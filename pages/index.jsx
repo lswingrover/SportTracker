@@ -843,7 +843,17 @@ export default function Home() {
                   {standings.map((row) => (
                     <tr key={row.teamId} className={row.isUs ? "us" : ""}>
                       <td>{row.rank ?? ""}</td>
-                      <td>{row.teamName}</td>
+                      <td>
+                        {row.teamName}
+                        {row.earnedBid && (
+                          <span
+                            title={row.bidAlias ? `Earned bid: ${row.bidAlias}` : "Earned bid"}
+                            style={{ marginLeft: 6 }}
+                          >
+                            🎫
+                          </span>
+                        )}
+                      </td>
                       <td>
                         {row.matchesWon}-{row.matchesLost}
                       </td>

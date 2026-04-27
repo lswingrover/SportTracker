@@ -249,20 +249,26 @@ function normalizeWork(w) {
 
 function normalizeStandings(rows, teamId) {
   if (!Array.isArray(rows)) return [];
-  return rows.map((r) => ({
-    teamId: r.TeamId,
-    teamName: r.TeamName,
-    isUs: String(r.TeamId) === String(teamId),
-    rank: r.OverallRank ?? r.FinishRank ?? null,
-    rankText: r.FinishRankText ?? null,
-    matchesWon: r.MatchesWon ?? 0,
-    matchesLost: r.MatchesLost ?? 0,
-    setsWon: r.SetsWon ?? 0,
-    setsLost: r.SetsLost ?? 0,
-    setPercent: r.SetPercent ?? 0,
-    pointRatio: r.PointRatio ?? 0,
-    club: r.Club?.Name || null,
-  }));
+  return rows.map((r) => {
+    const bidStatus = r?.BidIdentification?.BidStatus;
+    const earnedBid = bidStatus === 2 || bidStatus === "EarnedBid";
+    return {
+      teamId: r.TeamId,
+      teamName: r.TeamName,
+      isUs: String(r.TeamId) === String(teamId),
+      rank: r.OverallRank ?? r.FinishRank ?? null,
+      rankText: r.FinishRankText ?? null,
+      matchesWon: r.MatchesWon ?? 0,
+      matchesLost: r.MatchesLost ?? 0,
+      setsWon: r.SetsWon ?? 0,
+      setsLost: r.SetsLost ?? 0,
+      setPercent: r.SetPercent ?? 0,
+      pointRatio: r.PointRatio ?? 0,
+      club: r.Club?.Name || null,
+      earnedBid,
+      bidAlias: earnedBid ? r?.BidIdentification?.DivisionAlias || null : null,
+    };
+  });
 }
 
 function teamsFromStandings(rows) {
