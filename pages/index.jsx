@@ -383,6 +383,22 @@ function NextHero({ event, minutesUntil, projectedDone, eventOver }) {
   );
 }
 
+// Per-type alert toggles. Keep in sync with ALERT_TYPES in lib/push.js.
+const ALERT_TYPE_LABELS = [
+  ["game-soon-30", "Game starting (30 min)"],
+  ["game-soon-10", "Game starting (10 min)"],
+  ["live-score", "Live score updates"],
+  ["final-result", "Final results (Won / Lost)"],
+  ["schedule-change", "Schedule / court changes"],
+  ["bracket-advance", "Bracket advancement"],
+];
+
+function defaultClientPrefs() {
+  const out = {};
+  for (const [k] of ALERT_TYPE_LABELS) out[k] = true;
+  return out;
+}
+
 // Convert URL-safe base64 (VAPID public key format) to Uint8Array required
 // by PushManager.subscribe.
 function urlBase64ToUint8Array(base64String) {
@@ -403,6 +419,8 @@ function NotificationsCard({ teamId }) {
   const [supported, setSupported] = useState(false);
   const [subscribed, setSubscribed] = useState(false);
   const [working, setWorking] = useState(false);
+  const [prefs, setPrefs] = usePersistentState(`notifPrefs-${teamId}`, defaultClientPrefs());
+  const endpointRef = useRef(null);
 
   useEffect(() => {
     setMounted(true);
@@ -414,11 +432,13 @@ function NotificationsCard({ teamId }) {
     setSupported(ok);
     if (!ok) return;
     setPerm(window.Notification.permission);
-    // Reflect existing subscription if there is one.
     navigator.serviceWorker.getRegistration().then(async (reg) => {
       if (!reg) return;
       const sub = await reg.pushManager.getSubscription();
-      setSubscribed(Boolean(sub));
+      if (sub) {
+        endpointRef.current = sub.endpoint;
+        setSubscribed(true);
+      }
     });
   }, []);
 
@@ -444,13 +464,14 @@ function NotificationsCard({ teamId }) {
       const res = await fetch("/api/push-subscribe", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ subscription, teamId }),
+        body: JSON.stringify({ subscription, teamId, prefs }),
       });
       if (!res.ok) {
         const err = await res.text().catch(() => "");
         console.warn("subscribe failed:", err);
         return;
       }
+      endpointRef.current = subscription.endpoint;
       setSubscribed(true);
     } catch (err) {
       console.warn("Web Push subscribe error:", err);
@@ -473,9 +494,22 @@ function NotificationsCard({ teamId }) {
         }).catch(() => {});
         await sub.unsubscribe();
       }
+      endpointRef.current = null;
       setSubscribed(false);
     } finally {
       setWorking(false);
+    }
+  }
+
+  function togglePref(type) {
+    const next = { ...prefs, [type]: !prefs[type] };
+    setPrefs(next);
+    if (subscribed && endpointRef.current) {
+      fetch("/api/push-prefs", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ teamId, endpoint: endpointRef.current, prefs: next }),
+      }).catch(() => {});
     }
   }
 
@@ -502,32 +536,50 @@ function NotificationsCard({ teamId }) {
 
   return (
     <div className={`notif-card${on ? " on" : ""}`}>
-      <div style={{ minWidth: 0 }}>
-        <div className="title">
-          <span>🔔</span>
-          <span>Game Alerts</span>
-          <span className={`state${on ? " on" : blocked ? " blocked" : ""}`}>
-            {on ? "On" : blocked ? "Blocked" : "Off"}
-          </span>
+      <div className="notif-head">
+        <div style={{ minWidth: 0 }}>
+          <div className="title">
+            <span>🔔</span>
+            <span>Game Alerts</span>
+            <span className={`state${on ? " on" : blocked ? " blocked" : ""}`}>
+              {on ? "On" : blocked ? "Blocked" : "Off"}
+            </span>
+          </div>
+          <div className="desc">
+            {blocked
+              ? "Notifications are blocked in browser settings — enable them there to receive alerts."
+              : on
+                ? "Pushed live, even when this tab is closed."
+                : "Pushed live, even when this tab is closed. Pick what you want to hear about, then enable."}
+          </div>
         </div>
-        <div className="desc">
-          {blocked
-            ? "Notifications are blocked in browser settings — enable them there to receive alerts."
-            : on
-              ? "You'll get pushed live: scores, results, court changes, 30/10 min countdowns. Works even when this tab is closed."
-              : "Get pushed live for scores, results, court changes, and 30/10 min countdowns — even when this tab is closed."}
-        </div>
+        {!blocked &&
+          (on ? (
+            <button className="btn-secondary" onClick={unsubscribe} disabled={working}>
+              {working ? "…" : "Off"}
+            </button>
+          ) : (
+            <button className="btn-primary" onClick={subscribe} disabled={working}>
+              {working ? "…" : "Enable"}
+            </button>
+          ))}
       </div>
-      {!blocked &&
-        (on ? (
-          <button className="btn-secondary" onClick={unsubscribe} disabled={working}>
-            {working ? "…" : "Off"}
-          </button>
-        ) : (
-          <button className="btn-primary" onClick={subscribe} disabled={working}>
-            {working ? "…" : "Enable"}
-          </button>
-        ))}
+      {!blocked && (
+        <ul className="notif-prefs">
+          {ALERT_TYPE_LABELS.map(([key, label]) => (
+            <li key={key}>
+              <label>
+                <input
+                  type="checkbox"
+                  checked={prefs[key] !== false}
+                  onChange={() => togglePref(key)}
+                />
+                <span>{label}</span>
+              </label>
+            </li>
+          ))}
+        </ul>
+      )}
     </div>
   );
 }
