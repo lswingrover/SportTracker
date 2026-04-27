@@ -70,46 +70,112 @@ a { color: inherit; }
   padding-left: max(env(safe-area-inset-left), 16px);
 }
 
-.topbar {
+/* Compact header — single tight bar, ~48px tall: team name left, optional
+   live pill, active-tournament chip, refresh icon. The full venue/date
+   subtitle moved out of the header into the chip-row + content body. */
+.header-compact {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  margin-bottom: 12px;
-  gap: 12px;
+  gap: 8px;
   width: 100%;
   min-width: 0;
+  margin-bottom: 10px;
+  min-height: 48px;
 }
-.topbar > * { min-width: 0; }
-/* flex: 1 1 0 makes brand grow into leftover space starting from 0, so the
-   action buttons keep their natural size without being pushed off-screen. */
-.brand { display: flex; align-items: center; gap: 10px; min-width: 0; flex: 1 1 0; }
-.brand > div { min-width: 0; }
-.brand .logo {
-  width: 38px; height: 38px;
-  border-radius: 10px;
-  background: var(--accent);
-  display: grid; place-items: center;
-  font-size: 22px;
-  flex-shrink: 0;
-}
-.brand .name {
+.header-compact .team-name {
+  flex: 1 1 auto;
+  min-width: 0;
   font-family: "Barlow Condensed", sans-serif;
   font-weight: 900;
   font-size: 22px;
-  letter-spacing: 0.04em;
+  letter-spacing: 0.02em;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  color: var(--text);
 }
-.brand .sub {
-  color: var(--muted);
+.header-compact .live-pill {
+  background: var(--live);
+  color: #fff;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  padding: 3px 8px;
+  border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  flex-shrink: 0;
+  animation: dot-pulse 1.4s ease-in-out infinite;
+}
+.header-compact .live-pill .live-dot {
+  width: 7px; height: 7px;
+  border-radius: 50%;
+  background: #fff;
+}
+.header-compact .tournament-chip {
+  background: var(--accent-soft);
+  color: var(--accent);
+  border: 1px solid var(--accent-border);
   font-size: 12px;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  /* Wrap rather than overflow when the tournament name + venue + date are long. */
-  overflow-wrap: anywhere;
-  word-break: break-word;
+  font-weight: 700;
+  padding: 6px 10px;
+  border-radius: 999px;
+  white-space: nowrap;
+  max-width: 140px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  flex-shrink: 0;
 }
+.header-compact .icon-only-btn {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  color: var(--text);
+  width: 36px;
+  height: 36px;
+  border-radius: 999px;
+  display: grid;
+  place-items: center;
+  font-size: 16px;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+.header-compact .icon-only-btn:hover { border-color: var(--accent); }
+.header-compact .icon-only-btn:disabled { opacity: 0.5; cursor: progress; }
+
+/* Horizontal chip row for tournament selection. Scrolls horizontally on
+   narrow screens, masks the scrollbar, scroll-snaps to chips. */
+.chip-row {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+  scroll-snap-type: x mandatory;
+  margin-bottom: 14px;
+  padding: 2px 0 6px;
+}
+.chip-row::-webkit-scrollbar { display: none; }
+.chip {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  color: var(--text);
+  padding: 8px 14px;
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 600;
+  white-space: nowrap;
+  cursor: pointer;
+  flex-shrink: 0;
+  scroll-snap-align: start;
+  transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+}
+.chip.active {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--accent-ink);
+}
+.chip:disabled { opacity: 0.5; cursor: not-allowed; }
 
 .iconbtn {
   background: var(--panel);
@@ -125,50 +191,8 @@ a { color: inherit; }
 .iconbtn:hover { border-color: var(--accent); }
 .iconbtn:disabled { opacity: 0.6; cursor: progress; }
 
-.selectors {
-  display: grid;
-  /* minmax(0, 1fr) lets columns shrink below their content's intrinsic
-     min-width — without it, a <select> sizes its column to its longest
-     option's text, blowing the layout out horizontally. */
-  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-  gap: 8px;
-  margin-bottom: 14px;
-  width: 100%;
-}
-.selectors .full { grid-column: 1 / -1; }
-.selector {
-  background: var(--panel);
-  border: 1px solid var(--line);
-  border-radius: 10px;
-  padding: 8px 10px;
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  min-width: 0;
-}
-.selector label {
-  font-size: 11px;
-  letter-spacing: 0.02em;
-  color: var(--muted);
-}
-.selector select {
-  background: transparent;
-  border: 0;
-  color: var(--text);
-  font-family: inherit;
-  font-size: 14px;
-  font-weight: 600;
-  padding: 0;
-  outline: none;
-  cursor: pointer;
-  /* Hard-constrain the native select to its column so its option list never
-     pushes the parent grid wider. */
-  width: 100%;
-  max-width: 100%;
-  min-width: 0;
-  text-overflow: ellipsis;
-}
-.selector select option { background: var(--panel); color: var(--text); }
+/* The old .selectors dropdown grid was replaced by .chip-row + the
+   compact header. Theme picker moved to a small footer button. */
 
 .live-banner {
   background: linear-gradient(135deg, rgba(239, 68, 68, 0.28), rgba(239, 68, 68, 0.08));
@@ -676,6 +700,16 @@ a { color: inherit; }
 
 .list { display: flex; flex-direction: column; gap: 10px; }
 
+/* Two-column game grid at tablet width and up. The .app container caps at
+   720px so two columns get ~320px each — comfortable for the card hero. */
+@media (min-width: 640px) {
+  .list-2col {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+  }
+}
+
 .card {
   background: var(--panel);
   border: 1px solid var(--line);
@@ -703,11 +737,43 @@ a { color: inherit; }
   50% { box-shadow: 0 0 0 6px rgba(239, 68, 68, 0); }
 }
 
-/* Court number is the loudest element on each card. */
+/* Card row — collapsed/expanded structure. */
+.card-summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  width: 100%;
+  cursor: pointer;
+  background: transparent;
+  border: 0;
+  padding: 0;
+  font: inherit;
+  color: inherit;
+  text-align: left;
+}
+.card-chevron {
+  flex-shrink: 0;
+  font-size: 14px;
+  color: var(--muted);
+  transition: transform 0.2s ease;
+}
+.card.expanded .card-chevron { transform: rotate(90deg); }
+
+.card-expanded {
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px solid var(--line);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+/* Court number — dominant on upcoming, smaller on past where the score
+   takes the spotlight. */
 .court-hero {
   font-family: "Barlow Condensed", sans-serif;
   font-weight: 900;
-  font-size: 26px;
   line-height: 1;
   color: var(--accent);
   letter-spacing: 0.02em;
@@ -716,8 +782,101 @@ a { color: inherit; }
   align-items: baseline;
   gap: 6px;
 }
-.court-hero .court-pin { font-size: 14px; opacity: 0.7; }
+.card.upcoming .court-hero { font-size: 64px; }
+.card.past .court-hero, .card.live-card .court-hero { font-size: 22px; }
+.court-hero .court-pin { font-size: 0.32em; opacity: 0.7; }
 .court-hero:hover { text-decoration: underline; text-underline-offset: 4px; }
+
+/* Upcoming card — court hero is the headline, time + opponent below. */
+.card.upcoming {
+  padding: 18px 16px;
+}
+.card.upcoming .matchup {
+  font-family: "Barlow Condensed", sans-serif;
+  font-weight: 800;
+  font-size: 18px;
+  margin-top: 8px;
+  color: var(--text);
+}
+.card.upcoming .matchup-meta {
+  font-size: 13px;
+  color: var(--muted);
+  margin-top: 2px;
+}
+.card.upcoming.next-pulse {
+  position: relative;
+}
+.card.upcoming.next-pulse::after {
+  content: "";
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--accent);
+  box-shadow: 0 0 0 0 var(--accent-soft);
+  animation: dot-pulse 1.4s ease-in-out infinite;
+}
+
+/* Past card — score is dominant, badge + opponent secondary. */
+.card.past .score-hero {
+  font-family: "Barlow Condensed", sans-serif;
+  font-weight: 900;
+  font-size: 48px;
+  line-height: 1;
+  color: var(--text);
+  letter-spacing: 0.02em;
+  font-variant-numeric: tabular-nums;
+}
+.card.past .score-meta {
+  font-size: 13px;
+  color: var(--muted);
+  margin-top: 4px;
+}
+.card.past .past-summary-left {
+  min-width: 0;
+}
+.card.past .matchup {
+  font-family: "Barlow Condensed", sans-serif;
+  font-weight: 700;
+  font-size: 16px;
+  color: var(--text);
+}
+
+/* Sticky work-duty alert: floats above the bottom nav when a duty is
+   within 2 hours, dismissable. Lives on schedule + duties tabs only. */
+.duty-sticky {
+  position: fixed;
+  left: 12px;
+  right: 12px;
+  bottom: calc(76px + env(safe-area-inset-bottom));
+  background: linear-gradient(90deg, rgba(250, 204, 21, 0.95), rgba(239, 68, 68, 0.92));
+  color: #1a1a1a;
+  padding: 10px 14px;
+  border-radius: 14px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  z-index: 25;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+  font-size: 13px;
+  font-weight: 700;
+}
+.duty-sticky .icon { font-size: 18px; }
+.duty-sticky .text { flex: 1 1 auto; min-width: 0; line-height: 1.2; }
+.duty-sticky .dismiss {
+  background: rgba(0, 0, 0, 0.2);
+  color: inherit;
+  border: 0;
+  width: 28px;
+  height: 28px;
+  border-radius: 999px;
+  font-weight: 800;
+  font-size: 14px;
+  cursor: pointer;
+  flex-shrink: 0;
+}
 .card.just-won {
   animation: win-glow 1.6s ease-in-out 6;
   border-color: var(--accent);
@@ -788,30 +947,55 @@ a { color: inherit; }
 .btn-mini.primary { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); font-weight: 700; }
 .btn-mini.primary:hover { filter: brightness(1.05); }
 
+/* Compact standings table — 32px rows, 208 always pinned at the top with
+   an accent left border. Decorative thead rows dropped; columns are
+   Rank / Team (truncate 20ch) / W / L / Pts. */
 .standings-table {
   width: 100%;
   border-collapse: collapse;
   background: var(--panel);
   border: 1px solid var(--line);
-  border-radius: 14px;
+  border-radius: 12px;
   overflow: hidden;
-  font-size: 14px;
+  font-size: 13px;
+  font-variant-numeric: tabular-nums;
 }
-.standings-table th, .standings-table td {
-  padding: 10px 12px;
+.standings-table td {
+  padding: 6px 10px;
   text-align: left;
   border-bottom: 1px solid var(--line);
+  height: 32px;
+  vertical-align: middle;
 }
-.standings-table th {
-  font-size: 11px;
-  text-transform: uppercase;
-  letter-spacing: 0.1em;
+.standings-table td:first-child { padding-left: 12px; }
+.standings-table td.num {
+  text-align: right;
+  width: 36px;
   color: var(--muted);
-  background: var(--panel-2);
+}
+.standings-table td.team {
+  max-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-weight: 600;
+}
+.standings-table td.rank {
+  width: 32px;
+  color: var(--muted);
+  font-weight: 700;
 }
 .standings-table tr:last-child td { border-bottom: 0; }
-.standings-table tr.us { background: var(--accent-soft); }
-.standings-table tr.us td { color: var(--accent); font-weight: 700; }
+.standings-table tr.us-pinned td {
+  background: var(--accent-soft);
+  color: var(--accent);
+  font-weight: 800;
+  border-bottom: 2px solid var(--accent);
+}
+.standings-table tr.us-pinned td:first-child {
+  border-left: 4px solid var(--accent);
+  padding-left: 8px;
+}
 
 .empty {
   background: var(--panel);

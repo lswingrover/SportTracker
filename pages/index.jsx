@@ -10,6 +10,7 @@ const TOURNAMENTS = [
   {
     id: "big-sky-volleyfest-2026",
     label: "Big Sky VolleyFest",
+    chipLabel: "Big Sky",
     eventId: "PTAwMDAwNDI5NjU90",
     divId: "205376",
     teamId: "201772",
@@ -24,6 +25,7 @@ const TOURNAMENTS = [
   {
     id: "erva-regional-2026",
     label: "ERVA Regional Championship",
+    chipLabel: "ERVA Regional",
     eventId: "PTAwMDAwNDI2MDU90",
     divId: "203854",
     teamId: "201772",
@@ -38,6 +40,7 @@ const TOURNAMENTS = [
   {
     id: "mt-nw-jamboree-2026",
     label: "MT NW Jamboree U14",
+    chipLabel: "MT NW",
     eventId: "PTAwMDAwNDQ5NzY90",
     divId: "213538",
     teamId: "201772",
@@ -52,6 +55,7 @@ const TOURNAMENTS = [
   {
     id: "showtime-slammer-2026",
     label: "Showtime Slammer",
+    chipLabel: "Showtime",
     static: true,
     teamName: "208 U14 Red",
     venue: {
@@ -64,6 +68,7 @@ const TOURNAMENTS = [
   {
     id: "erva-power-league-2026",
     label: "ERVA Power League (multi-week)",
+    chipLabel: "Power League",
     eventId: "PTAwMDAwNDI2MDY90",
     divId: "203858",
     teamId: "201772",
@@ -78,6 +83,7 @@ const TOURNAMENTS = [
   {
     id: "sandpoint-showdown-2026",
     label: "Sandpoint Showdown",
+    chipLabel: "Sandpoint",
     static: true,
     teamName: "208 U14 Red",
     venue: {
@@ -90,6 +96,7 @@ const TOURNAMENTS = [
   {
     id: "holly-jolly-jamboree-2025",
     label: "Holly Jolly Jamboree",
+    chipLabel: "Holly Jolly",
     static: true,
     teamName: "208 U14 Red",
     venue: {
@@ -814,103 +821,186 @@ function mapsHrefFor(query) {
   return `https://maps.google.com/?q=${q}`;
 }
 
-function GameCard({ game, opponentInfo, teamName, onShare, onAddCal, justWon, teamWatchNowLink, venue, tz }) {
+function CourtHero({ court, venue }) {
+  const courtLabel = court || "TBD";
+  const mapQuery = venue ? `${courtLabel} · ${venue.name || ""} ${venue.address || ""}`.trim() : courtLabel;
+  const mapHref = mapsHrefFor(mapQuery);
+  if (mapHref) {
+    return (
+      <a className="court-hero" href={mapHref} target="_blank" rel="noreferrer" title="Open in Maps">
+        <span className="court-pin">📍</span>Court {courtLabel}
+      </a>
+    );
+  }
+  return (
+    <span className="court-hero">
+      <span className="court-pin">📍</span>Court {courtLabel}
+    </span>
+  );
+}
+
+function setsCountForRow(sets) {
+  if (!Array.isArray(sets) || !sets.length) return null;
+  let us = 0, them = 0;
+  for (const s of sets) {
+    if (s.us > s.them) us++;
+    else if (s.them > s.us) them++;
+  }
+  return `${us}–${them}`;
+}
+
+function UpcomingGameCard({ game, expanded, onToggle, venue, tz, teamWatchNowLink, opponentInfo, onAddCal }) {
   const watchUrl = game.videoLink || (game.live ? teamWatchNowLink : null);
   const tzLabel = tzShortLabel(tz);
   const localized = game.timeISO
     ? `${formatInTz(game.timeISO, tz)}${tzLabel ? ` ${tzLabel}` : ""}`
     : game.time || "TBD";
   const cls = [
-    "card",
-    game.next ? "next" : "",
-    game.result === "W" ? "win" : "",
-    game.result === "L" ? "loss" : "",
-    game.done ? "past" : "",
+    "card upcoming",
+    expanded ? "expanded" : "",
+    game.next && !game.live ? "next-pulse" : "",
     game.live ? "live-card" : "",
-    justWon ? "just-won" : "",
-  ]
-    .filter(Boolean)
-    .join(" ");
-
-  const courtLabel = game.court || "TBD";
-  const mapQuery = venue ? `${courtLabel} · ${venue.name || ""} ${venue.address || ""}`.trim() : courtLabel;
-  const mapHref = mapsHrefFor(mapQuery);
-
+  ].filter(Boolean).join(" ");
   return (
     <article className={cls}>
-      <div className="card-row">
+      <button className="card-summary" onClick={onToggle} aria-expanded={expanded}>
         <div style={{ minWidth: 0 }}>
-          {mapHref ? (
-            <a className="court-hero" href={mapHref} target="_blank" rel="noreferrer" title="Open in Maps">
-              <span className="court-pin">📍</span>Court {courtLabel}
-            </a>
-          ) : (
-            <span className="court-hero">Court {courtLabel}</span>
-          )}
-          <div className="opp" style={{ marginTop: 4 }}>vs {game.opponent}</div>
-          <div className="meta">{localized}</div>
+          <CourtHero court={game.court} venue={venue} />
+          <div className="matchup">vs {game.opponent}</div>
+          <div className="matchup-meta">{localized}</div>
+        </div>
+        <div className="card-chevron">▸</div>
+      </button>
+      {expanded && (
+        <div className="card-expanded">
           {opponentInfo && (
             <div className="meta">
-              Opp {opponentInfo.matchesWon}–{opponentInfo.matchesLost}
+              Opponent: {opponentInfo.matchesWon}–{opponentInfo.matchesLost}
               {opponentInfo.rank ? ` · #${opponentInfo.rank} in pool` : ""}
             </div>
           )}
+          {game.courtStay && (
+            <div className="meta" style={{ color: "var(--warn)" }}>
+              {game.courtStay.stay
+                ? `↪ Stay on Court ${game.court} for the next match`
+                : game.courtStay.stayIfWin && game.courtStay.stayIfLoss
+                  ? `↪ Stay on Court ${game.court} either way`
+                  : game.courtStay.stayIfWin
+                    ? `↪ Stay on Court ${game.court} if you win`
+                    : game.courtStay.stayIfLoss
+                      ? `↪ Stay on Court ${game.court} if you lose`
+                      : null}
+            </div>
+          )}
+          <div className="card-actions">
+            {game.timeISO && (
+              <button className="btn-mini" onClick={() => onAddCal(game)}>
+                📅 Add to calendar
+              </button>
+            )}
+            {watchUrl && (
+              <a className="btn-mini primary" href={watchUrl} target="_blank" rel="noreferrer">
+                📺 Watch live
+              </a>
+            )}
+          </div>
         </div>
-        <div style={{ display: "flex", gap: 6, flexWrap: "wrap", justifyContent: "flex-end" }}>
-          {game.live && <span className="badge live">● Live</span>}
+      )}
+    </article>
+  );
+}
+
+function PastGameCard({ game, expanded, onToggle, venue, tz, opponentInfo, onShare, justWon }) {
+  const tzLabel = tzShortLabel(tz);
+  const localized = game.timeISO
+    ? `${formatInTz(game.timeISO, tz)}${tzLabel ? ` ${tzLabel}` : ""}`
+    : game.time || "";
+  const setsCount = setsCountForRow(game.sets);
+  const cls = [
+    "card past",
+    expanded ? "expanded" : "",
+    game.result === "W" ? "win" : "",
+    game.result === "L" ? "loss" : "",
+    justWon ? "just-won" : "",
+  ].filter(Boolean).join(" ");
+  return (
+    <article className={cls}>
+      <button className="card-summary" onClick={onToggle} aria-expanded={expanded}>
+        <div className="past-summary-left">
+          <div className="score-hero">{setsCount || (game.result === "W" ? "Won" : "Lost")}</div>
+          <div className="score-meta">vs {game.opponent}</div>
+          <div className="score-meta">
+            Court {game.court || "?"}
+            {localized ? ` · ${localized}` : ""}
+          </div>
+        </div>
+        <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 6 }}>
           {game.result === "W" && <span className="badge win">Won</span>}
           {game.result === "L" && <span className="badge loss">Lost</span>}
-          {!game.done && game.next && !game.live && <span className="badge next">Next</span>}
-          {!game.done && !game.next && !game.live && <span className="badge">Upcoming</span>}
+          <div className="card-chevron">▸</div>
         </div>
-      </div>
-      {game.courtStay && (
-        <div className="meta" style={{ color: "var(--warn)" }}>
-          {game.courtStay.stay
-            ? `↪ Stay on Court ${game.court} for the next match`
-            : game.courtStay.stayIfWin && game.courtStay.stayIfLoss
-              ? `↪ Stay on Court ${game.court} either way`
-              : game.courtStay.stayIfWin
-                ? `↪ Stay on Court ${game.court} if you win`
-                : game.courtStay.stayIfLoss
-                  ? `↪ Stay on Court ${game.court} if you lose`
-                  : null}
+      </button>
+      {expanded && (
+        <div className="card-expanded">
+          {Array.isArray(game.sets) && game.sets.length > 0 && (
+            <div className="sets">
+              Sets:{" "}
+              {game.sets.map((s, i) => (
+                <span key={i}>
+                  {i > 0 ? ", " : ""}
+                  <span style={s.deciding ? { color: "var(--accent)", fontWeight: 700 } : undefined}>
+                    {s.us}–{s.them}
+                    {s.deciding ? " ●" : ""}
+                  </span>
+                </span>
+              ))}
+            </div>
+          )}
+          {opponentInfo && (
+            <div className="meta">
+              Opp record: {opponentInfo.matchesWon}–{opponentInfo.matchesLost}
+              {opponentInfo.rank ? ` · #${opponentInfo.rank} in pool` : ""}
+            </div>
+          )}
+          <div className="card-actions">
+            {game.result && (
+              <button className="btn-mini" onClick={() => onShare(game)}>
+                📣 Share result
+              </button>
+            )}
+          </div>
         </div>
       )}
-      {Array.isArray(game.sets) && game.sets.length > 0 ? (
-        <div className="sets">
-          Sets:{" "}
-          {game.sets.map((s, i) => (
-            <span key={i}>
-              {i > 0 ? ", " : ""}
-              <span style={s.deciding ? { color: "var(--accent)", fontWeight: 700 } : undefined}>
-                {s.us}–{s.them}
-                {s.deciding ? " ●" : ""}
-              </span>
-            </span>
-          ))}
-        </div>
-      ) : (
-        game.score && <div className="sets">Sets: {game.score}</div>
-      )}
-      <div className="card-actions">
-        {!game.done && game.timeISO && (
-          <button className="btn-mini" onClick={() => onAddCal(game)}>
-            📅 Add to calendar
-          </button>
-        )}
-        {watchUrl && (
-          <a className="btn-mini primary" href={watchUrl} target="_blank" rel="noreferrer">
-            📺 Watch live
-          </a>
-        )}
-        {game.done && game.result && (
-          <button className="btn-mini" onClick={() => onShare(game)}>
-            📣 Share result
-          </button>
-        )}
-      </div>
     </article>
+  );
+}
+
+// Sticky alert when the next work duty is within 2 hours. Floats above
+// the bottom nav, dismissable for the rest of the session.
+function DutySticky({ workAssignments, dismissed, onDismiss, tz }) {
+  const [now, setNow] = useState(null);
+  useEffect(() => {
+    setNow(Date.now());
+    const id = setInterval(() => setNow(Date.now()), 60 * 1000);
+    return () => clearInterval(id);
+  }, []);
+  if (now == null || dismissed) return null;
+  const next = (workAssignments || [])
+    .filter((w) => w.timeISO)
+    .map((w) => ({ ...w, ms: new Date(w.timeISO).getTime() }))
+    .filter((w) => w.ms > now && w.ms - now < 2 * 60 * 60 * 1000)
+    .sort((a, b) => a.ms - b.ms)[0];
+  if (!next) return null;
+  const tzLabel = tzShortLabel(tz);
+  const t = `${formatInTz(next.timeISO, tz, { hour: "numeric", minute: "2-digit" })}${tzLabel ? ` ${tzLabel}` : ""}`;
+  return (
+    <div className="duty-sticky" role="status">
+      <span className="icon">⚠️</span>
+      <div className="text">
+        Work duty at {t} — {next.role} · Court {next.court}
+      </div>
+      <button className="dismiss" onClick={onDismiss} aria-label="Dismiss">×</button>
+    </div>
   );
 }
 
@@ -931,10 +1021,21 @@ export default function Home() {
   const [recentWinIds, setRecentWinIds] = useState(new Set());
   const [winToast, setWinToast] = useState(null);
   const [lastLiveChange, setLastLiveChange] = useState(null);
+  const [expandedIds, setExpandedIds] = useState(() => new Set());
+  const [dutyDismissed, setDutyDismissed] = useState(false);
   const prevDataRef = useRef(null);
   const prevLiveRef = useRef(null);
   const firstLoadRef = useRef(true);
   const [origin, setOrigin] = useState("");
+
+  function toggleExpanded(id) {
+    setExpandedIds((s) => {
+      const next = new Set(s);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  }
 
   useEffect(() => {
     if (typeof window !== "undefined") setOrigin(window.location.origin);
@@ -1111,75 +1212,46 @@ export default function Home() {
         <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
       </Head>
       <div className="app">
-        <header className="topbar">
-          <div className="brand">
-            <div className="logo">🏐</div>
-            <div style={{ minWidth: 0 }}>
-              <div className="name">{teamName}</div>
-              <div className="sub">
-                {tournamentName}
-                {tournamentLocation ? ` · ${tournamentLocation}` : ""}
-                {tournamentDateRange ? ` · ${tournamentDateRange}` : ""}
-                {eventOver ? " · 🏁 Final" : ""}
-                {data?.cached ? " · cached" : ""}
-              </div>
-            </div>
-          </div>
-          <div style={{ display: "flex", gap: 8 }}>
-            <button className="iconbtn" onClick={shareSummary}>
-              Share
-            </button>
-            <button className="iconbtn" onClick={() => load(true)} disabled={loading}>
-              {loading ? "…" : "Refresh"}
-            </button>
-          </div>
+        <header className="header-compact">
+          <div className="team-name" title={teamName}>{teamName}</div>
+          {data?.liveGame && (
+            <span className="live-pill" aria-label="Live game">
+              <span className="live-dot" /> LIVE
+            </span>
+          )}
+          <span className="tournament-chip" title={tournamentName}>
+            {tournament.chipLabel || tournament.label}
+          </span>
+          <button
+            className="icon-only-btn"
+            onClick={() => load(true)}
+            disabled={loading}
+            aria-label="Refresh"
+            title="Refresh"
+          >
+            {loading ? "…" : "↻"}
+          </button>
         </header>
 
-        <div className="selectors">
-          <div className="selector">
-            <label>Tournament</label>
-            <select
-              value={tournamentId}
-              onChange={(e) => {
-                setTournamentId(e.target.value);
-                const next = TOURNAMENTS.find((t) => t.id === e.target.value);
-                if (next) setTeamId(next.teamId);
+        <div className="chip-row" role="tablist" aria-label="Tournaments">
+          {TOURNAMENTS.map((t) => (
+            <button
+              key={t.id}
+              className={`chip${tournamentId === t.id ? " active" : ""}`}
+              onClick={() => {
+                setTournamentId(t.id);
+                if (!t.static) setTeamId(t.teamId);
               }}
+              role="tab"
+              aria-selected={tournamentId === t.id}
             >
-              {TOURNAMENTS.map((t) => (
-                <option key={t.id} value={t.id}>
-                  {t.label} · {t.date}
-                </option>
-              ))}
-            </select>
-          </div>
-          <div className="selector">
-            <label>Theme</label>
-            <select value={themeId} onChange={(e) => setThemeId(e.target.value)}>
-              {THEMES.map((t) => (
-                <option key={t.id} value={t.id}>
-                  {t.label}
-                </option>
-              ))}
-            </select>
-          </div>
-          <div className="selector full">
-            <label>Team</label>
-            <select value={teamId} onChange={(e) => setTeamId(e.target.value)}>
-              {teamsList.length === 0 && (
-                <option value={teamId}>{teamName}</option>
-              )}
-              {teamsList.map((t) => (
-                <option key={t.teamId} value={t.teamId}>
-                  {t.teamName}
-                  {t.club ? ` · ${t.club}` : ""}
-                </option>
-              ))}
-            </select>
-          </div>
+              {t.chipLabel || t.label}
+            </button>
+          ))}
         </div>
 
-        {!tournament.static && <WorkUrgencyBanner workAssignments={work} />}
+        {/* WorkUrgencyBanner removed — replaced by sticky DutySticky below
+            that floats above the bottom nav and dismisses for the session. */}
 
         {tournament.static ? (
           <StaticTournamentCard tournament={tournament} />
@@ -1258,44 +1330,43 @@ export default function Home() {
 
         {tab === "schedule" && (
           <>
-            {pastGames.length > 0 && (
+            {upcomingGames.length > 0 && (
               <>
-                <div className="section-title">Results ({pastGames.length})</div>
-                <SeasonArc pastGames={pastGames} />
-                <PastGamesSummary standings={data?.standings || []} record={record} />
-                <div className="list">
-                  {pastGames.map((g) => (
-                    <GameCard
+                <div className="section-title">Upcoming ({upcomingGames.length})</div>
+                <div className="list list-2col">
+                  {upcomingGames.map((g) => (
+                    <UpcomingGameCard
                       key={g.id}
                       game={g}
-                      teamName={teamName}
+                      expanded={expandedIds.has(g.id)}
+                      onToggle={() => toggleExpanded(g.id)}
                       venue={tournament.venue}
                       tz={tournament.venue?.tz}
                       teamWatchNowLink={data?.teamWatchNowLink}
                       opponentInfo={standingsById.get(g.opponent)}
-                      onShare={shareGame}
                       onAddCal={addCalSingle}
-                      justWon={recentWinIds.has(g.id)}
                     />
                   ))}
                 </div>
               </>
             )}
-            {upcomingGames.length > 0 && (
+            {pastGames.length > 0 && (
               <>
-                <div className="section-title">Upcoming · {upcomingGames.length}</div>
-                <div className="list">
-                  {upcomingGames.map((g) => (
-                    <GameCard
+                <div className="section-title">Results ({pastGames.length})</div>
+                <SeasonArc pastGames={pastGames} />
+                <PastGamesSummary standings={data?.standings || []} record={record} />
+                <div className="list list-2col">
+                  {pastGames.map((g) => (
+                    <PastGameCard
                       key={g.id}
                       game={g}
-                      teamName={teamName}
+                      expanded={expandedIds.has(g.id)}
+                      onToggle={() => toggleExpanded(g.id)}
                       venue={tournament.venue}
                       tz={tournament.venue?.tz}
-                      teamWatchNowLink={data?.teamWatchNowLink}
                       opponentInfo={standingsById.get(g.opponent)}
                       onShare={shareGame}
-                      onAddCal={addCalSingle}
+                      justWon={recentWinIds.has(g.id)}
                     />
                   ))}
                 </div>
@@ -1316,38 +1387,34 @@ export default function Home() {
             {standings.length === 0 ? (
               <div className="empty">No standings available.</div>
             ) : (
-              <table className="standings-table">
-                <thead>
-                  <tr>
-                    <th>#</th>
-                    <th>Team</th>
-                    <th>W-L</th>
-                    <th>Set %</th>
+              (() => {
+                const us = standings.find((s) => s.isUs);
+                const others = standings.filter((s) => !s.isUs);
+                const renderRow = (row, pinned = false) => (
+                  <tr key={row.teamId} className={pinned ? "us-pinned" : ""}>
+                    <td className="rank">{row.rank ?? ""}</td>
+                    <td className="team">
+                      {row.teamName}
+                      {row.earnedBid && (
+                        <span title={row.bidAlias ? `Earned bid: ${row.bidAlias}` : "Earned bid"} style={{ marginLeft: 4 }}>
+                          🎫
+                        </span>
+                      )}
+                    </td>
+                    <td className="num">{row.matchesWon}</td>
+                    <td className="num">{row.matchesLost}</td>
+                    <td className="num">{Math.round((row.setPercent || 0) * 100)}</td>
                   </tr>
-                </thead>
-                <tbody>
-                  {standings.map((row) => (
-                    <tr key={row.teamId} className={row.isUs ? "us" : ""}>
-                      <td>{row.rank ?? ""}</td>
-                      <td>
-                        {row.teamName}
-                        {row.earnedBid && (
-                          <span
-                            title={row.bidAlias ? `Earned bid: ${row.bidAlias}` : "Earned bid"}
-                            style={{ marginLeft: 6 }}
-                          >
-                            🎫
-                          </span>
-                        )}
-                      </td>
-                      <td>
-                        {row.matchesWon}–{row.matchesLost}
-                      </td>
-                      <td>{Math.round((row.setPercent || 0) * 100)}%</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+                );
+                return (
+                  <table className="standings-table">
+                    <tbody>
+                      {us && renderRow(us, true)}
+                      {others.map((row) => renderRow(row, false))}
+                    </tbody>
+                  </table>
+                );
+              })()
             )}
           </>
         )}
@@ -1412,6 +1479,15 @@ export default function Home() {
           <a href="mailto:lswingrover@gmail.com">lswingrover@gmail.com</a>
         </div>
       </div>
+
+      {!tournament.static && (tab === "schedule" || tab === "work") && (
+        <DutySticky
+          workAssignments={work}
+          dismissed={dutyDismissed}
+          onDismiss={() => setDutyDismissed(true)}
+          tz={tournament.venue?.tz}
+        />
+      )}
 
       {winToast && (
         <div
