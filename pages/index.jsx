@@ -442,21 +442,40 @@ function NextHero({ event, minutesUntil, projectedDone, eventOver, tz }) {
 }
 
 // Per-type alert toggles. Keep in sync with ALERT_TYPES in lib/push.js.
-const ALERT_TYPE_LABELS = [
-  ["game-soon-30", "Game starting (30 min)"],
-  ["game-soon-10", "Game starting (10 min)"],
-  ["live-score", "Live score updates"],
-  ["final-result", "Final results (Won / Lost)"],
-  ["schedule-change", "Schedule / court changes"],
-  ["bracket-advance", "Bracket advancement"],
-  ["work-soon-30", "Work duty in 30 min"],
-  ["work-soon-10", "Work duty in 10 min"],
+// Timing-aware kinds (game-soon, work-soon) store { enabled, leadMinutes };
+// others store boolean.
+const CLIENT_ALERT_TYPES = [
+  { id: "game-soon", label: "Game starting", timing: true, defaultLead: 30 },
+  { id: "live-score", label: "Live score updates" },
+  { id: "final-result", label: "Final results (Won / Lost)" },
+  { id: "schedule-change", label: "Schedule / court changes" },
+  { id: "bracket-advance", label: "Bracket advancement" },
+  { id: "work-soon", label: "Work duty", timing: true, defaultLead: 30 },
 ];
+const LEAD_OPTIONS = [5, 10, 15, 20, 30, 45, 60, 90];
 
 function defaultClientPrefs() {
   const out = {};
-  for (const [k] of ALERT_TYPE_LABELS) out[k] = true;
+  for (const t of CLIENT_ALERT_TYPES) {
+    out[t.id] = t.timing ? { enabled: true, leadMinutes: t.defaultLead } : true;
+  }
   return out;
+}
+
+function readClientPref(prefs, t) {
+  const raw = prefs?.[t.id];
+  if (t.timing) {
+    if (typeof raw === "object" && raw !== null) {
+      return {
+        enabled: raw.enabled !== false,
+        leadMinutes: LEAD_OPTIONS.includes(raw.leadMinutes) ? raw.leadMinutes : t.defaultLead,
+      };
+    }
+    if (typeof raw === "boolean") return { enabled: raw, leadMinutes: t.defaultLead };
+    return { enabled: true, leadMinutes: t.defaultLead };
+  }
+  if (typeof raw === "boolean") return { enabled: raw };
+  return { enabled: true };
 }
 
 // Convert URL-safe base64 (VAPID public key format) to Uint8Array required
@@ -561,8 +580,7 @@ function NotificationsCard({ teamId }) {
     }
   }
 
-  function togglePref(type) {
-    const next = { ...prefs, [type]: !prefs[type] };
+  function syncPrefs(next) {
     setPrefs(next);
     if (subscribed && endpointRef.current) {
       fetch("/api/push-prefs", {
@@ -571,6 +589,22 @@ function NotificationsCard({ teamId }) {
         body: JSON.stringify({ teamId, endpoint: endpointRef.current, prefs: next }),
       }).catch(() => {});
     }
+  }
+
+  function togglePref(t) {
+    const cur = readClientPref(prefs, t);
+    const nextVal = t.timing
+      ? { enabled: !cur.enabled, leadMinutes: cur.leadMinutes }
+      : !cur.enabled;
+    syncPrefs({ ...prefs, [t.id]: nextVal });
+  }
+
+  function setLeadMinutes(t, lead) {
+    const cur = readClientPref(prefs, t);
+    syncPrefs({
+      ...prefs,
+      [t.id]: { enabled: cur.enabled, leadMinutes: lead },
+    });
   }
 
   if (!mounted) return null;
@@ -626,18 +660,35 @@ function NotificationsCard({ teamId }) {
       </div>
       {!blocked && (
         <ul className="notif-prefs">
-          {ALERT_TYPE_LABELS.map(([key, label]) => (
-            <li key={key}>
-              <label>
-                <input
-                  type="checkbox"
-                  checked={prefs[key] !== false}
-                  onChange={() => togglePref(key)}
-                />
-                <span>{label}</span>
-              </label>
-            </li>
-          ))}
+          {CLIENT_ALERT_TYPES.map((t) => {
+            const cur = readClientPref(prefs, t);
+            return (
+              <li key={t.id}>
+                <label>
+                  <input
+                    type="checkbox"
+                    checked={cur.enabled}
+                    onChange={() => togglePref(t)}
+                  />
+                  <span>{t.label}</span>
+                </label>
+                {t.timing && cur.enabled && (
+                  <select
+                    className="lead-select"
+                    value={cur.leadMinutes}
+                    onChange={(e) => setLeadMinutes(t, Number(e.target.value))}
+                    aria-label={`${t.label} lead time`}
+                  >
+                    {LEAD_OPTIONS.map((m) => (
+                      <option key={m} value={m}>
+                        {m} min before
+                      </option>
+                    ))}
+                  </select>
+                )}
+              </li>
+            );
+          })}
         </ul>
       )}
     </div>
