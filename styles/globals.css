@@ -665,10 +665,15 @@ button.stat:hover { border-color: var(--accent); }
   margin-right: 4px;
 }
 .arc-dot {
-  width: 10px; height: 10px;
+  width: 12px; height: 12px;
   border-radius: 50%;
   display: inline-block;
+  padding: 0;
+  border: 0;
+  cursor: pointer;
+  transition: transform 0.08s ease;
 }
+.arc-dot:active { transform: scale(0.85); }
 .arc-dot.w { background: var(--win); box-shadow: 0 0 6px rgba(34,197,94,0.5); }
 .arc-dot.l { background: transparent; border: 2px solid var(--loss); }
 
@@ -880,7 +885,13 @@ button.stat:hover { border-color: var(--accent); }
   display: inline-flex;
   align-items: baseline;
   gap: 6px;
+  background: transparent;
+  border: 0;
+  padding: 0;
+  cursor: pointer;
+  transition: transform 0.08s ease;
 }
+.court-hero:active { transform: scale(0.97); }
 .card.upcoming .court-hero { font-size: 64px; }
 .card.past .court-hero, .card.live-card .court-hero { font-size: 22px; }
 .court-hero .court-pin { font-size: 0.32em; opacity: 0.7; }
@@ -1166,6 +1177,51 @@ button.stat:hover { border-color: var(--accent); }
 }
 .press-feedback:active {
   transform: scale(0.97);
+}
+
+/* Lightweight transient toast — auto-dismisses, top of screen, replaces
+   the legacy winToast inline style. */
+.toast {
+  position: fixed;
+  top: max(env(safe-area-inset-top), 12px);
+  left: 0;
+  right: 0;
+  display: grid;
+  place-items: center;
+  z-index: 100;
+  pointer-events: none;
+}
+.toast .toast-pill {
+  background: var(--accent);
+  color: var(--accent-ink);
+  padding: 10px 16px;
+  border-radius: 999px;
+  font-weight: 700;
+  font-family: "Barlow Condensed", sans-serif;
+  font-size: 15px;
+  letter-spacing: 0.04em;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+  max-width: 360px;
+  text-align: center;
+  animation: toast-in 0.2s ease;
+}
+@keyframes toast-in {
+  from { opacity: 0; transform: translateY(-8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* InfoSheet body styles (reuses .sheet skeleton). */
+.sheet .info-line {
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--text);
+  margin-bottom: 6px;
+}
+.sheet .info-line.muted { color: var(--muted); font-size: 13px; }
+.sheet .info-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 14px;
 }
 
 /* "Viewing as" team switcher pill — sits below the chip row. Subtle

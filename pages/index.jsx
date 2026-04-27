@@ -765,23 +765,26 @@ function StaticTournamentCard({ tournament }) {
   );
 }
 
-function SeasonArc({ pastGames }) {
+function SeasonArc({ pastGames, onDotTap }) {
   if (!pastGames || pastGames.length === 0) return null;
   return (
     <div className="season-arc" aria-label="Season results">
       <span className="arc-label">Arc</span>
       {pastGames.map((g) => (
-        <span
+        <button
+          type="button"
           key={g.id}
-          className={`arc-dot ${g.result === "W" ? "w" : g.result === "L" ? "l" : ""}`}
+          className={`arc-dot press-feedback ${g.result === "W" ? "w" : g.result === "L" ? "l" : ""}`}
           title={`${g.result || "?"} vs ${g.opponent}`}
+          aria-label={`${g.result === "W" ? "Win" : "Loss"} vs ${g.opponent}`}
+          onClick={() => onDotTap?.(g.id)}
         />
       ))}
     </div>
   );
 }
 
-function UpcomingTournamentCountdown({ tournament, eventMeta }) {
+function UpcomingTournamentCountdown({ tournament, eventMeta, onTap }) {
   // Server and client both render with daysAway=null first; useEffect fills in
   // after mount to avoid hydration drift.
   const [daysAway, setDaysAway] = useState(null);
@@ -800,7 +803,15 @@ function UpcomingTournamentCountdown({ tournament, eventMeta }) {
   return (
     <section className="upcoming-card">
       <div className="eyebrow">Tournament starts in</div>
-      <div className="countdown-num">{daysAway != null ? daysAway : "—"}</div>
+      <button
+        type="button"
+        className="countdown-num press-feedback"
+        onClick={onTap}
+        style={{ background: "transparent", border: 0, cursor: "pointer", color: "inherit", font: "inherit", padding: 0 }}
+        aria-label="Tournament details"
+      >
+        {daysAway != null ? daysAway : "—"}
+      </button>
       <div className="countdown-unit">{daysAway === 1 ? "day" : "days"}</div>
       {venue?.name && <div className="upcoming-venue">{venue.name}</div>}
       {venue?.address && (
@@ -872,21 +883,20 @@ function mapsHrefFor(query) {
   return `https://maps.google.com/?q=${q}`;
 }
 
-function CourtHero({ court, venue }) {
+function CourtHero({ court, venue, onTap }) {
   const courtLabel = court || "TBD";
-  const mapQuery = venue ? `${courtLabel} · ${venue.name || ""} ${venue.address || ""}`.trim() : courtLabel;
-  const mapHref = mapsHrefFor(mapQuery);
-  if (mapHref) {
-    return (
-      <a className="court-hero" href={mapHref} target="_blank" rel="noreferrer" title="Open in Maps">
-        <span className="court-pin">📍</span>Court {courtLabel}
-      </a>
-    );
-  }
   return (
-    <span className="court-hero">
+    <button
+      type="button"
+      className="court-hero press-feedback"
+      onClick={(e) => {
+        e.stopPropagation();
+        onTap?.(courtLabel, venue);
+      }}
+      aria-label={`Court ${courtLabel} info`}
+    >
       <span className="court-pin">📍</span>Court {courtLabel}
-    </span>
+    </button>
   );
 }
 
@@ -1009,7 +1019,7 @@ function setsCountForRow(sets) {
   return `${us}–${them}`;
 }
 
-function UpcomingGameCard({ game, expanded, onToggle, venue, tz, teamWatchNowLink, opponentInfo, onAddCal, onOpenOpponent }) {
+function UpcomingGameCard({ game, expanded, onToggle, venue, tz, teamWatchNowLink, opponentInfo, onAddCal, onOpenOpponent, onCourtTap }) {
   const watchUrl = game.videoLink || (game.live ? teamWatchNowLink : null);
   const tzLabel = tzShortLabel(tz);
   const localized = game.timeISO
@@ -1025,7 +1035,7 @@ function UpcomingGameCard({ game, expanded, onToggle, venue, tz, teamWatchNowLin
     <article className={cls}>
       <button className="card-summary" onClick={onToggle} aria-expanded={expanded}>
         <div style={{ minWidth: 0 }}>
-          <CourtHero court={game.court} venue={venue} />
+          <CourtHero court={game.court} venue={venue} onTap={onCourtTap} />
           <div className="matchup">
             vs{" "}
             <span
@@ -1090,7 +1100,7 @@ function UpcomingGameCard({ game, expanded, onToggle, venue, tz, teamWatchNowLin
   );
 }
 
-function PastGameCard({ game, expanded, onToggle, venue, tz, opponentInfo, onShare, justWon, onOpenOpponent, teamName }) {
+function PastGameCard({ game, expanded, onToggle, venue, tz, opponentInfo, onShare, justWon, onOpenOpponent, teamName, onCourtTap, onResultBadgeTap }) {
   const tzLabel = tzShortLabel(tz);
   const localized = game.timeISO
     ? `${formatInTz(game.timeISO, tz)}${tzLabel ? ` ${tzLabel}` : ""}`
@@ -1104,7 +1114,7 @@ function PastGameCard({ game, expanded, onToggle, venue, tz, opponentInfo, onSha
     justWon ? "just-won" : "",
   ].filter(Boolean).join(" ");
   return (
-    <article className={cls}>
+    <article className={cls} id={`game-${game.id}`}>
       <button className="card-summary" onClick={onToggle} aria-expanded={expanded}>
         <div className="past-summary-left">
           <div className="score-hero">{setsCount || (game.result === "W" ? "Won" : "Lost")}</div>
@@ -1135,8 +1145,32 @@ function PastGameCard({ game, expanded, onToggle, venue, tz, opponentInfo, onSha
           </div>
         </div>
         <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 6 }}>
-          {game.result === "W" && <span className="badge win">Won</span>}
-          {game.result === "L" && <span className="badge loss">Lost</span>}
+          {game.result === "W" && (
+            <button
+              type="button"
+              className="badge win press-feedback"
+              onClick={(e) => {
+                e.stopPropagation();
+                onResultBadgeTap?.("wins");
+              }}
+              aria-label="Show all wins"
+            >
+              Won
+            </button>
+          )}
+          {game.result === "L" && (
+            <button
+              type="button"
+              className="badge loss press-feedback"
+              onClick={(e) => {
+                e.stopPropagation();
+                onResultBadgeTap?.("losses");
+              }}
+              aria-label="Show all losses"
+            >
+              Lost
+            </button>
+          )}
           <div className="card-chevron">▸</div>
         </div>
       </button>
@@ -1194,6 +1228,64 @@ function PastGameCard({ game, expanded, onToggle, venue, tz, opponentInfo, onSha
         </div>
       )}
     </article>
+  );
+}
+
+function Toast({ text, onClose }) {
+  useEffect(() => {
+    if (!text) return;
+    const id = setTimeout(onClose, 3000);
+    return () => clearTimeout(id);
+  }, [text, onClose]);
+  if (!text) return null;
+  return (
+    <div className="toast" role="status">
+      <div className="toast-pill">{text}</div>
+    </div>
+  );
+}
+
+function InfoSheet({ data, onClose }) {
+  useEffect(() => {
+    if (!data) return;
+    function onKey(e) {
+      if (e.key === "Escape") onClose();
+    }
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [data, onClose]);
+  const open = Boolean(data);
+  const d = data || {};
+  return (
+    <>
+      <div className={`sheet-backdrop${open ? " open" : ""}`} onClick={onClose} aria-hidden={!open} />
+      <aside className={`sheet${open ? " open" : ""}`} role="dialog" aria-hidden={!open}>
+        <div className="sheet-handle" />
+        {d.title && <h3>{d.title}</h3>}
+        {d.subtitle && <div className="sub">{d.subtitle}</div>}
+        {(d.lines || []).map((line, i) => (
+          <div key={i} className={`info-line${line.muted ? " muted" : ""}`}>
+            {line.text}
+          </div>
+        ))}
+        {d.actions && d.actions.length > 0 && (
+          <div className="info-actions">
+            {d.actions.map((a, i) =>
+              a.href ? (
+                <a key={i} className="btn-mini primary" href={a.href} target="_blank" rel="noreferrer">
+                  {a.label}
+                </a>
+              ) : (
+                <button key={i} className="btn-mini" onClick={a.onClick}>
+                  {a.label}
+                </button>
+              )
+            )}
+          </div>
+        )}
+        <button className="sheet-close" onClick={onClose}>{d.closeLabel || "Close"}</button>
+      </aside>
+    </>
   );
 }
 
@@ -1409,6 +1501,59 @@ export default function Home() {
   const [opponentSheet, setOpponentSheet] = useState(null);
   const [teamPickerOpen, setTeamPickerOpen] = useState(false);
   const [statsAccordion, setStatsAccordion] = useState(null); // 'wins' | 'losses' | null
+  const [toast, setToast] = useState(null);
+  const [infoSheet, setInfoSheet] = useState(null);
+
+  function showCourtInfo(court, venue) {
+    if (!court) return;
+    const lines = [];
+    if (venue?.name) lines.push({ text: venue.name });
+    if (venue?.address) lines.push({ text: venue.address, muted: true });
+    if (!venue?.name && !venue?.address) lines.push({ text: "Venue information not available.", muted: true });
+    const mapHref = venue?.address ? mapsHrefFor(`${venue.name || ""} ${venue.address || ""}`.trim()) : null;
+    setInfoSheet({
+      title: `Court ${court}`,
+      lines,
+      actions: mapHref ? [{ label: "📍 Open in Maps", href: mapHref }] : [],
+    });
+  }
+
+  function showProjectedDoneToast() {
+    setToast("Estimated based on scheduled end times. Actual may vary.");
+  }
+
+  function showWorkDutyInfo(w) {
+    if (!w) return;
+    const tz = tournament.venue?.tz;
+    const tzLabel = tzShortLabel(tz);
+    const reportTime = w.timeISO
+      ? `${formatInTz(w.timeISO, tz, { weekday: "short", hour: "numeric", minute: "2-digit" })}${tzLabel ? ` ${tzLabel}` : ""}`
+      : "TBD";
+    setInfoSheet({
+      title: w.role,
+      subtitle: `Court ${w.court}${w.teams ? ` · ${w.teams}` : ""}`,
+      lines: [
+        { text: `Your team is assigned to ${w.role.toLowerCase()} duty.` },
+        { text: `Report by ${reportTime}.`, muted: true },
+      ],
+      closeLabel: "Got it",
+    });
+  }
+
+  function showCountdownInfo() {
+    if (!tournament || !tournamentMeta) return;
+    setInfoSheet({
+      title: tournamentMeta.name || tournament.label,
+      subtitle: tournamentDateRange,
+      lines: [
+        tournamentMeta.location ? { text: `📍 ${tournamentMeta.location}` } : null,
+        tournament.venue?.address ? { text: tournament.venue.address, muted: true } : null,
+      ].filter(Boolean),
+      actions: tournament.venue?.address
+        ? [{ label: "📍 Open in Maps", href: mapsHrefFor(`${tournament.venue.name || ""} ${tournament.venue.address || ""}`) }]
+        : [],
+    });
+  }
   const prevDataRef = useRef(null);
   const prevLiveRef = useRef(null);
   const firstLoadRef = useRef(true);
@@ -1755,7 +1900,13 @@ export default function Home() {
             : null;
           const notStarted = startMs && startMs > Date.now() && !nextEvent && !eventOver;
           if (notStarted) {
-            return <UpcomingTournamentCountdown tournament={tournament} eventMeta={tournamentMeta} />;
+            return (
+              <UpcomingTournamentCountdown
+                tournament={tournament}
+                eventMeta={tournamentMeta}
+                onTap={showCountdownInfo}
+              />
+            );
           }
           return (
             <NextHero
@@ -1815,6 +1966,7 @@ export default function Home() {
                       opponentInfo={standingsById.get(g.opponent)}
                       onAddCal={addCalSingle}
                       onOpenOpponent={openOpponent}
+                      onCourtTap={showCourtInfo}
                     />
                   ))}
                 </div>
@@ -1823,7 +1975,20 @@ export default function Home() {
             {pastGames.length > 0 && (
               <>
                 <div className="section-title">Results ({pastGames.length})</div>
-                <SeasonArc pastGames={pastGames} />
+                <SeasonArc
+                  pastGames={pastGames}
+                  onDotTap={(gid) => {
+                    setExpandedIds((s) => {
+                      const next = new Set(s);
+                      next.add(gid);
+                      return next;
+                    });
+                    if (typeof document !== "undefined") {
+                      const el = document.getElementById(`game-${gid}`);
+                      if (el) el.scrollIntoView({ behavior: "smooth", block: "center" });
+                    }
+                  }}
+                />
                 <PastGamesSummary standings={data?.standings || []} record={record} />
                 <div className="list list-2col">
                   {pastGames.map((g) => (
@@ -1839,6 +2004,11 @@ export default function Home() {
                       onShare={shareGame}
                       justWon={recentWinIds.has(g.id)}
                       onOpenOpponent={openOpponent}
+                      onCourtTap={showCourtInfo}
+                      onResultBadgeTap={(mode) => {
+                        setStatsAccordion(mode);
+                        if (typeof window !== "undefined") window.scrollTo({ top: 0, behavior: "smooth" });
+                      }}
                     />
                   ))}
                 </div>
@@ -1916,7 +2086,20 @@ export default function Home() {
                     ? `${formatInTz(w.timeISO, tz)}${tzLabel ? ` ${tzLabel}` : ""}`
                     : w.time || "TBD";
                   return (
-                    <article key={w.id} className="card">
+                    <article
+                      key={w.id}
+                      className="card press-feedback"
+                      role="button"
+                      tabIndex={0}
+                      onClick={() => showWorkDutyInfo(w)}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter" || e.key === " ") {
+                          e.preventDefault();
+                          showWorkDutyInfo(w);
+                        }
+                      }}
+                      style={{ cursor: "pointer" }}
+                    >
                       <div className="card-row">
                         <div>
                           <div className="opp">{w.role}</div>
@@ -1950,11 +2133,16 @@ export default function Home() {
             )}
           </div>
           {data?.projectedDone && upcomingGames.length > 0 && (
-            <div>
+            <button
+              type="button"
+              className="press-feedback"
+              onClick={showProjectedDoneToast}
+              style={{ background: "transparent", border: 0, cursor: "pointer", color: "inherit", font: "inherit", padding: 0 }}
+            >
               Done ~{formatTimeOfDayInTz(data.projectedDone, tournament.venue?.tz)}
               {tzShortLabel(tournament.venue?.tz) ? ` ${tzShortLabel(tournament.venue?.tz)}` : ""}
               {data?.projectedDoneSource === "scheduled" ? " (scheduled)" : " (est.)"}
-            </div>
+            </button>
           )}
         </footer>
 
@@ -1965,6 +2153,8 @@ export default function Home() {
       </div>
 
       <OpponentSheet data={opponentSheet} onClose={() => setOpponentSheet(null)} />
+      <InfoSheet data={infoSheet} onClose={() => setInfoSheet(null)} />
+      <Toast text={toast} onClose={() => setToast(null)} />
 
       <TeamPickerSheet
         teams={teamPickerOpen ? teamsList : null}
