@@ -1179,6 +1179,139 @@ button.stat:hover { border-color: var(--accent); }
   transform: scale(0.97);
 }
 
+/* Demo / guided tour overlay. The cutout uses the classic
+   box-shadow:0 0 0 9999px trick to dim everything around the
+   highlighted target. */
+.demo-pill {
+  background: transparent;
+  border: 1px solid var(--accent-border);
+  color: var(--accent);
+  padding: 6px 12px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  cursor: pointer;
+  transition: transform 0.08s ease, background 0.15s ease;
+  flex-shrink: 0;
+}
+.demo-pill:hover { background: var(--accent-soft); }
+.demo-pill:active { transform: scale(0.95); }
+
+.tour-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  pointer-events: auto;
+}
+.tour-fullbackdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.72);
+  pointer-events: none;
+  animation: toast-in 0.2s ease;
+}
+.tour-cutout {
+  position: absolute;
+  border-radius: 14px;
+  box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.72);
+  outline: 2px solid var(--accent);
+  outline-offset: 4px;
+  pointer-events: none;
+  transition: top 0.25s ease, left 0.25s ease, width 0.25s ease, height 0.25s ease;
+}
+.tour-bubble {
+  position: absolute;
+  left: 50%;
+  bottom: calc(96px + env(safe-area-inset-bottom));
+  transform: translateX(-50%);
+  background: var(--panel);
+  border: 1px solid var(--accent);
+  border-radius: 16px;
+  padding: 16px 18px;
+  width: calc(100% - 32px);
+  max-width: 360px;
+  color: var(--text);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.5);
+  pointer-events: auto;
+  animation: toast-in 0.2s ease;
+}
+.tour-step-num {
+  font-size: 10px;
+  letter-spacing: 0.16em;
+  color: var(--accent);
+  font-weight: 700;
+  margin-bottom: 6px;
+}
+.tour-title {
+  font-family: "Barlow Condensed", sans-serif;
+  font-weight: 800;
+  font-size: 22px;
+  letter-spacing: 0.02em;
+  margin-bottom: 6px;
+  color: var(--text);
+}
+.tour-body {
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--text);
+  margin-bottom: 14px;
+}
+.tour-controls {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  justify-content: space-between;
+}
+.tour-controls button {
+  background: transparent;
+  border: 1px solid var(--line);
+  color: var(--text);
+  padding: 8px 14px;
+  border-radius: 999px;
+  font-weight: 700;
+  font-size: 13px;
+  cursor: pointer;
+}
+.tour-controls button.primary {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--accent-ink);
+}
+.tour-controls .skip-btn { color: var(--muted); border: 0; }
+
+.tour-nudge {
+  background: var(--accent-soft);
+  border: 1px solid var(--accent-border);
+  color: var(--accent);
+  padding: 8px 12px;
+  border-radius: 10px;
+  margin-bottom: 12px;
+  font-size: 12px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+}
+.tour-nudge button {
+  background: var(--accent);
+  color: var(--accent-ink);
+  border: 0;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 700;
+  cursor: pointer;
+}
+.tour-nudge .dismiss {
+  background: transparent;
+  color: var(--muted);
+  font-size: 18px;
+  width: 24px;
+  height: 24px;
+  padding: 0;
+}
+
 /* Lightweight transient toast — auto-dismisses, top of screen, replaces
    the legacy winToast inline style. */
 .toast {

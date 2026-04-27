@@ -1231,6 +1231,86 @@ function PastGameCard({ game, expanded, onToggle, venue, tz, opponentInfo, onSha
   );
 }
 
+// 12-step guided tour. Each step has an optional CSS selector to highlight
+// (cutout overlay), an optional setupTab to switch into before the step
+// renders, and optional sideEffect (confetti, etc.). When no selector
+// matches, the bubble centers with a full dim backdrop.
+const TOUR_STEPS = [
+  { selector: ".chip-row", title: "Tournaments", body: "Tap any chip to switch tournaments. Past events show final records; future ones show countdowns." },
+  { selector: ".stats", title: "Season record", body: "Tap Wins or Losses to see a game-by-game breakdown." },
+  { selector: ".card.upcoming", setupTab: "schedule", title: "Upcoming game", body: "Court number is the hero — tap it for venue details. Tap the opponent name for head-to-head history." },
+  { title: "Live score banner", body: "When a game is live, this banner appears with real-time scores pulled from AES every 30 seconds." },
+  { sideEffect: "confetti", title: "🎉 Wins!", body: "Win a game and the app celebrates with confetti." },
+  { selector: ".card.past", setupTab: "schedule", title: "Past games", body: "Tap any past game to expand. See set-by-set scores and share the result as an image." },
+  { selector: ".tabs button:nth-child(2)", setupTab: "standings", title: "Standings", body: "Tap any team row to see their record and your head-to-head history. The 208 row pinned at the top opens a season summary." },
+  { selector: ".tabs button:nth-child(3)", setupTab: "work", title: "Work duties", body: "Your team's court assignments. A sticky alert appears when a duty is within 2 hours." },
+  { selector: ".notif-card", setupTab: "schedule", title: "Notifications", body: "Subscribe to push alerts. Each alert type has its own timing — set how early you want the heads-up." },
+  { selector: ".calendar-section", title: "Calendar", body: "Subscribe to the team calendar so every tournament auto-appears in your phone's calendar app." },
+  { title: "Add to Home Screen", body: "Add this app to your home screen for a native app experience — Safari → Share → Add to Home Screen. No App Store required." },
+  { sideEffect: "confetti", title: "You're all set. Go 208! 🏐", body: "" },
+];
+
+function Tour({ step, onNext, onPrev, onSkip, onSetupTab, onConfetti }) {
+  const stepData = TOUR_STEPS[step - 1];
+  const [rect, setRect] = useState(null);
+
+  useEffect(() => {
+    if (!stepData) return;
+    if (stepData.setupTab) onSetupTab?.(stepData.setupTab);
+    if (stepData.sideEffect === "confetti") onConfetti?.();
+    if (!stepData.selector) {
+      setRect(null);
+      return;
+    }
+    const id = setTimeout(() => {
+      const el = document.querySelector(stepData.selector);
+      if (!el) {
+        setRect(null);
+        return;
+      }
+      const r = el.getBoundingClientRect();
+      setRect({ top: r.top, left: r.left, width: r.width, height: r.height });
+      el.scrollIntoView({ behavior: "smooth", block: "center" });
+    }, 300);
+    return () => clearTimeout(id);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [step]);
+
+  if (!stepData) return null;
+  const total = TOUR_STEPS.length;
+  return (
+    <div className="tour-overlay" role="dialog" aria-label={`Tour step ${step} of ${total}`}>
+      {rect ? (
+        <div
+          className="tour-cutout"
+          style={{
+            top: Math.max(rect.top - 6, 6),
+            left: Math.max(rect.left - 6, 6),
+            width: rect.width + 12,
+            height: rect.height + 12,
+          }}
+        />
+      ) : (
+        <div className="tour-fullbackdrop" />
+      )}
+      <div className="tour-bubble">
+        <div className="tour-step-num">Step {step} of {total}</div>
+        <div className="tour-title">{stepData.title}</div>
+        {stepData.body && <div className="tour-body">{stepData.body}</div>}
+        <div className="tour-controls">
+          <button className="skip-btn" onClick={onSkip}>Skip</button>
+          <div style={{ display: "flex", gap: 8 }}>
+            {step > 1 && <button onClick={onPrev}>← Back</button>}
+            <button className="primary" onClick={onNext}>
+              {step === total ? "Done" : "Next →"}
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function Toast({ text, onClose }) {
   useEffect(() => {
     if (!text) return;
@@ -1503,6 +1583,24 @@ export default function Home() {
   const [statsAccordion, setStatsAccordion] = useState(null); // 'wins' | 'losses' | null
   const [toast, setToast] = useState(null);
   const [infoSheet, setInfoSheet] = useState(null);
+  const [tourStep, setTourStep] = useState(0);
+  const [tourSeen, setTourSeen] = usePersistentState("tourSeen", false);
+  const [tourNudgeDismissed, setTourNudgeDismissed] = usePersistentState("tourNudgeDismissed", false);
+
+  function startTour() {
+    setTourStep(1);
+    setTourSeen(true);
+    setTourNudgeDismissed(true);
+  }
+  function nextTourStep() {
+    setTourStep((s) => {
+      if (s >= TOUR_STEPS.length) return 0;
+      return s + 1;
+    });
+  }
+  function prevTourStep() {
+    setTourStep((s) => Math.max(1, s - 1));
+  }
 
   function showCourtInfo(court, venue) {
     if (!court) return;
@@ -1808,6 +1906,9 @@ export default function Home() {
           <span className="tournament-chip" title={tournamentName}>
             {tournament.chipLabel || tournament.label}
           </span>
+          <button className="demo-pill" onClick={startTour} aria-label="Start guided demo">
+            Demo
+          </button>
           <button
             className="icon-only-btn"
             onClick={() => load(true)}
@@ -1818,6 +1919,16 @@ export default function Home() {
             {loading ? "…" : "↻"}
           </button>
         </header>
+
+        {!tourSeen && !tourNudgeDismissed && tourStep === 0 && (
+          <div className="tour-nudge">
+            <span>New here? Take a quick demo tour →</span>
+            <button onClick={startTour}>Start</button>
+            <button className="dismiss" onClick={() => setTourNudgeDismissed(true)} aria-label="Dismiss nudge">
+              ×
+            </button>
+          </div>
+        )}
 
         <div className="chip-row" role="tablist" aria-label="Tournaments">
           {TOURNAMENTS.map((t) => (
@@ -2155,6 +2266,17 @@ export default function Home() {
       <OpponentSheet data={opponentSheet} onClose={() => setOpponentSheet(null)} />
       <InfoSheet data={infoSheet} onClose={() => setInfoSheet(null)} />
       <Toast text={toast} onClose={() => setToast(null)} />
+
+      {tourStep > 0 && (
+        <Tour
+          step={tourStep}
+          onNext={nextTourStep}
+          onPrev={prevTourStep}
+          onSkip={() => setTourStep(0)}
+          onSetupTab={(t) => setTab(t)}
+          onConfetti={() => celebrate(themeId)}
+        />
+      )}
 
       <TeamPickerSheet
         teams={teamPickerOpen ? teamsList : null}
