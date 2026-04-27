@@ -322,6 +322,85 @@ a { color: inherit; }
 .stat.win .value { color: var(--win); }
 .stat.loss .value { color: var(--loss); }
 .stat.pos .value { color: var(--accent); }
+button.stat {
+  cursor: pointer;
+  transition: border-color 0.15s ease, background 0.15s ease, transform 0.08s ease;
+  font: inherit;
+  color: inherit;
+  border: 1px solid var(--line);
+}
+button.stat.active {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+}
+button.stat:hover { border-color: var(--accent); }
+
+/* Inline stats accordion — animates open from the stat bar. Stays in
+   layout flow so the cards below it slide down. */
+.stats-accordion {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  margin: -8px 0 16px;
+  overflow: hidden;
+  animation: stats-accordion-in 0.2s ease;
+}
+@keyframes stats-accordion-in {
+  from { opacity: 0; transform: translateY(-4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.stats-accordion-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 14px 8px;
+  font-family: "Barlow Condensed", sans-serif;
+  font-weight: 800;
+  font-size: 16px;
+  letter-spacing: 0.04em;
+  border-bottom: 1px solid var(--line);
+}
+.stats-accordion.wins .stats-accordion-head { color: var(--win); }
+.stats-accordion.losses .stats-accordion-head { color: var(--loss); }
+.stats-accordion-close {
+  background: transparent;
+  border: 0;
+  color: var(--muted);
+  font-size: 18px;
+  cursor: pointer;
+  width: 28px;
+  height: 28px;
+  border-radius: 999px;
+}
+.stats-accordion-close:hover { color: var(--text); background: var(--panel-2); }
+.stats-accordion-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.stats-accordion-list li {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--line);
+}
+.stats-accordion-list li:last-child { border-bottom: 0; }
+.stats-accordion-list .opp {
+  font-family: "Barlow Condensed", sans-serif;
+  font-weight: 700;
+  font-size: 15px;
+  color: var(--text);
+}
+.stats-accordion-list .row-score {
+  font-family: "Barlow Condensed", sans-serif;
+  font-weight: 900;
+  font-size: 22px;
+  font-variant-numeric: tabular-nums;
+}
+.stats-accordion.wins .row-score { color: var(--win); }
+.stats-accordion.losses .row-score { color: var(--loss); }
 
 .hero {
   background: linear-gradient(135deg, var(--accent-soft), rgba(0,0,0,0));

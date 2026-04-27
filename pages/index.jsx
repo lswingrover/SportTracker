@@ -1197,6 +1197,51 @@ function PastGameCard({ game, expanded, onToggle, venue, tz, opponentInfo, onSha
   );
 }
 
+function StatsAccordion({ mode, games, tz, onClose }) {
+  if (!mode) return null;
+  const filtered = (games || []).filter(
+    (g) => g.done && (mode === "wins" ? g.result === "W" : g.result === "L")
+  );
+  const tzLabel = tzShortLabel(tz);
+  return (
+    <section className={`stats-accordion ${mode}`} aria-live="polite">
+      <div className="stats-accordion-head">
+        <span>{mode === "wins" ? "Wins" : "Losses"} ({filtered.length})</span>
+        <button className="stats-accordion-close" onClick={onClose} aria-label="Close list">
+          ×
+        </button>
+      </div>
+      {filtered.length === 0 ? (
+        <div className="meta" style={{ padding: "10px 14px" }}>
+          No {mode === "wins" ? "wins" : "losses"} yet this tournament.
+        </div>
+      ) : (
+        <ul className="stats-accordion-list">
+          {filtered.map((g) => {
+            const setsLabel = setsCountForRow(g.sets);
+            const dateLabel = g.timeISO
+              ? `${formatInTz(g.timeISO, tz, { weekday: "short", month: "short", day: "numeric" })}${tzLabel ? ` ${tzLabel}` : ""}`
+              : g.time || "—";
+            return (
+              <li key={g.id}>
+                <div>
+                  <div className="opp">vs {g.opponent}</div>
+                  <div className="meta">
+                    {dateLabel} · Court {g.court || "?"}
+                  </div>
+                </div>
+                <div className="row-score">
+                  {setsLabel || (mode === "wins" ? "Won" : "Lost")}
+                </div>
+              </li>
+            );
+          })}
+        </ul>
+      )}
+    </section>
+  );
+}
+
 function TeamPickerSheet({ teams, currentTeamId, onPick, onClose }) {
   const open = teams != null;
   useEffect(() => {
@@ -1363,6 +1408,7 @@ export default function Home() {
   const [dutyDismissed, setDutyDismissed] = useState(false);
   const [opponentSheet, setOpponentSheet] = useState(null);
   const [teamPickerOpen, setTeamPickerOpen] = useState(false);
+  const [statsAccordion, setStatsAccordion] = useState(null); // 'wins' | 'losses' | null
   const prevDataRef = useRef(null);
   const prevLiveRef = useRef(null);
   const firstLoadRef = useRef(true);
@@ -1672,19 +1718,36 @@ export default function Home() {
         )}
 
         <section className="stats">
-          <div className="stat win">
+          <button
+            type="button"
+            className={`stat win press-feedback${statsAccordion === "wins" ? " active" : ""}`}
+            onClick={() => setStatsAccordion((s) => (s === "wins" ? null : "wins"))}
+            aria-expanded={statsAccordion === "wins"}
+          >
             <div className="label">Wins</div>
             <div className="value">{record.wins}</div>
-          </div>
-          <div className="stat loss">
+          </button>
+          <button
+            type="button"
+            className={`stat loss press-feedback${statsAccordion === "losses" ? " active" : ""}`}
+            onClick={() => setStatsAccordion((s) => (s === "losses" ? null : "losses"))}
+            aria-expanded={statsAccordion === "losses"}
+          >
             <div className="label">Losses</div>
             <div className="value">{record.losses}</div>
-          </div>
+          </button>
           <div className="stat pos">
             <div className="label">Pool</div>
             <div className="value">{data?.poolPosition || "—"}</div>
           </div>
         </section>
+
+        <StatsAccordion
+          mode={statsAccordion}
+          games={data?.games || []}
+          tz={tournament.venue?.tz}
+          onClose={() => setStatsAccordion(null)}
+        />
 
         {(() => {
           const startMs = tournamentMeta?.startDate
