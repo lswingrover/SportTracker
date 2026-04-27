@@ -839,6 +839,115 @@ function CourtHero({ court, venue }) {
   );
 }
 
+// Render a 400×200 result graphic to a canvas, then share via the Web
+// Share API (level-2 file sharing) or fall back to a PNG download. Used
+// from past-game cards in the expanded state.
+async function shareGameImage({ game, teamName, tz }) {
+  if (typeof window === "undefined" || typeof document === "undefined") return;
+  const W = 400, H = 200;
+  const canvas = document.createElement("canvas");
+  canvas.width = W;
+  canvas.height = H;
+  const ctx = canvas.getContext("2d");
+  if (!ctx) return;
+
+  // Background
+  const grad = ctx.createLinearGradient(0, 0, W, H);
+  grad.addColorStop(0, "#1E3EBF");
+  grad.addColorStop(1, "#0a1a4a");
+  ctx.fillStyle = grad;
+  ctx.fillRect(0, 0, W, H);
+
+  // Result band — green for win, red for loss
+  ctx.fillStyle = game.result === "W" ? "#22c55e" : "#ef4444";
+  ctx.fillRect(0, 0, 6, H);
+
+  // Team name
+  ctx.fillStyle = "#FFFFFF";
+  ctx.font = '700 18px "Barlow Condensed", system-ui, sans-serif';
+  ctx.textBaseline = "top";
+  ctx.fillText(teamName || "208 U14 Red", 20, 18);
+
+  // vs Opponent
+  ctx.font = '600 14px system-ui, sans-serif';
+  ctx.fillStyle = "rgba(255,255,255,0.85)";
+  ctx.fillText(`vs ${game.opponent || "TBD"}`, 20, 42);
+
+  // Big score (set count) center-left
+  const setCount = setsCountForRow(game.sets);
+  const big = setCount || (game.result === "W" ? "WON" : game.result === "L" ? "LOST" : "");
+  ctx.fillStyle = "#FFFFFF";
+  ctx.font = '900 72px "Barlow Condensed", system-ui, sans-serif';
+  ctx.textBaseline = "middle";
+  ctx.fillText(big, 20, H / 2 + 18);
+
+  // Per-set scores (small, top-right column)
+  if (Array.isArray(game.sets) && game.sets.length > 0) {
+    ctx.fillStyle = "rgba(255,255,255,0.92)";
+    ctx.font = '700 14px "Barlow Condensed", system-ui, sans-serif';
+    ctx.textBaseline = "top";
+    ctx.textAlign = "right";
+    let y = 18;
+    for (let i = 0; i < game.sets.length; i++) {
+      const s = game.sets[i];
+      ctx.fillText(`Set ${i + 1}: ${s.us}–${s.them}`, W - 18, y);
+      y += 18;
+    }
+    ctx.textAlign = "left";
+  }
+
+  // Date (bottom-left, subtle)
+  if (game.timeISO) {
+    ctx.fillStyle = "rgba(255,255,255,0.65)";
+    ctx.font = '500 11px system-ui, sans-serif';
+    ctx.textBaseline = "bottom";
+    const date = formatInTz(game.timeISO, tz, { weekday: undefined, month: "short", day: "numeric", year: "numeric", hour: undefined, minute: undefined });
+    ctx.fillText(date, 20, H - 16);
+  }
+
+  // Watermark (bottom-right)
+  ctx.fillStyle = "rgba(255,255,255,0.6)";
+  ctx.font = '600 10px system-ui, sans-serif';
+  ctx.textAlign = "right";
+  ctx.textBaseline = "bottom";
+  ctx.fillText("208tracker.vercel.app", W - 18, H - 16);
+  ctx.textAlign = "left";
+
+  // Convert to blob → File and share / download
+  const blob = await new Promise((resolve) => canvas.toBlob(resolve, "image/png"));
+  if (!blob) return;
+  const filename = `208-${(game.opponent || "result").replace(/\s+/g, "_")}.png`;
+  const file = new File([blob], filename, { type: "image/png" });
+
+  const canFileShare =
+    typeof navigator !== "undefined" &&
+    typeof navigator.share === "function" &&
+    typeof navigator.canShare === "function" &&
+    navigator.canShare({ files: [file] });
+
+  if (canFileShare) {
+    try {
+      await navigator.share({
+        files: [file],
+        title: `${teamName} ${game.result === "W" ? "win" : "result"}`,
+      });
+      return;
+    } catch {
+      /* user cancelled; fall through to download */
+    }
+  }
+
+  // Fallback: trigger a PNG download.
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+}
+
 function setsCountForRow(sets) {
   if (!Array.isArray(sets) || !sets.length) return null;
   let us = 0, them = 0;
@@ -930,7 +1039,7 @@ function UpcomingGameCard({ game, expanded, onToggle, venue, tz, teamWatchNowLin
   );
 }
 
-function PastGameCard({ game, expanded, onToggle, venue, tz, opponentInfo, onShare, justWon, onOpenOpponent }) {
+function PastGameCard({ game, expanded, onToggle, venue, tz, opponentInfo, onShare, justWon, onOpenOpponent, teamName }) {
   const tzLabel = tzShortLabel(tz);
   const localized = game.timeISO
     ? `${formatInTz(game.timeISO, tz)}${tzLabel ? ` ${tzLabel}` : ""}`
@@ -1019,7 +1128,15 @@ function PastGameCard({ game, expanded, onToggle, venue, tz, opponentInfo, onSha
           <div className="card-actions">
             {game.result && (
               <button className="btn-mini" onClick={() => onShare(game)}>
-                📣 Share result
+                📣 Share text
+              </button>
+            )}
+            {game.result && (
+              <button
+                className="btn-mini primary"
+                onClick={() => shareGameImage({ game, teamName, tz })}
+              >
+                🖼 Share image
               </button>
             )}
           </div>
@@ -1496,6 +1613,7 @@ export default function Home() {
                       onToggle={() => toggleExpanded(g.id)}
                       venue={tournament.venue}
                       tz={tournament.venue?.tz}
+                      teamName={teamName}
                       opponentInfo={standingsById.get(g.opponent)}
                       onShare={shareGame}
                       justWon={recentWinIds.has(g.id)}
