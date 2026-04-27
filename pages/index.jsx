@@ -391,6 +391,8 @@ const ALERT_TYPE_LABELS = [
   ["final-result", "Final results (Won / Lost)"],
   ["schedule-change", "Schedule / court changes"],
   ["bracket-advance", "Bracket advancement"],
+  ["work-soon-30", "Work duty in 30 min"],
+  ["work-soon-10", "Work duty in 10 min"],
 ];
 
 function defaultClientPrefs() {
