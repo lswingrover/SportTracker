@@ -193,6 +193,11 @@ function normalizeMatch(m, { done }) {
   }
 
   const live = !done ? detectLive(m, opponent) : null;
+  const videoLink =
+    pickFirst(m?.CourtInfo || {}, ["VideoLink"]) ||
+    pickFirst(m?.Court || {}, ["VideoLink"]) ||
+    pickFirst(m, ["VideoLink", "WatchNowLink", "ScheduledVideoLink"]) ||
+    null;
 
   return {
     id: pickFirst(m, ["MatchId", "Id", "ScheduleId"]) || `${start || "x"}-${opponent}`,
@@ -202,6 +207,7 @@ function normalizeMatch(m, { done }) {
     sets,
     court,
     opponent,
+    videoLink,
     time: iso ? formatLocalTime(iso) : null,
     timeISO: iso,
     timeMs: ms,
@@ -366,11 +372,14 @@ function buildResponse({ eventMeta, team, current, future, work, standings, next
       }
     : null;
 
+  const teamWatchNowLink = team?.WatchNowLink || null;
+
   return {
     teamName: team?.TeamName || ctx.teamName,
     teamId: ctx.teamId,
     eventId: ctx.eventId,
     divisionId: ctx.divisionId,
+    teamWatchNowLink,
     event,
     record,
     poolPosition,
@@ -383,6 +392,7 @@ function buildResponse({ eventMeta, team, current, future, work, standings, next
           time: liveGame.time,
           timeISO: liveGame.timeISO,
           gameId: liveGame.id,
+          videoLink: liveGame.videoLink || null,
         }
       : null,
     projectedDone,

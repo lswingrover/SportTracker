@@ -170,7 +170,7 @@ async function celebrate(themeId) {
   }
 }
 
-function LiveScoreBanner({ live, lastChangedAt }) {
+function LiveScoreBanner({ live, lastChangedAt, watchUrl }) {
   const [tick, setTick] = useState(0);
   useEffect(() => {
     const id = setInterval(() => setTick((t) => t + 1), 1000);
@@ -220,6 +220,13 @@ function LiveScoreBanner({ live, lastChangedAt }) {
       {stale && (
         <div className="meta" style={{ marginTop: 6, color: "var(--warn)" }}>
           ⏸ May be between sets — score hasn't moved in {Math.round(idleMs / 60000)} min
+        </div>
+      )}
+      {watchUrl && (
+        <div style={{ marginTop: 10 }}>
+          <a className="btn-mini primary" href={watchUrl} target="_blank" rel="noreferrer">
+            📺 Watch this court live
+          </a>
         </div>
       )}
     </section>
@@ -399,7 +406,8 @@ function CalendarCard({ origin, eventId, divId, teamId, teamName, gameCount }) {
   );
 }
 
-function GameCard({ game, opponentInfo, teamName, onShare, onAddCal, justWon }) {
+function GameCard({ game, opponentInfo, teamName, onShare, onAddCal, justWon, teamWatchNowLink }) {
+  const watchUrl = game.videoLink || (game.live ? teamWatchNowLink : null);
   const cls = [
     "card",
     game.next ? "next" : "",
@@ -441,6 +449,11 @@ function GameCard({ game, opponentInfo, teamName, onShare, onAddCal, justWon }) 
           <button className="btn-mini" onClick={() => onAddCal(game)}>
             📅 Add to calendar
           </button>
+        )}
+        {watchUrl && (
+          <a className="btn-mini primary" href={watchUrl} target="_blank" rel="noreferrer">
+            📺 Watch live
+          </a>
         )}
         {game.done && game.result && (
           <button className="btn-mini" onClick={() => onShare(game)}>
@@ -707,7 +720,11 @@ export default function Home() {
         </div>
 
         {data?.liveGame && (
-          <LiveScoreBanner live={data.liveGame} lastChangedAt={lastLiveChange} />
+          <LiveScoreBanner
+            live={data.liveGame}
+            lastChangedAt={lastLiveChange}
+            watchUrl={data.liveGame?.videoLink || data.teamWatchNowLink || null}
+          />
         )}
 
         <section className="stats">
@@ -770,6 +787,7 @@ export default function Home() {
                       key={g.id}
                       game={g}
                       teamName={teamName}
+                      teamWatchNowLink={data?.teamWatchNowLink}
                       opponentInfo={standingsById.get(g.opponent)}
                       onShare={shareGame}
                       onAddCal={addCalSingle}
@@ -788,6 +806,7 @@ export default function Home() {
                       key={g.id}
                       game={g}
                       teamName={teamName}
+                      teamWatchNowLink={data?.teamWatchNowLink}
                       opponentInfo={standingsById.get(g.opponent)}
                       onShare={shareGame}
                       onAddCal={addCalSingle}
