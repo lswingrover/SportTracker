@@ -226,8 +226,16 @@ function LiveScoreBanner({ live, lastChangedAt }) {
   );
 }
 
-function NextHero({ event, minutesUntil, projectedDone }) {
+function NextHero({ event, minutesUntil, projectedDone, eventOver }) {
   if (!event) {
+    if (eventOver) {
+      return (
+        <section className="hero empty">
+          <h2>🏁 Tournament complete</h2>
+          <div className="meta">All matches finished. See past games and final standings below.</div>
+        </section>
+      );
+    }
     return (
       <section className="hero empty">
         <h2>No upcoming match</h2>
@@ -570,6 +578,20 @@ export default function Home() {
   const nextEvent = data?.nextEvent || null;
   const minutesUntil = useCountdown(nextEvent?.timeISO);
 
+  const tournamentMeta = data?.event || null;
+  const tournamentName = tournamentMeta?.name || tournament.label;
+  const tournamentLocation = tournamentMeta?.location || tournament.venue?.name || null;
+  const tournamentDateRange = useMemo(() => {
+    if (!tournamentMeta?.startDate) return tournament.date;
+    const opts = { month: "short", day: "numeric" };
+    const s = new Date(tournamentMeta.startDate).toLocaleDateString("en-US", opts);
+    const e = tournamentMeta.endDate
+      ? new Date(tournamentMeta.endDate).toLocaleDateString("en-US", opts)
+      : null;
+    return e && e !== s ? `${s}–${e}` : s;
+  }, [tournamentMeta, tournament.date]);
+  const eventOver = tournamentMeta?.isOver === true;
+
   function shareGame(g) {
     const text = g.result === "W"
       ? `${teamName} def. ${g.opponent}${g.score ? ` ${g.score}` : ""} 🏐`
@@ -622,7 +644,10 @@ export default function Home() {
             <div style={{ minWidth: 0 }}>
               <div className="name">{teamName}</div>
               <div className="sub">
-                {tournament.label}
+                {tournamentName}
+                {tournamentLocation ? ` · ${tournamentLocation}` : ""}
+                {tournamentDateRange ? ` · ${tournamentDateRange}` : ""}
+                {eventOver ? " · 🏁 Final" : ""}
                 {data?.cached ? " · cached" : ""}
               </div>
             </div>
@@ -700,7 +725,12 @@ export default function Home() {
           </div>
         </section>
 
-        <NextHero event={nextEvent} minutesUntil={minutesUntil} projectedDone={data?.projectedDone} />
+        <NextHero
+          event={nextEvent}
+          minutesUntil={minutesUntil}
+          projectedDone={data?.projectedDone}
+          eventOver={eventOver}
+        />
 
         <NotificationsCard upcoming={upcomingGames} />
 

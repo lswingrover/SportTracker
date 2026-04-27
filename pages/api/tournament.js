@@ -1,3 +1,10 @@
+// Deferred for v3 (intentionally not implemented yet):
+//   - Pool standings tab: render `/division/{div}/pools` so we can show
+//     "Pool 3, 4th of 4" pool breakdown next to the overall standings.
+//   - Venue directions + contact info: use event metadata location field
+//     to render a venue card with Apple Maps + Google Maps deep links and
+//     any contact info AES exposes.
+
 const AES_BASE = "https://results.advancedeventsystems.com";
 
 const DEFAULT_EVENT_ID = process.env.EVENT_ID || "PTAwMDAwNDI2MDU90";
@@ -265,7 +272,7 @@ function recordFromStandings(standings) {
   return { wins: us.matchesWon, losses: us.matchesLost };
 }
 
-function buildResponse({ team, current, future, work, standings, nextAssignments, remoteTimestamp, ctx }) {
+function buildResponse({ eventMeta, team, current, future, work, standings, nextAssignments, remoteTimestamp, ctx }) {
   const playedRaw = Array.isArray(current) ? current : [];
   const upcomingRaw = Array.isArray(future) ? future : [];
 
@@ -348,11 +355,23 @@ function buildResponse({ team, current, future, work, standings, nextAssignments
 
   for (const w of workAssignments) delete w.timeMs;
 
+  const event = eventMeta
+    ? {
+        id: eventMeta.Key || ctx.eventId,
+        name: eventMeta.Name || null,
+        location: (eventMeta.Location || "").trim() || null,
+        startDate: eventMeta.StartDate || null,
+        endDate: eventMeta.EndDate || null,
+        isOver: eventMeta.IsOver === true,
+      }
+    : null;
+
   return {
     teamName: team?.TeamName || ctx.teamName,
     teamId: ctx.teamId,
     eventId: ctx.eventId,
     divisionId: ctx.divisionId,
+    event,
     record,
     poolPosition,
     nextGame,
@@ -381,6 +400,7 @@ function buildResponse({ team, current, future, work, standings, nextAssignments
 async function loadFresh(ctx) {
   const { eventId, divisionId, teamId } = ctx;
   const urls = {
+    event: `${AES_BASE}/api/event/${eventId}`,
     team: `${AES_BASE}/api/event/${eventId}/teams/${teamId}`,
     current: `${AES_BASE}/api/event/${eventId}/division/${divisionId}/team/${teamId}/schedule/current`,
     future: `${AES_BASE}/api/event/${eventId}/division/${divisionId}/team/${teamId}/schedule/future`,
@@ -389,7 +409,8 @@ async function loadFresh(ctx) {
     nextAssignments: `${AES_BASE}/odata/${eventId}/nextassignments(dId=${divisionId},cId=null,tIds=[])`,
     timestamp: `${AES_BASE}/api/event/${eventId}/timestamp`,
   };
-  const [team, current, future, work, standings, nextAssignments, timestamp] = await Promise.all([
+  const [eventMeta, team, current, future, work, standings, nextAssignments, timestamp] = await Promise.all([
+    fetchJson(urls.event).catch(() => null),
     fetchJson(urls.team).catch(() => null),
     fetchJson(urls.current).catch(() => []),
     fetchJson(urls.future).catch(() => []),
@@ -400,6 +421,7 @@ async function loadFresh(ctx) {
   ]);
   const remoteTimestamp = timestamp?.LastUpdatedTimestamp || null;
   const payload = buildResponse({
+    eventMeta,
     team,
     current,
     future,
