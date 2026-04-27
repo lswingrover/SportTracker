@@ -18,14 +18,14 @@
 
 [data-theme="208"] {
   --bg: #000000;
-  --panel: #0a0a0d;
-  --panel-2: #14141a;
-  --line: #25252e;
+  --panel: #111111;
+  --panel-2: #1a1a1a;
+  --line: #222222;
   --text: #ffffff;
   --muted: #a8acb6;
   --accent: #1E3EBF;
   --accent-ink: #ffffff;
-  --accent-soft: rgba(30, 62, 191, 0.2);
+  --accent-soft: rgba(30, 62, 191, 0.22);
   --accent-border: rgba(30, 62, 191, 0.6);
   --celebrate: #FF69B4;
 }
@@ -55,7 +55,9 @@ a { color: inherit; }
 .app {
   max-width: 720px;
   margin: 0 auto;
-  padding: 16px 16px 96px;
+  /* Extra bottom padding so the fixed bottom nav (with safe-area) doesn't
+     cover the footer. ~76px nav + ~30px ios safe area + breathing room. */
+  padding: 16px 16px calc(120px + env(safe-area-inset-bottom));
 }
 
 .topbar {
@@ -140,13 +142,47 @@ a { color: inherit; }
 .selector select option { background: var(--panel); color: var(--text); }
 
 .live-banner {
-  background: linear-gradient(135deg, rgba(239, 68, 68, 0.25), rgba(239, 68, 68, 0.08));
+  background: linear-gradient(135deg, rgba(239, 68, 68, 0.28), rgba(239, 68, 68, 0.08));
   border: 2px solid var(--live);
   border-radius: 18px;
-  padding: 16px;
+  padding: 18px;
   margin-bottom: 16px;
   position: relative;
   animation: live-pulse 1.6s ease-in-out infinite;
+}
+.live-banner .stacked-sets {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-top: 12px;
+  background: rgba(0,0,0,0.35);
+  border-radius: 10px;
+  padding: 10px 12px;
+  font-family: "Barlow Condensed", sans-serif;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+.live-banner .stacked-sets .set-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  font-size: 16px;
+}
+.live-banner .stacked-sets .set-row.deciding { color: var(--accent); }
+.live-banner .stacked-sets .set-row.in-progress {
+  color: var(--live);
+  font-size: 18px;
+}
+.live-banner .stacked-sets .set-row .label {
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  font-size: 11px;
+  color: var(--muted);
+  font-weight: 600;
+}
+.live-banner .stacked-sets .set-row.deciding .label,
+.live-banner .stacked-sets .set-row.in-progress .label {
+  color: inherit;
 }
 @keyframes live-pulse {
   0%, 100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.5); }
@@ -331,30 +367,48 @@ a { color: inherit; }
 .notif-card .state.on { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
 .notif-card .state.blocked { background: rgba(239,68,68,0.15); color: var(--loss); border-color: rgba(239,68,68,0.4); }
 
+/* Bottom-pinned tab navigation — mobile sports-app pattern. Sits above
+   the iOS safe area, extra height for thumb taps. */
 .tabs {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
   display: flex;
-  gap: 6px;
   background: var(--panel);
-  padding: 4px;
-  border-radius: 12px;
-  border: 1px solid var(--line);
-  margin-bottom: 14px;
+  border-top: 1px solid var(--line);
+  padding: 4px 4px calc(4px + env(safe-area-inset-bottom));
+  z-index: 30;
+  box-shadow: 0 -8px 24px rgba(0, 0, 0, 0.5);
 }
 .tabs button {
   flex: 1;
   background: transparent;
   border: 0;
   color: var(--muted);
-  padding: 10px 8px;
-  border-radius: 8px;
+  padding: 8px 4px 6px;
+  min-height: 56px;
+  border-radius: 10px;
   font-weight: 700;
-  font-size: 13px;
+  font-size: 11px;
   text-transform: uppercase;
   letter-spacing: 0.08em;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  transition: color 0.15s ease, background 0.15s ease;
+}
+.tabs button .icon {
+  font-size: 20px;
+  line-height: 1;
 }
 .tabs button.active {
-  background: var(--accent);
-  color: var(--accent-ink);
+  color: var(--accent);
+}
+.tabs button.active .icon {
+  filter: drop-shadow(0 0 6px var(--accent-soft));
 }
 
 .section-title {
@@ -410,6 +464,101 @@ a { color: inherit; }
   font-size: 13px;
   line-height: 1.5;
 }
+
+/* Season arc — compact W/L dot row above the schedule list. */
+.season-arc {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin-bottom: 12px;
+  padding: 8px 12px;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+}
+.season-arc .arc-label {
+  font-size: 10px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-right: 4px;
+}
+.arc-dot {
+  width: 10px; height: 10px;
+  border-radius: 50%;
+  display: inline-block;
+}
+.arc-dot.w { background: var(--win); box-shadow: 0 0 6px rgba(34,197,94,0.5); }
+.arc-dot.l { background: transparent; border: 2px solid var(--loss); }
+
+/* Upcoming-tournament countdown card — empty-state for tournaments
+   that haven't started yet. */
+.upcoming-card {
+  background: linear-gradient(135deg, var(--accent-soft), rgba(0,0,0,0));
+  border: 1px solid var(--accent-border);
+  border-radius: 18px;
+  padding: 22px;
+  margin-bottom: 16px;
+  text-align: center;
+}
+.upcoming-card .eyebrow {
+  font-size: 11px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--accent);
+}
+.upcoming-card .countdown-num {
+  font-family: "Barlow Condensed", sans-serif;
+  font-weight: 900;
+  font-size: 64px;
+  line-height: 1;
+  margin: 8px 0 4px;
+  color: var(--text);
+}
+.upcoming-card .countdown-unit {
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  color: var(--muted);
+  font-size: 12px;
+}
+.upcoming-card .upcoming-venue {
+  margin-top: 14px;
+  font-family: "Barlow Condensed", sans-serif;
+  font-weight: 700;
+  font-size: 18px;
+  color: var(--text);
+}
+.upcoming-card .upcoming-meta {
+  margin-top: 4px;
+  color: var(--muted);
+  font-size: 13px;
+}
+.upcoming-card .upcoming-meta a { color: var(--accent); text-decoration: none; }
+
+/* Work-duty urgency banner — sticky at top when work duty starts within
+   60 minutes. */
+.work-urgent {
+  background: linear-gradient(90deg, rgba(250, 204, 21, 0.2), rgba(239, 68, 68, 0.18));
+  border: 2px solid var(--warn);
+  border-radius: 14px;
+  padding: 12px 14px;
+  margin-bottom: 14px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  animation: live-pulse 1.6s ease-in-out infinite;
+}
+.work-urgent .icon { font-size: 24px; }
+.work-urgent .role {
+  font-family: "Barlow Condensed", sans-serif;
+  font-weight: 800;
+  font-size: 18px;
+  color: var(--warn);
+  letter-spacing: 0.04em;
+  line-height: 1.1;
+}
+.work-urgent .meta { color: var(--text); font-size: 13px; margin-top: 2px; }
 
 .record-summary {
   background: var(--accent-soft);
@@ -475,21 +624,45 @@ a { color: inherit; }
 .card {
   background: var(--panel);
   border: 1px solid var(--line);
+  border-left-width: 4px;
+  border-left-color: var(--accent);
   border-radius: 14px;
   padding: 14px;
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 8px;
 }
 .card.next {
-  border-color: var(--accent);
   box-shadow: 0 0 0 1px var(--accent-soft);
 }
-.card.win { border-left: 4px solid var(--win); }
-.card.loss { border-left: 4px solid var(--loss); }
-/* Past games stay full-opacity; the W/L color stripe and badge carry the
-   "completed" signal without dimming the result text the parents want to see. */
-.card.live-card { border-color: var(--live); box-shadow: 0 0 0 1px rgba(239,68,68,0.25); }
+.card.win { border-left-color: var(--win); }
+.card.loss { border-left-color: var(--loss); }
+/* Past games stay full-opacity; the W/L stripe + badge carry the signal. */
+.card.live-card {
+  border-left-color: var(--live);
+  border-left-width: 5px;
+  animation: live-card-pulse 1.4s ease-in-out infinite;
+}
+@keyframes live-card-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.45); }
+  50% { box-shadow: 0 0 0 6px rgba(239, 68, 68, 0); }
+}
+
+/* Court number is the loudest element on each card. */
+.court-hero {
+  font-family: "Barlow Condensed", sans-serif;
+  font-weight: 900;
+  font-size: 26px;
+  line-height: 1;
+  color: var(--accent);
+  letter-spacing: 0.02em;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: baseline;
+  gap: 6px;
+}
+.court-hero .court-pin { font-size: 14px; opacity: 0.7; }
+.court-hero:hover { text-decoration: underline; text-underline-offset: 4px; }
 .card.just-won {
   animation: win-glow 1.6s ease-in-out 6;
   border-color: var(--accent);
@@ -508,13 +681,17 @@ a { color: inherit; }
 .card .opp {
   font-family: "Barlow Condensed", sans-serif;
   font-weight: 800;
-  font-size: 20px;
+  font-size: 18px;
+  color: var(--text);
 }
 .card .meta { color: var(--muted); font-size: 13px; }
 .card .sets {
+  font-family: "Barlow Condensed", sans-serif;
+  font-weight: 700;
   color: var(--text);
-  font-size: 13px;
+  font-size: 16px;
   font-variant-numeric: tabular-nums;
+  letter-spacing: 0.02em;
 }
 
 .badge {

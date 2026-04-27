@@ -295,14 +295,26 @@ function LiveScoreBanner({ live, lastChangedAt, watchUrl }) {
           Set {live.setNumber}
         </span>
       </div>
-      {sets.length > 1 && (
-        <div className="meta" style={{ marginTop: 8 }}>
-          {sets.map((s, i) => (
-            <span key={i} style={{ marginRight: 10 }}>
-              Set {i + 1}{s.deciding ? " (deciding)" : ""}: {s.us}-{s.them}{" "}
-              {s.complete ? "✓" : i === sets.length - 1 ? "🔴" : ""}
-            </span>
-          ))}
+      {sets.length > 0 && (
+        <div className="stacked-sets">
+          {sets.map((s, i) => {
+            const inProgress = i === sets.length - 1 && !s.complete;
+            const cls = ["set-row", s.deciding ? "deciding" : "", inProgress ? "in-progress" : ""]
+              .filter(Boolean)
+              .join(" ");
+            return (
+              <div className={cls} key={i}>
+                <span className="label">
+                  Set {i + 1}
+                  {s.deciding ? " · Deciding" : ""}
+                  {inProgress ? " · ● Live" : s.complete ? " ✓" : ""}
+                </span>
+                <span>
+                  {s.us} – {s.them}
+                </span>
+              </div>
+            );
+          })}
         </div>
       )}
       {stale && (
@@ -533,6 +545,85 @@ function StaticTournamentCard({ tournament }) {
   );
 }
 
+function SeasonArc({ pastGames }) {
+  if (!pastGames || pastGames.length === 0) return null;
+  return (
+    <div className="season-arc" aria-label="Season results">
+      <span className="arc-label">Arc</span>
+      {pastGames.map((g) => (
+        <span
+          key={g.id}
+          className={`arc-dot ${g.result === "W" ? "w" : g.result === "L" ? "l" : ""}`}
+          title={`${g.result || "?"} vs ${g.opponent}`}
+        />
+      ))}
+    </div>
+  );
+}
+
+function UpcomingTournamentCountdown({ tournament, eventMeta }) {
+  // Server and client both render with daysAway=null first; useEffect fills in
+  // after mount to avoid hydration drift.
+  const [daysAway, setDaysAway] = useState(null);
+  useEffect(() => {
+    const startISO = eventMeta?.startDate || null;
+    if (!startISO) return;
+    const ms = new Date(startISO).getTime() - Date.now();
+    setDaysAway(Math.max(0, Math.ceil(ms / (24 * 60 * 60 * 1000))));
+  }, [eventMeta?.startDate]);
+
+  const venue = tournament?.venue;
+  const mapHref = venue?.address
+    ? mapsHrefFor(`${venue.name || ""} ${venue.address}`.trim())
+    : null;
+
+  return (
+    <section className="upcoming-card">
+      <div className="eyebrow">Tournament starts in</div>
+      <div className="countdown-num">{daysAway != null ? daysAway : "—"}</div>
+      <div className="countdown-unit">{daysAway === 1 ? "day" : "days"}</div>
+      {venue?.name && <div className="upcoming-venue">{venue.name}</div>}
+      {venue?.address && (
+        <div className="upcoming-meta">
+          {mapHref ? (
+            <a href={mapHref} target="_blank" rel="noreferrer">
+              📍 {venue.address}
+            </a>
+          ) : (
+            <>📍 {venue.address}</>
+          )}
+        </div>
+      )}
+    </section>
+  );
+}
+
+function WorkUrgencyBanner({ workAssignments }) {
+  const [now, setNow] = useState(null);
+  useEffect(() => {
+    setNow(Date.now());
+    const id = setInterval(() => setNow(Date.now()), 30 * 1000);
+    return () => clearInterval(id);
+  }, []);
+  if (now == null) return null;
+  const next = (workAssignments || [])
+    .filter((w) => w.timeISO)
+    .map((w) => ({ ...w, ms: new Date(w.timeISO).getTime() }))
+    .filter((w) => w.ms > now && w.ms - now < 60 * 60 * 1000)
+    .sort((a, b) => a.ms - b.ms)[0];
+  if (!next) return null;
+  const minsAway = Math.max(1, Math.round((next.ms - now) / 60000));
+  return (
+    <div className="work-urgent" role="status">
+      <span className="icon">🟡</span>
+      <div style={{ minWidth: 0 }}>
+        <div className="role">⚠️ Work duty in {minsAway} min — {next.role}</div>
+        <div className="meta">Court {next.court}{next.teams ? ` · ${next.teams}` : ""}</div>
+      </div>
+    </div>
+  );
+}
+
 function PastGamesSummary({ standings, record }) {
   const us = standings.find((s) => s.isUs);
   const setsWon = us?.setsWon ?? null;
@@ -550,7 +641,18 @@ function PastGamesSummary({ standings, record }) {
   );
 }
 
-function GameCard({ game, opponentInfo, teamName, onShare, onAddCal, justWon, teamWatchNowLink }) {
+function mapsHrefFor(query) {
+  if (!query) return null;
+  const q = encodeURIComponent(query);
+  if (typeof navigator !== "undefined") {
+    const ua = navigator.userAgent || "";
+    const isApple = /iPhone|iPad|iPod|Macintosh/.test(ua);
+    if (isApple) return `https://maps.apple.com/?q=${q}`;
+  }
+  return `https://maps.google.com/?q=${q}`;
+}
+
+function GameCard({ game, opponentInfo, teamName, onShare, onAddCal, justWon, teamWatchNowLink, venue }) {
   const watchUrl = game.videoLink || (game.live ? teamWatchNowLink : null);
   const cls = [
     "card",
@@ -564,23 +666,32 @@ function GameCard({ game, opponentInfo, teamName, onShare, onAddCal, justWon, te
     .filter(Boolean)
     .join(" ");
 
+  const courtLabel = game.court || "TBD";
+  const mapQuery = venue ? `${courtLabel} · ${venue.name || ""} ${venue.address || ""}`.trim() : courtLabel;
+  const mapHref = mapsHrefFor(mapQuery);
+
   return (
     <article className={cls}>
       <div className="card-row">
         <div style={{ minWidth: 0 }}>
-          <div className="opp">vs {game.opponent}</div>
-          <div className="meta">
-            {game.time || "TBD"} · Court {game.court}
-          </div>
+          {mapHref ? (
+            <a className="court-hero" href={mapHref} target="_blank" rel="noreferrer" title="Open in Maps">
+              <span className="court-pin">📍</span>Ct {courtLabel}
+            </a>
+          ) : (
+            <span className="court-hero">Ct {courtLabel}</span>
+          )}
+          <div className="opp" style={{ marginTop: 4 }}>vs {game.opponent}</div>
+          <div className="meta">{game.time || "TBD"}</div>
           {opponentInfo && (
             <div className="meta">
-              Opp record {opponentInfo.matchesWon}-{opponentInfo.matchesLost}
+              Opp {opponentInfo.matchesWon}-{opponentInfo.matchesLost}
               {opponentInfo.rank ? ` · #${opponentInfo.rank} in pool` : ""}
             </div>
           )}
         </div>
         <div style={{ display: "flex", gap: 6, flexWrap: "wrap", justifyContent: "flex-end" }}>
-          {game.live && <span className="badge live">Live</span>}
+          {game.live && <span className="badge live">● Live</span>}
           {game.result === "W" && <span className="badge win">Won</span>}
           {game.result === "L" && <span className="badge loss">Lost</span>}
           {!game.done && game.next && !game.live && <span className="badge next">Next</span>}
@@ -902,6 +1013,8 @@ export default function Home() {
           </div>
         </div>
 
+        {!tournament.static && <WorkUrgencyBanner workAssignments={work} />}
+
         {tournament.static ? (
           <StaticTournamentCard tournament={tournament} />
         ) : (
@@ -929,12 +1042,23 @@ export default function Home() {
           </div>
         </section>
 
-        <NextHero
-          event={nextEvent}
-          minutesUntil={minutesUntil}
-          projectedDone={data?.projectedDone}
-          eventOver={eventOver}
-        />
+        {(() => {
+          const startMs = tournamentMeta?.startDate
+            ? new Date(tournamentMeta.startDate).getTime()
+            : null;
+          const notStarted = startMs && startMs > Date.now() && !nextEvent && !eventOver;
+          if (notStarted) {
+            return <UpcomingTournamentCountdown tournament={tournament} eventMeta={tournamentMeta} />;
+          }
+          return (
+            <NextHero
+              event={nextEvent}
+              minutesUntil={minutesUntil}
+              projectedDone={data?.projectedDone}
+              eventOver={eventOver}
+            />
+          );
+        })()}
 
         <NotificationsCard upcoming={upcomingGames} />
 
@@ -949,16 +1073,18 @@ export default function Home() {
 
         <nav className="tabs">
           {[
-            ["schedule", "Schedule"],
-            ["standings", "Standings"],
-            ["work", "Work"],
-          ].map(([id, label]) => (
+            ["schedule", "Schedule", "🗓"],
+            ["standings", "Standings", "🏆"],
+            ["work", "Work", "🟡"],
+          ].map(([id, label, icon]) => (
             <button
               key={id}
               className={tab === id ? "active" : ""}
               onClick={() => setTab(id)}
+              aria-label={label}
             >
-              {label}
+              <span className="icon">{icon}</span>
+              <span>{label}</span>
             </button>
           ))}
         </nav>
@@ -968,6 +1094,7 @@ export default function Home() {
             {pastGames.length > 0 && (
               <>
                 <div className="section-title">Past games · {pastGames.length}</div>
+                <SeasonArc pastGames={pastGames} />
                 <PastGamesSummary standings={data?.standings || []} record={record} />
                 <div className="list">
                   {pastGames.map((g) => (
@@ -975,6 +1102,7 @@ export default function Home() {
                       key={g.id}
                       game={g}
                       teamName={teamName}
+                      venue={tournament.venue}
                       teamWatchNowLink={data?.teamWatchNowLink}
                       opponentInfo={standingsById.get(g.opponent)}
                       onShare={shareGame}
@@ -994,6 +1122,7 @@ export default function Home() {
                       key={g.id}
                       game={g}
                       teamName={teamName}
+                      venue={tournament.venue}
                       teamWatchNowLink={data?.teamWatchNowLink}
                       opponentInfo={standingsById.get(g.opponent)}
                       onShare={shareGame}
