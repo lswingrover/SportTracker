@@ -39,6 +39,11 @@ html, body, #__next {
   font-family: "Barlow", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
   -webkit-font-smoothing: antialiased;
   min-height: 100%;
+  /* Safety net: never let any rogue child force the document wider than the
+     viewport. The real fix is min-width:0 on flex/grid children below; this
+     just guarantees no horizontal scroll surfaces if something slips. */
+  max-width: 100%;
+  overflow-x: hidden;
 }
 body { padding-bottom: env(safe-area-inset-bottom); }
 
@@ -53,6 +58,7 @@ button { font-family: inherit; cursor: pointer; }
 a { color: inherit; }
 
 .app {
+  width: 100%;
   max-width: 720px;
   margin: 0 auto;
   /* Extra bottom padding so the fixed bottom nav (with safe-area) doesn't
@@ -66,8 +72,14 @@ a { color: inherit; }
   justify-content: space-between;
   margin-bottom: 12px;
   gap: 12px;
+  width: 100%;
+  min-width: 0;
 }
-.brand { display: flex; align-items: center; gap: 10px; min-width: 0; }
+.topbar > * { min-width: 0; }
+/* flex: 1 1 0 makes brand grow into leftover space starting from 0, so the
+   action buttons keep their natural size without being pushed off-screen. */
+.brand { display: flex; align-items: center; gap: 10px; min-width: 0; flex: 1 1 0; }
+.brand > div { min-width: 0; }
 .brand .logo {
   width: 38px; height: 38px;
   border-radius: 10px;
@@ -90,6 +102,9 @@ a { color: inherit; }
   font-size: 12px;
   letter-spacing: 0.08em;
   text-transform: uppercase;
+  /* Wrap rather than overflow when the tournament name + venue + date are long. */
+  overflow-wrap: anywhere;
+  word-break: break-word;
 }
 
 .iconbtn {
@@ -108,9 +123,13 @@ a { color: inherit; }
 
 .selectors {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  /* minmax(0, 1fr) lets columns shrink below their content's intrinsic
+     min-width — without it, a <select> sizes its column to its longest
+     option's text, blowing the layout out horizontally. */
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
   gap: 8px;
   margin-bottom: 14px;
+  width: 100%;
 }
 .selectors .full { grid-column: 1 / -1; }
 .selector {
@@ -121,6 +140,7 @@ a { color: inherit; }
   display: flex;
   flex-direction: column;
   gap: 2px;
+  min-width: 0;
 }
 .selector label {
   font-size: 10px;
@@ -138,6 +158,12 @@ a { color: inherit; }
   padding: 0;
   outline: none;
   cursor: pointer;
+  /* Hard-constrain the native select to its column so its option list never
+     pushes the parent grid wider. */
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  text-overflow: ellipsis;
 }
 .selector select option { background: var(--panel); color: var(--text); }
 
