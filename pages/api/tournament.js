@@ -50,9 +50,13 @@ function setsFromMatch(m) {
 }
 
 function setScores(s) {
-  const us = pickFirst(s, ["TeamScore", "OurScore", "HomeScore", "Team1Score"]);
-  const them = pickFirst(s, ["OpponentScore", "AwayScore", "Team2Score"]);
+  const us = pickFirst(s, ["TeamScore", "OurScore", "HomeScore", "Team1Score", "FirstTeamScore"]);
+  const them = pickFirst(s, ["OpponentScore", "AwayScore", "Team2Score", "SecondTeamScore"]);
   return { us, them };
+}
+
+function isDecidingSet(s) {
+  return s?.IsDecidingSet === true;
 }
 
 function teamWonMatch(m) {
@@ -88,6 +92,7 @@ function liveScoreShape(m, opponentName) {
       us: typeof us === "number" ? us : null,
       them: typeof them === "number" ? them : null,
       complete: typeof s?.IsComplete === "boolean" ? s.IsComplete : null,
+      deciding: isDecidingSet(s),
     };
   });
   const inProgressIdx = parsed.findIndex(
@@ -186,7 +191,9 @@ function normalizeMatch(m, { done }) {
       sets = setArr
         .map((s) => {
           const { us, them } = setScores(s);
-          return us != null && them != null ? { us, them } : null;
+          return us != null && them != null
+            ? { us, them, deciding: isDecidingSet(s) }
+            : null;
         })
         .filter(Boolean);
     }

@@ -207,14 +207,12 @@ function LiveScoreBanner({ live, lastChangedAt, watchUrl }) {
       </div>
       {sets.length > 1 && (
         <div className="meta" style={{ marginTop: 8 }}>
-          {sets.map((s, i) => {
-            const live = i === live?.setIndex && !s.complete;
-            return (
-              <span key={i} style={{ marginRight: 10 }}>
-                Set {i + 1}: {s.us}-{s.them} {s.complete ? "✓" : i === sets.length - 1 ? "🔴" : ""}
-              </span>
-            );
-          })}
+          {sets.map((s, i) => (
+            <span key={i} style={{ marginRight: 10 }}>
+              Set {i + 1}{s.deciding ? " (deciding)" : ""}: {s.us}-{s.them}{" "}
+              {s.complete ? "✓" : i === sets.length - 1 ? "🔴" : ""}
+            </span>
+          ))}
         </div>
       )}
       {stale && (
@@ -443,7 +441,22 @@ function GameCard({ game, opponentInfo, teamName, onShare, onAddCal, justWon, te
           {!game.done && !game.next && !game.live && <span className="badge">Upcoming</span>}
         </div>
       </div>
-      {game.score && <div className="sets">Sets: {game.score}</div>}
+      {Array.isArray(game.sets) && game.sets.length > 0 ? (
+        <div className="sets">
+          Sets:{" "}
+          {game.sets.map((s, i) => (
+            <span key={i}>
+              {i > 0 ? ", " : ""}
+              <span style={s.deciding ? { color: "var(--accent)", fontWeight: 700 } : undefined}>
+                {s.us}-{s.them}
+                {s.deciding ? " ●" : ""}
+              </span>
+            </span>
+          ))}
+        </div>
+      ) : (
+        game.score && <div className="sets">Sets: {game.score}</div>
+      )}
       <div className="card-actions">
         {!game.done && game.timeISO && (
           <button className="btn-mini" onClick={() => onAddCal(game)}>
