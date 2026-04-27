@@ -1,10 +1,11 @@
 import { useEffect, useMemo, useRef, useState, useCallback } from "react";
 import Head from "next/head";
 
-// Confirmed by scanning AES /api/event/{key}/standings for TeamId 201772 across
-// every 2025-26 PNW event that lists 208vbc as a participating club. Order is
-// most-recent-first so the upcoming tournament sits at the top of the dropdown
-// and is the default selection.
+// Confirmed via AES /api/event/{key}/standings for TeamId 201772, plus the
+// SportsEngine team iCal feed for tournaments not on AES (those carry
+// static: true and render a "no live data" card instead of fetching).
+// Order: most-recent first; Big Sky is the default selection because it's
+// the next upcoming event.
 const TOURNAMENTS = [
   {
     id: "big-sky-volleyfest-2026",
@@ -35,8 +36,34 @@ const TOURNAMENTS = [
     date: "Apr 25, 2026",
   },
   {
-    id: "erva-power-league-jan-2026",
-    label: "ERVA Power League",
+    id: "mt-nw-jamboree-2026",
+    label: "MT NW Jamboree U14",
+    eventId: "PTAwMDAwNDQ5NzY90",
+    divId: "213538",
+    teamId: "201772",
+    teamName: "208 U14 Red",
+    venue: {
+      name: "Glacier High School",
+      address: "Kalispell, MT",
+      tz: "America/Denver",
+    },
+    date: "Mar 28, 2026",
+  },
+  {
+    id: "showtime-slammer-2026",
+    label: "Showtime Slammer",
+    static: true,
+    teamName: "208 U14 Red",
+    venue: {
+      name: "Showtime Volleyball",
+      address: "9044 W Prairie Ave, Post Falls, ID 83854",
+      tz: "America/Los_Angeles",
+    },
+    date: "Mar 21, 2026",
+  },
+  {
+    id: "erva-power-league-2026",
+    label: "ERVA Power League (multi-week)",
     eventId: "PTAwMDAwNDI2MDY90",
     divId: "203858",
     teamId: "201772",
@@ -46,7 +73,31 @@ const TOURNAMENTS = [
       address: "Spokane & Post Falls",
       tz: "America/Los_Angeles",
     },
-    date: "Jan 3, 2026",
+    date: "Jan 3 – Apr 18, 2026",
+  },
+  {
+    id: "sandpoint-showdown-2026",
+    label: "Sandpoint Showdown",
+    static: true,
+    teamName: "208 U14 Red",
+    venue: {
+      name: "Sandpoint",
+      address: "410 S Division Ave, Sandpoint, ID 83864",
+      tz: "America/Los_Angeles",
+    },
+    date: "Feb 15, 2026",
+  },
+  {
+    id: "holly-jolly-jamboree-2025",
+    label: "Holly Jolly Jamboree",
+    static: true,
+    teamName: "208 U14 Red",
+    venue: {
+      name: "Holly Jolly Jamboree",
+      address: null,
+      tz: "America/Los_Angeles",
+    },
+    date: "Dec 6, 2025",
   },
 ];
 
@@ -451,6 +502,37 @@ function CalendarCard({ origin, eventId, divId, teamId, teamName, gameCount }) {
   );
 }
 
+function StaticTournamentCard({ tournament }) {
+  const { venue, date, label } = tournament;
+  const mapsHref =
+    venue?.address &&
+    `https://maps.apple.com/?q=${encodeURIComponent(`${venue.name || ""} ${venue.address}`.trim())}`;
+  return (
+    <section className="static-card">
+      <div className="static-eyebrow">📅 Tournament</div>
+      <div className="static-name">{label}</div>
+      <div className="static-meta">{date}</div>
+      {venue?.name && <div className="static-venue">{venue.name}</div>}
+      {venue?.address && (
+        <div className="static-meta">
+          {mapsHref ? (
+            <a href={mapsHref} target="_blank" rel="noreferrer">
+              📍 {venue.address}
+            </a>
+          ) : (
+            <>📍 {venue.address}</>
+          )}
+        </div>
+      )}
+      <div className="static-divider" />
+      <div className="static-note">
+        No live data available for this tournament — it isn't published on the
+        AES system. Check the team's SportsEngine page for schedule details.
+      </div>
+    </section>
+  );
+}
+
 function PastGamesSummary({ standings, record }) {
   const us = standings.find((s) => s.isUs);
   const setsWon = us?.setsWon ?? null;
@@ -594,6 +676,17 @@ export default function Home() {
 
   const load = useCallback(
     async (force = false) => {
+      if (tournament.static) {
+        // Static tournaments aren't on AES — no data to fetch. Reset state so
+        // switching from a live tournament doesn't leak its games/standings.
+        prevDataRef.current = null;
+        prevLiveRef.current = null;
+        firstLoadRef.current = true;
+        setData(null);
+        setError(null);
+        setLoading(false);
+        return;
+      }
       try {
         setLoading(true);
         const url = `/api/tournament?eventId=${encodeURIComponent(tournament.eventId)}&divId=${encodeURIComponent(tournament.divId)}&teamId=${encodeURIComponent(teamId)}&teamName=${encodeURIComponent(teamName)}${force ? "&force=1" : ""}`;
@@ -809,6 +902,10 @@ export default function Home() {
           </div>
         </div>
 
+        {tournament.static ? (
+          <StaticTournamentCard tournament={tournament} />
+        ) : (
+          <>
         {data?.liveGame && (
           <LiveScoreBanner
             live={data.liveGame}
@@ -979,6 +1076,8 @@ export default function Home() {
                 ))}
               </div>
             )}
+          </>
+        )}
           </>
         )}
 

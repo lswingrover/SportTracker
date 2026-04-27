@@ -366,6 +366,51 @@ a { color: inherit; }
   margin: 14px 0 8px;
 }
 
+.static-card {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  padding: 22px;
+  margin-bottom: 16px;
+}
+.static-eyebrow {
+  font-size: 11px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--accent);
+  margin-bottom: 10px;
+}
+.static-name {
+  font-family: "Barlow Condensed", sans-serif;
+  font-weight: 900;
+  font-size: 28px;
+  line-height: 1.1;
+  margin-bottom: 6px;
+}
+.static-venue {
+  font-family: "Barlow Condensed", sans-serif;
+  font-weight: 700;
+  font-size: 18px;
+  margin-top: 8px;
+}
+.static-meta {
+  color: var(--muted);
+  font-size: 14px;
+  margin-top: 4px;
+}
+.static-meta a { color: var(--accent); text-decoration: none; }
+.static-meta a:hover { text-decoration: underline; }
+.static-divider {
+  height: 1px;
+  background: var(--line);
+  margin: 16px 0;
+}
+.static-note {
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.5;
+}
+
 .record-summary {
   background: var(--accent-soft);
   border: 1px solid var(--accent-border);
