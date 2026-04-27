@@ -323,7 +323,96 @@ function recordFromStandings(standings) {
   return { wins: us.matchesWon, losses: us.matchesLost };
 }
 
-function buildResponse({ eventMeta, team, current, future, work, standings, nextAssignments, remoteTimestamp, ctx }) {
+// Recursively scan a brackets blob for any Match objects involving
+// teamId. AES nests matches at multiple depths (Roots[].Match,
+// FutureRoundMatches[].Match, BottomSource.Match, etc.) so a deep walk
+// is the only reliable way to surface the team's full played history
+// when /schedule/current returns []. Pool play matches are NOT in this
+// blob — AES doesn't expose pool-match details on public endpoints.
+function extractTeamMatchesFromBrackets(brackets, teamIdStr) {
+  if (!brackets) return [];
+  const teamId = Number(teamIdStr);
+  const found = new Map();
+  const seen = new WeakSet();
+  function visit(obj) {
+    if (!obj || typeof obj !== "object" || seen.has(obj)) return;
+    seen.add(obj);
+    if (Array.isArray(obj)) {
+      for (const v of obj) visit(v);
+      return;
+    }
+    if (
+      obj.MatchId != null &&
+      "FirstTeam" in obj &&
+      "SecondTeam" in obj &&
+      "Sets" in obj
+    ) {
+      const ftId = obj.FirstTeam?.TeamId;
+      const stId = obj.SecondTeam?.TeamId;
+      if (ftId === teamId || stId === teamId) {
+        if (!found.has(obj.MatchId)) {
+          found.set(obj.MatchId, obj);
+        }
+      }
+    }
+    for (const v of Object.values(obj)) visit(v);
+  }
+  visit(brackets);
+  return Array.from(found.values());
+}
+
+function bracketMatchToGame(m, teamIdStr) {
+  const teamId = Number(teamIdStr);
+  const ourSide = m.FirstTeam?.TeamId === teamId ? "first" : "second";
+  const won =
+    ourSide === "first" ? m.FirstTeamWon === true : m.SecondTeamWon === true;
+  const lost =
+    ourSide === "first" ? m.SecondTeamWon === true : m.FirstTeamWon === true;
+  // Prefer .Name over .Text — the latter carries trailing region tags
+  // like " (EV)" that don't match the standings TeamName, breaking
+  // head-to-head joins. Strip any residual trailing-paren tags too.
+  const rawOpponent =
+    ourSide === "first"
+      ? m.SecondTeam?.Name || m.SecondTeamText || "TBD"
+      : m.FirstTeam?.Name || m.FirstTeamText || "TBD";
+  const opponent = String(rawOpponent).replace(/\s*\([^)]*\)\s*$/, "").trim();
+  const sets = (m.Sets || [])
+    .map((s) => {
+      const fs = s.FirstTeamScore;
+      const ss = s.SecondTeamScore;
+      if (fs == null || ss == null) return null;
+      return ourSide === "first"
+        ? { us: fs, them: ss, deciding: s.IsDecidingSet === true }
+        : { us: ss, them: fs, deciding: s.IsDecidingSet === true };
+    })
+    .filter(Boolean);
+  const start = m.ScheduledStartDateTime || null;
+  const { iso, ms } = parseTime(start);
+  const score = sets.length ? sets.map((s) => `${s.us}–${s.them}`).join(", ") : null;
+  const courtName =
+    m.Court?.Name ||
+    (typeof m.Court === "string" ? m.Court : null) ||
+    "TBD";
+  return {
+    id: String(m.MatchId),
+    done: won || lost,
+    result: won ? "W" : lost ? "L" : null,
+    score,
+    sets: sets.length ? sets : null,
+    court: courtName,
+    opponent,
+    videoLink: m.Court?.VideoLink || null,
+    time: iso ? formatLocalTime(iso) : null,
+    timeISO: iso,
+    timeMs: ms,
+    endISO: m.ScheduledEndDateTime || null,
+    courtStay: null,
+    live: null,
+    next: false,
+  };
+}
+
+function buildResponse({ eventMeta, team, current, future, work, standings, nextAssignments, brackets, remoteTimestamp, ctx }) {
   const playedRaw = Array.isArray(current) ? current : [];
   const upcomingRaw = Array.isArray(future) ? future : [];
 
@@ -335,6 +424,23 @@ function buildResponse({ eventMeta, team, current, future, work, standings, next
     .sort((a, b) => (a.timeMs || 0) - (b.timeMs || 0));
   if (!games.length && (played.length || upcoming.length)) {
     games.push(...played, ...upcoming);
+  }
+
+  // Merge in bracket-derived matches that aren't already present. AES
+  // schedule/current returns [] for concluded tournaments, but the
+  // brackets blob still carries the full match history with scores —
+  // backfill gives us 'past games' even after the tournament ends.
+  // (Pool play matches aren't exposed by AES public endpoints; this
+  // covers cross-bracket / playoff matches only.)
+  if (Array.isArray(brackets) && brackets.length > 0) {
+    const have = new Set(games.map((g) => String(g.id)));
+    const bracketGames = extractTeamMatchesFromBrackets(brackets, ctx.teamId)
+      .map((m) => bracketMatchToGame(m, ctx.teamId))
+      .filter((g) => !have.has(String(g.id)));
+    if (bracketGames.length > 0) {
+      games.push(...bracketGames);
+      games.sort((a, b) => (a.timeMs || 0) - (b.timeMs || 0));
+    }
   }
 
   let firstUpcomingFlagged = false;
@@ -471,9 +577,10 @@ async function loadFresh(ctx) {
     work: `${AES_BASE}/api/event/${eventId}/division/${divisionId}/team/${teamId}/schedule/work`,
     standings: `${AES_BASE}/odata/${eventId}/standings(dId=${divisionId},cId=null,tIds=[])`,
     nextAssignments: `${AES_BASE}/odata/${eventId}/nextassignments(dId=${divisionId},cId=null,tIds=[])`,
+    brackets: `${AES_BASE}/api/event/${eventId}/division/${divisionId}/brackets`,
     timestamp: `${AES_BASE}/api/event/${eventId}/timestamp`,
   };
-  const [eventMeta, team, current, future, work, standings, nextAssignments, timestamp] = await Promise.all([
+  const [eventMeta, team, current, future, work, standings, nextAssignments, brackets, timestamp] = await Promise.all([
     fetchJson(urls.event).catch(() => null),
     fetchJson(urls.team).catch(() => null),
     fetchJson(urls.current).catch(() => []),
@@ -481,6 +588,7 @@ async function loadFresh(ctx) {
     fetchJson(urls.work).catch(() => []),
     fetchJson(urls.standings).catch(() => ({ value: [] })),
     fetchJson(urls.nextAssignments).catch(() => ({ value: [] })),
+    fetchJson(urls.brackets).catch(() => []),
     fetchJson(urls.timestamp).catch(() => null),
   ]);
   const remoteTimestamp = timestamp?.LastUpdatedTimestamp || null;
@@ -492,6 +600,7 @@ async function loadFresh(ctx) {
     work,
     standings,
     nextAssignments,
+    brackets,
     remoteTimestamp,
     ctx,
   });

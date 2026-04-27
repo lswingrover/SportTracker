@@ -1424,13 +1424,23 @@ function OpponentHistoryPage({ opponentName, tournaments, dataByTournament, load
   const [sortDesc, setSortDesc] = useState(true);
 
   // Flatten games from every tournament where the opponent appears.
+  // AES opponent names sometimes carry trailing club tags ("Foo (EV)") or
+  // case differences vs. the standings teamName, so normalize before
+  // comparing — case-insensitive, trimmed, ignore trailing parens.
+  const norm = (s) =>
+    String(s || "")
+      .toLowerCase()
+      .replace(/\s*\([^)]*\)\s*$/, "")
+      .trim();
+  const target = norm(opponentName);
   const allGames = [];
   for (const t of tournaments) {
     if (t.static) continue;
     const data = dataByTournament[t.id];
     if (!data?.games) continue;
     for (const g of data.games) {
-      if (!g.done || g.opponent !== opponentName) continue;
+      if (!g.done) continue;
+      if (norm(g.opponent) !== target) continue;
       allGames.push({ ...g, _tournamentId: t.id, _tournamentLabel: t.label, _tournamentDate: t.date });
     }
   }
@@ -2234,10 +2244,24 @@ export default function Home() {
             <div className="label">Losses</div>
             <div className="value">{record.losses}</div>
           </button>
-          <div className="stat pos">
+          <button
+            type="button"
+            className="stat pos press-feedback"
+            onClick={() => {
+              setTab("standings");
+              setTimeout(() => {
+                if (typeof document !== "undefined") {
+                  document
+                    .querySelector(".standings-table tr.us-pinned")
+                    ?.scrollIntoView({ behavior: "smooth", block: "center" });
+                }
+              }, 100);
+            }}
+            aria-label="View pool standings"
+          >
             <div className="label">Pool</div>
             <div className="value">{data?.poolPosition || "—"}</div>
-          </div>
+          </button>
         </section>
 
         <StatsAccordion
