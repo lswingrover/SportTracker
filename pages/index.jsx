@@ -113,6 +113,53 @@ function pad(n) {
   return String(n).padStart(2, "0");
 }
 
+// Tournament tz handling. Tournament config carries an IANA timezone
+// (e.g. America/Denver for Big Sky in Billings, America/Los_Angeles for
+// ERVA in Spokane). Render every time in the venue's wall-clock so a
+// parent in California still sees the Spokane match at the right moment.
+const TZ_SHORT_LABEL = {
+  "America/Los_Angeles": "PT",
+  "America/Denver": "MT",
+  "America/Phoenix": "MST",
+  "America/Chicago": "CT",
+  "America/New_York": "ET",
+  "America/Anchorage": "AKT",
+  "Pacific/Honolulu": "HT",
+};
+
+function tzShortLabel(tz) {
+  return TZ_SHORT_LABEL[tz] || null;
+}
+
+function formatInTz(iso, tz, opts) {
+  if (!iso) return null;
+  try {
+    const base = {
+      weekday: "short",
+      month: "short",
+      day: "numeric",
+      hour: "numeric",
+      minute: "2-digit",
+    };
+    const merged = opts ? { ...base, ...opts } : base;
+    if (tz) merged.timeZone = tz;
+    return new Date(iso).toLocaleString("en-US", merged);
+  } catch {
+    return iso;
+  }
+}
+
+function formatTimeOfDayInTz(iso, tz) {
+  if (!iso) return null;
+  try {
+    const opts = { hour: "numeric", minute: "2-digit" };
+    if (tz) opts.timeZone = tz;
+    return new Date(iso).toLocaleTimeString("en-US", opts);
+  } catch {
+    return iso;
+  }
+}
+
 function icsDate(iso) {
   const d = new Date(iso);
   return (
@@ -333,7 +380,8 @@ function LiveScoreBanner({ live, lastChangedAt, watchUrl }) {
   );
 }
 
-function NextHero({ event, minutesUntil, projectedDone, eventOver }) {
+function NextHero({ event, minutesUntil, projectedDone, eventOver, tz }) {
+  const tzLabel = tzShortLabel(tz);
   if (!event) {
     if (eventOver) {
       return (
@@ -348,13 +396,16 @@ function NextHero({ event, minutesUntil, projectedDone, eventOver }) {
         <h2>No upcoming match</h2>
         <div className="meta">
           {projectedDone
-            ? `Projected end: ${new Date(projectedDone).toLocaleString()}`
+            ? `Projected end: ${formatInTz(projectedDone, tz)}${tzLabel ? ` ${tzLabel}` : ""}`
             : "Schedule data not yet available."}
         </div>
       </section>
     );
   }
   const work = event.kind === "work";
+  const eventLocalized = event.timeISO
+    ? `${formatInTz(event.timeISO, tz)}${tzLabel ? ` ${tzLabel}` : ""}`
+    : event.time;
   return (
     <section className={`hero${work ? " work" : ""}`}>
       <h2>
@@ -364,7 +415,7 @@ function NextHero({ event, minutesUntil, projectedDone, eventOver }) {
         {work ? event.role : `vs ${event.opponent}`}
       </div>
       <div className="meta">
-        {event.time} · Court {event.court}
+        {eventLocalized} · Court {event.court}
         {work && event.teams ? ` · ${event.teams}` : ""}
       </div>
       <div className="countdown">
@@ -766,8 +817,12 @@ function mapsHrefFor(query) {
   return `https://maps.google.com/?q=${q}`;
 }
 
-function GameCard({ game, opponentInfo, teamName, onShare, onAddCal, justWon, teamWatchNowLink, venue }) {
+function GameCard({ game, opponentInfo, teamName, onShare, onAddCal, justWon, teamWatchNowLink, venue, tz }) {
   const watchUrl = game.videoLink || (game.live ? teamWatchNowLink : null);
+  const tzLabel = tzShortLabel(tz);
+  const localized = game.timeISO
+    ? `${formatInTz(game.timeISO, tz)}${tzLabel ? ` ${tzLabel}` : ""}`
+    : game.time || "TBD";
   const cls = [
     "card",
     game.next ? "next" : "",
@@ -796,7 +851,7 @@ function GameCard({ game, opponentInfo, teamName, onShare, onAddCal, justWon, te
             <span className="court-hero">Ct {courtLabel}</span>
           )}
           <div className="opp" style={{ marginTop: 4 }}>vs {game.opponent}</div>
-          <div className="meta">{game.time || "TBD"}</div>
+          <div className="meta">{localized}</div>
           {opponentInfo && (
             <div className="meta">
               Opp {opponentInfo.matchesWon}-{opponentInfo.matchesLost}
@@ -1170,6 +1225,7 @@ export default function Home() {
               minutesUntil={minutesUntil}
               projectedDone={data?.projectedDone}
               eventOver={eventOver}
+              tz={tournament.venue?.tz}
             />
           );
         })()}
@@ -1217,6 +1273,7 @@ export default function Home() {
                       game={g}
                       teamName={teamName}
                       venue={tournament.venue}
+                      tz={tournament.venue?.tz}
                       teamWatchNowLink={data?.teamWatchNowLink}
                       opponentInfo={standingsById.get(g.opponent)}
                       onShare={shareGame}
@@ -1237,6 +1294,7 @@ export default function Home() {
                       game={g}
                       teamName={teamName}
                       venue={tournament.venue}
+                      tz={tournament.venue?.tz}
                       teamWatchNowLink={data?.teamWatchNowLink}
                       opponentInfo={standingsById.get(g.opponent)}
                       onShare={shareGame}
@@ -1303,20 +1361,27 @@ export default function Home() {
               <div className="empty">No work duties scheduled.</div>
             ) : (
               <div className="list">
-                {work.map((w) => (
-                  <article key={w.id} className="card">
-                    <div className="card-row">
-                      <div>
-                        <div className="opp">{w.role}</div>
-                        <div className="meta">
-                          {w.time || "TBD"} · Court {w.court}
+                {work.map((w) => {
+                  const tz = tournament.venue?.tz;
+                  const tzLabel = tzShortLabel(tz);
+                  const wTime = w.timeISO
+                    ? `${formatInTz(w.timeISO, tz)}${tzLabel ? ` ${tzLabel}` : ""}`
+                    : w.time || "TBD";
+                  return (
+                    <article key={w.id} className="card">
+                      <div className="card-row">
+                        <div>
+                          <div className="opp">{w.role}</div>
+                          <div className="meta">
+                            {wTime} · Court {w.court}
+                          </div>
+                          {w.teams && <div className="meta">{w.teams}</div>}
                         </div>
-                        {w.teams && <div className="meta">{w.teams}</div>}
+                        <span className="badge">Work</span>
                       </div>
-                      <span className="badge">Work</span>
-                    </div>
-                  </article>
-                ))}
+                    </article>
+                  );
+                })}
               </div>
             )}
           </>
@@ -1338,8 +1403,8 @@ export default function Home() {
           </div>
           {data?.projectedDone && upcomingGames.length > 0 && (
             <div>
-              Done ~
-              {new Date(data.projectedDone).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })}
+              Done ~{formatTimeOfDayInTz(data.projectedDone, tournament.venue?.tz)}
+              {tzShortLabel(tournament.venue?.tz) ? ` ${tzShortLabel(tournament.venue?.tz)}` : ""}
               {data?.projectedDoneSource === "scheduled" ? " (scheduled)" : " (est.)"}
             </div>
           )}
