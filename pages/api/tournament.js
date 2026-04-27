@@ -98,7 +98,7 @@ function scoreString(m) {
     .map((s) => {
       const { us, them } = setScores(s);
       if (us == null || them == null) return null;
-      return `${us}-${them}`;
+      return `${us}–${them}`;
     })
     .filter(Boolean);
   return parts.length ? parts.join(", ") : null;

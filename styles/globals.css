@@ -147,9 +147,8 @@ a { color: inherit; }
   min-width: 0;
 }
 .selector label {
-  font-size: 10px;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
+  font-size: 11px;
+  letter-spacing: 0.02em;
   color: var(--muted);
 }
 .selector select {
@@ -287,8 +286,7 @@ a { color: inherit; }
 .stat .label {
   font-size: 11px;
   color: var(--muted);
-  text-transform: uppercase;
-  letter-spacing: 0.1em;
+  letter-spacing: 0.04em;
 }
 .stat .value {
   font-family: "Barlow Condensed", sans-serif;
@@ -450,10 +448,9 @@ a { color: inherit; }
   padding: 8px 4px 6px;
   min-height: 56px;
   border-radius: 10px;
-  font-weight: 700;
-  font-size: 11px;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
+  font-weight: 600;
+  font-size: 12px;
+  letter-spacing: 0.02em;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -474,9 +471,9 @@ a { color: inherit; }
 
 .section-title {
   font-family: "Barlow Condensed", sans-serif;
-  font-size: 14px;
+  font-size: 16px;
   font-weight: 800;
-  letter-spacing: 0.18em;
+  letter-spacing: 0.04em;
   color: var(--muted);
   margin: 14px 0 8px;
 }
@@ -489,9 +486,8 @@ a { color: inherit; }
   margin-bottom: 16px;
 }
 .static-eyebrow {
-  font-size: 11px;
-  letter-spacing: 0.18em;
-  text-transform: uppercase;
+  font-size: 13px;
+  letter-spacing: 0.04em;
   color: var(--accent);
   margin-bottom: 10px;
 }
@@ -564,9 +560,8 @@ a { color: inherit; }
   text-align: center;
 }
 .upcoming-card .eyebrow {
-  font-size: 11px;
-  letter-spacing: 0.18em;
-  text-transform: uppercase;
+  font-size: 13px;
+  letter-spacing: 0.04em;
   color: var(--accent);
 }
 .upcoming-card .countdown-num {
@@ -578,10 +573,9 @@ a { color: inherit; }
   color: var(--text);
 }
 .upcoming-card .countdown-unit {
-  text-transform: uppercase;
-  letter-spacing: 0.14em;
+  letter-spacing: 0.04em;
   color: var(--muted);
-  font-size: 12px;
+  font-size: 13px;
 }
 .upcoming-card .upcoming-venue {
   margin-top: 14px;

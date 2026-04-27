@@ -573,7 +573,7 @@ function NotificationsCard({ teamId }) {
         <div style={{ minWidth: 0 }}>
           <div className="title">
             <span>🔕</span>
-            <span>Game alerts not supported</span>
+            <span>Notifications not supported</span>
           </div>
           <div className="desc">
             Add the app to your iPhone home screen and open it in standalone
@@ -593,7 +593,7 @@ function NotificationsCard({ teamId }) {
         <div style={{ minWidth: 0 }}>
           <div className="title">
             <span>🔔</span>
-            <span>Game Alerts</span>
+            <span>Notifications</span>
             <span className={`state${on ? " on" : blocked ? " blocked" : ""}`}>
               {on ? "On" : blocked ? "Blocked" : "Off"}
             </span>
@@ -664,16 +664,13 @@ function CalendarCard({ origin, eventId, divId, teamId, teamName, gameCount }) {
           </div>
         </div>
         <a className="btn-mini primary" href={webcal}>
-          Add to iPhone
+          Subscribe to Calendar
         </a>
       </div>
       <div style={{ marginTop: 10, display: "flex", gap: 6, flexWrap: "wrap" }}>
         <button className="btn-mini" onClick={copy}>
-          Copy URL
+          Copy link
         </button>
-        <a className="btn-mini" href={url} target="_blank" rel="noreferrer">
-          Open feed
-        </a>
       </div>
     </div>
   );
@@ -845,16 +842,16 @@ function GameCard({ game, opponentInfo, teamName, onShare, onAddCal, justWon, te
         <div style={{ minWidth: 0 }}>
           {mapHref ? (
             <a className="court-hero" href={mapHref} target="_blank" rel="noreferrer" title="Open in Maps">
-              <span className="court-pin">📍</span>Ct {courtLabel}
+              <span className="court-pin">📍</span>Court {courtLabel}
             </a>
           ) : (
-            <span className="court-hero">Ct {courtLabel}</span>
+            <span className="court-hero">Court {courtLabel}</span>
           )}
           <div className="opp" style={{ marginTop: 4 }}>vs {game.opponent}</div>
           <div className="meta">{localized}</div>
           {opponentInfo && (
             <div className="meta">
-              Opp {opponentInfo.matchesWon}-{opponentInfo.matchesLost}
+              Opp {opponentInfo.matchesWon}–{opponentInfo.matchesLost}
               {opponentInfo.rank ? ` · #${opponentInfo.rank} in pool` : ""}
             </div>
           )}
@@ -870,13 +867,13 @@ function GameCard({ game, opponentInfo, teamName, onShare, onAddCal, justWon, te
       {game.courtStay && (
         <div className="meta" style={{ color: "var(--warn)" }}>
           {game.courtStay.stay
-            ? `↪ Stay on Ct ${game.court} for the next match`
+            ? `↪ Stay on Court ${game.court} for the next match`
             : game.courtStay.stayIfWin && game.courtStay.stayIfLoss
-              ? `↪ Stay on Ct ${game.court} either way`
+              ? `↪ Stay on Court ${game.court} either way`
               : game.courtStay.stayIfWin
-                ? `↪ Stay on Ct ${game.court} if you win`
+                ? `↪ Stay on Court ${game.court} if you win`
                 : game.courtStay.stayIfLoss
-                  ? `↪ Stay on Ct ${game.court} if you lose`
+                  ? `↪ Stay on Court ${game.court} if you lose`
                   : null}
         </div>
       )}
@@ -887,7 +884,7 @@ function GameCard({ game, opponentInfo, teamName, onShare, onAddCal, justWon, te
             <span key={i}>
               {i > 0 ? ", " : ""}
               <span style={s.deciding ? { color: "var(--accent)", fontWeight: 700 } : undefined}>
-                {s.us}-{s.them}
+                {s.us}–{s.them}
                 {s.deciding ? " ●" : ""}
               </span>
             </span>
@@ -1095,7 +1092,7 @@ export default function Home() {
       lines.push(`LIVE: ${data.liveGame.us}-${data.liveGame.them} (Set ${data.liveGame.setNumber})`);
     } else if (nextEvent) {
       const what = nextEvent.kind === "work" ? nextEvent.role : `vs ${nextEvent.opponent}`;
-      lines.push(`Next: ${nextEvent.time} · Ct ${nextEvent.court} · ${what}`);
+      lines.push(`Next: ${nextEvent.time} · Court ${nextEvent.court} · ${what}`);
     }
     const text = lines.join("\n");
     try {
@@ -1245,7 +1242,7 @@ export default function Home() {
           {[
             ["schedule", "Schedule", "🗓"],
             ["standings", "Standings", "🏆"],
-            ["work", "Work", "🟡"],
+            ["work", "Duties", "🟡"],
           ].map(([id, label, icon]) => (
             <button
               key={id}
@@ -1263,7 +1260,7 @@ export default function Home() {
           <>
             {pastGames.length > 0 && (
               <>
-                <div className="section-title">Past games · {pastGames.length}</div>
+                <div className="section-title">Results ({pastGames.length})</div>
                 <SeasonArc pastGames={pastGames} />
                 <PastGamesSummary standings={data?.standings || []} record={record} />
                 <div className="list">
@@ -1344,7 +1341,7 @@ export default function Home() {
                         )}
                       </td>
                       <td>
-                        {row.matchesWon}-{row.matchesLost}
+                        {row.matchesWon}–{row.matchesLost}
                       </td>
                       <td>{Math.round((row.setPercent || 0) * 100)}%</td>
                     </tr>
