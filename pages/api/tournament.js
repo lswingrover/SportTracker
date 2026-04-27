@@ -59,6 +59,25 @@ function isDecidingSet(s) {
   return s?.IsDecidingSet === true;
 }
 
+// AES WorkTeamCourtAssignmentFlag is a bitmask:
+//   1 = PreviousMatchSameCourt, 2 = NextMatchSameCourt,
+//   4 = NextMatchSameCourtIfWin, 8 = NextMatchSameCourtIfLoss,
+//   16 = WorkTeamAssignmentIsNotDefinite.
+// AES exposes two fields per match (First/Second team perspective). We OR
+// them together since we don't always know which side our team is, and
+// surface boolean hints derived from the bits we care about.
+function courtStayHints(m) {
+  const a = Number(m?.FirstTeamWorkTeamCourtAssignmentFlag) || 0;
+  const b = Number(m?.SecondTeamWorkTeamCourtAssignmentFlag) || 0;
+  const flag = a | b;
+  if (!flag) return null;
+  const stay = (flag & 2) === 2;
+  const stayIfWin = (flag & 4) === 4;
+  const stayIfLoss = (flag & 8) === 8;
+  if (!stay && !stayIfWin && !stayIfLoss) return null;
+  return { stay, stayIfWin, stayIfLoss };
+}
+
 function teamWonMatch(m) {
   const ours = pickFirst(m, ["TeamSetsWon", "OurSetsWon", "HomeTeamSetsWon"]);
   const theirs = pickFirst(m, ["OpponentSetsWon", "AwaySetsWon", "AwayTeamSetsWon"]);
@@ -202,6 +221,8 @@ function normalizeMatch(m, { done }) {
   const endRaw = pickFirst(m, ["ScheduledEndDateTime", "EndDateTime", "MatchEndDateTime"]);
   const { iso: endISO } = parseTime(endRaw);
 
+  const courtStay = !done ? courtStayHints(m) : null;
+
   const live = !done ? detectLive(m, opponent) : null;
   const videoLink =
     pickFirst(m?.CourtInfo || {}, ["VideoLink"]) ||
@@ -222,6 +243,7 @@ function normalizeMatch(m, { done }) {
     timeISO: iso,
     timeMs: ms,
     endISO,
+    courtStay,
     live,
   };
 }

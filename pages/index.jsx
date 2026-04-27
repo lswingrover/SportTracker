@@ -441,6 +441,19 @@ function GameCard({ game, opponentInfo, teamName, onShare, onAddCal, justWon, te
           {!game.done && !game.next && !game.live && <span className="badge">Upcoming</span>}
         </div>
       </div>
+      {game.courtStay && (
+        <div className="meta" style={{ color: "var(--warn)" }}>
+          {game.courtStay.stay
+            ? `↪ Stay on Ct ${game.court} for the next match`
+            : game.courtStay.stayIfWin && game.courtStay.stayIfLoss
+              ? `↪ Stay on Ct ${game.court} either way`
+              : game.courtStay.stayIfWin
+                ? `↪ Stay on Ct ${game.court} if you win`
+                : game.courtStay.stayIfLoss
+                  ? `↪ Stay on Ct ${game.court} if you lose`
+                  : null}
+        </div>
+      )}
       {Array.isArray(game.sets) && game.sets.length > 0 ? (
         <div className="sets">
           Sets:{" "}
