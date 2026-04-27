@@ -4,8 +4,8 @@
   "description": "Live AES tournament tracker for 208 U14 Red",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#07090f",
-  "theme_color": "#f97316",
+  "background_color": "#002147",
+  "theme_color": "#B8960C",
   "orientation": "portrait",
   "icons": [
     {
