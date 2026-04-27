@@ -61,9 +61,13 @@ a { color: inherit; }
   width: 100%;
   max-width: 720px;
   margin: 0 auto;
-  /* Extra bottom padding so the fixed bottom nav (with safe-area) doesn't
-     cover the footer. ~76px nav + ~30px ios safe area + breathing room. */
-  padding: 16px 16px calc(120px + env(safe-area-inset-bottom));
+  /* Top: max() so we always honor the iOS notch / status bar in standalone
+     PWA mode (~47px on notched iPhones), and never go below 16px elsewhere.
+     Bottom: room for the fixed bottom nav + iOS safe area + breathing room. */
+  padding-top: max(env(safe-area-inset-top), 16px);
+  padding-right: max(env(safe-area-inset-right), 16px);
+  padding-bottom: calc(120px + env(safe-area-inset-bottom));
+  padding-left: max(env(safe-area-inset-left), 16px);
 }
 
 .topbar {
