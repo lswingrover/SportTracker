@@ -1,7 +1,30 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState, useCallback } from "react";
 import Head from "next/head";
 
+const TOURNAMENTS = [
+  {
+    id: "liberty-lake-2026",
+    label: "Liberty Lake Crossover",
+    eventId: "PTAwMDAwNDI2MDU90",
+    divId: "203854",
+    teamId: "201772",
+    teamName: "208 U14 Red",
+    venue: {
+      name: "Liberty Lake Sports Complex",
+      address: "1421 N Pepper Ln, Liberty Lake, WA 99019",
+      tz: "America/Los_Angeles",
+    },
+    date: "2026-04",
+  },
+];
+
+const THEMES = [
+  { id: "default", label: "Sport (orange)" },
+  { id: "208", label: "208 (navy/gold)" },
+];
+
 const REFRESH_MS = 2 * 60 * 1000;
+const CONFETTI_SRC = "https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js";
 
 function pad(n) {
   return String(n).padStart(2, "0");
@@ -20,35 +43,25 @@ function icsDate(iso) {
   );
 }
 
-function buildICS(events) {
-  const lines = [
+function buildSingleICS(g, teamName) {
+  const start = g.timeISO;
+  if (!start) return null;
+  const end = new Date(new Date(start).getTime() + 75 * 60 * 1000).toISOString();
+  return [
     "BEGIN:VCALENDAR",
     "VERSION:2.0",
     "PRODID:-//208 Tracker//EN",
     "CALSCALE:GREGORIAN",
-  ];
-  for (const e of events) {
-    if (!e.timeISO) continue;
-    const start = icsDate(e.timeISO);
-    const end = icsDate(
-      new Date(new Date(e.timeISO).getTime() + 75 * 60 * 1000).toISOString()
-    );
-    const uid = `${e.id || start}@208tracker`;
-    const summary = e.summary || `vs ${e.opponent || "TBD"}`;
-    const location = e.court || "TBD";
-    lines.push(
-      "BEGIN:VEVENT",
-      `UID:${uid}`,
-      `DTSTAMP:${icsDate(new Date().toISOString())}`,
-      `DTSTART:${start}`,
-      `DTEND:${end}`,
-      `SUMMARY:${summary}`,
-      `LOCATION:${location}`,
-      "END:VEVENT"
-    );
-  }
-  lines.push("END:VCALENDAR");
-  return lines.join("\r\n");
+    "BEGIN:VEVENT",
+    `UID:${g.id}@208tracker`,
+    `DTSTAMP:${icsDate(new Date().toISOString())}`,
+    `DTSTART:${icsDate(start)}`,
+    `DTEND:${icsDate(end)}`,
+    `SUMMARY:${teamName} vs ${g.opponent}`,
+    `LOCATION:Court ${g.court}`,
+    "END:VEVENT",
+    "END:VCALENDAR",
+  ].join("\r\n");
 }
 
 function downloadICS(filename, content) {
@@ -85,138 +98,515 @@ function useCountdown(targetISO) {
   return Math.round(diff / 60000);
 }
 
-function detectChanges(prev, next) {
-  const changes = new Set();
-  if (!prev || !Array.isArray(prev.games)) return changes;
-  const prevById = new Map(prev.games.map((g) => [g.id, g]));
+function usePersistentState(key, initial) {
+  const [value, setValue] = useState(initial);
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    try {
+      const raw = window.localStorage.getItem(key);
+      if (raw !== null) setValue(JSON.parse(raw));
+    } catch {}
+    // intentionally only run on mount
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    try {
+      window.localStorage.setItem(key, JSON.stringify(value));
+    } catch {}
+  }, [key, value]);
+  return [value, setValue];
+}
+
+function detectChangedIds(prev, next) {
+  const out = new Set();
+  if (!prev || !Array.isArray(prev.games)) return out;
+  const map = new Map(prev.games.map((g) => [g.id, g]));
   for (const g of next.games || []) {
-    const old = prevById.get(g.id);
+    const old = map.get(g.id);
     if (!old) continue;
-    if (old.court !== g.court || old.timeISO !== g.timeISO) {
-      changes.add(g.id);
+    if (old.court !== g.court || old.timeISO !== g.timeISO) out.add(g.id);
+  }
+  return out;
+}
+
+function detectNewWins(prev, next) {
+  const wins = [];
+  if (!prev || !Array.isArray(prev.games)) return wins;
+  const map = new Map(prev.games.map((g) => [g.id, g]));
+  for (const g of next.games || []) {
+    const old = map.get(g.id);
+    if (g.result === "W" && (!old || old.result !== "W")) wins.push(g);
+  }
+  return wins;
+}
+
+let confettiPromise = null;
+function loadConfetti() {
+  if (typeof window === "undefined") return Promise.resolve(null);
+  if (window.confetti) return Promise.resolve(window.confetti);
+  if (confettiPromise) return confettiPromise;
+  confettiPromise = new Promise((resolve) => {
+    const s = document.createElement("script");
+    s.src = CONFETTI_SRC;
+    s.async = true;
+    s.onload = () => resolve(window.confetti || null);
+    s.onerror = () => resolve(null);
+    document.head.appendChild(s);
+  });
+  return confettiPromise;
+}
+
+async function celebrate(themeId) {
+  const c = await loadConfetti();
+  if (!c) return;
+  const colors =
+    themeId === "208" ? ["#B8960C", "#002147", "#ffffff"] : ["#f97316", "#ffffff", "#22c55e"];
+  c({ particleCount: 120, spread: 70, origin: { y: 0.6 }, colors });
+  setTimeout(() => c({ particleCount: 60, angle: 60, spread: 55, origin: { x: 0 }, colors }), 200);
+  setTimeout(() => c({ particleCount: 60, angle: 120, spread: 55, origin: { x: 1 }, colors }), 250);
+  if (typeof navigator !== "undefined" && navigator.vibrate) {
+    navigator.vibrate([200, 100, 200]);
+  }
+}
+
+function LiveScoreBanner({ live, lastChangedAt }) {
+  const [tick, setTick] = useState(0);
+  useEffect(() => {
+    const id = setInterval(() => setTick((t) => t + 1), 1000);
+    return () => clearInterval(id);
+  }, []);
+  if (!live) return null;
+  const idleMs = lastChangedAt ? Date.now() - lastChangedAt : 0;
+  const stale = idleMs > 5 * 60 * 1000;
+  const ago = lastChangedAt
+    ? Math.max(0, Math.round(idleMs / 1000))
+    : null;
+  const sets = live.rawSets || [];
+  return (
+    <section className="live-banner" aria-live="polite">
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+        <span className="live-tag">
+          <span className="live-dot" /> Live
+        </span>
+        <span style={{ color: "var(--muted)", fontSize: 12 }}>
+          Court {live.court}
+          {ago != null && ` · updated ${ago}s ago`}
+        </span>
+      </div>
+      <div className="matchup">208 vs {live.opponent}</div>
+      <div className="scoreline">
+        <span style={{ color: "var(--text)" }}>{live.us}</span>
+        <span className="vs">–</span>
+        <span style={{ color: live.them > live.us ? "var(--loss)" : "var(--text)" }}>
+          {live.them}
+        </span>
+        <span className="vs" style={{ fontSize: 18 }}>
+          Set {live.setNumber}
+        </span>
+      </div>
+      {sets.length > 1 && (
+        <div className="meta" style={{ marginTop: 8 }}>
+          {sets.map((s, i) => {
+            const live = i === live?.setIndex && !s.complete;
+            return (
+              <span key={i} style={{ marginRight: 10 }}>
+                Set {i + 1}: {s.us}-{s.them} {s.complete ? "✓" : i === sets.length - 1 ? "🔴" : ""}
+              </span>
+            );
+          })}
+        </div>
+      )}
+      {stale && (
+        <div className="meta" style={{ marginTop: 6, color: "var(--warn)" }}>
+          ⏸ May be between sets — score hasn't moved in {Math.round(idleMs / 60000)} min
+        </div>
+      )}
+    </section>
+  );
+}
+
+function NextHero({ event, minutesUntil, projectedDone }) {
+  if (!event) {
+    return (
+      <section className="hero empty">
+        <h2>No upcoming match</h2>
+        <div className="meta">
+          {projectedDone
+            ? `Projected end: ${new Date(projectedDone).toLocaleString()}`
+            : "Schedule data not yet available."}
+        </div>
+      </section>
+    );
+  }
+  const work = event.kind === "work";
+  return (
+    <section className={`hero${work ? " work" : ""}`}>
+      <h2>
+        {work ? "🟡 Next work duty" : "▶ Next match"}
+      </h2>
+      <div className="opp">
+        {work ? event.role : `vs ${event.opponent}`}
+      </div>
+      <div className="meta">
+        {event.time} · Court {event.court}
+        {work && event.teams ? ` · ${event.teams}` : ""}
+      </div>
+      <div className="countdown">
+        <span className="num">
+          {minutesUntil != null
+            ? minutesUntil > 60
+              ? `${Math.floor(minutesUntil / 60)}h ${minutesUntil % 60}m`
+              : `${minutesUntil}`
+            : "—"}
+        </span>
+        <span className="unit">
+          {minutesUntil != null && minutesUntil <= 60 ? "min until tip" : "until tip"}
+        </span>
+      </div>
+    </section>
+  );
+}
+
+function NotificationsCard({ upcoming }) {
+  const [perm, setPerm] = useState(
+    typeof window === "undefined" ? "default" : Notification?.permission || "unsupported"
+  );
+  const timersRef = useRef([]);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    if (!("Notification" in window)) {
+      setPerm("unsupported");
+      return;
+    }
+    setPerm(Notification.permission);
+  }, []);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    if (perm !== "granted") return;
+    for (const t of timersRef.current) clearTimeout(t);
+    timersRef.current = [];
+    const now = Date.now();
+    for (const g of upcoming) {
+      if (!g.timeISO) continue;
+      const ms = new Date(g.timeISO).getTime();
+      for (const lead of [30, 10]) {
+        const fireAt = ms - lead * 60 * 1000;
+        const delay = fireAt - now;
+        if (delay <= 0) continue;
+        const id = setTimeout(() => {
+          try {
+            new Notification(`208 vs ${g.opponent} in ${lead} min`, {
+              body: `Court ${g.court} · ${g.time}`,
+              tag: `${g.id}-${lead}`,
+              icon: "/icon-192.svg",
+            });
+          } catch {}
+        }, delay);
+        timersRef.current.push(id);
+      }
+    }
+    return () => {
+      for (const t of timersRef.current) clearTimeout(t);
+      timersRef.current = [];
+    };
+  }, [upcoming, perm]);
+
+  async function ask() {
+    if (typeof window === "undefined" || !("Notification" in window)) return;
+    const result = await Notification.requestPermission();
+    setPerm(result);
+  }
+
+  if (perm === "unsupported") return null;
+  const on = perm === "granted";
+  const blocked = perm === "denied";
+
+  return (
+    <div className={`notif-card${on ? " on" : ""}`}>
+      <div style={{ minWidth: 0 }}>
+        <div className="title">
+          <span>🔔</span>
+          <span>Game alerts</span>
+          <span className={`state${on ? " on" : blocked ? " blocked" : ""}`}>
+            {on ? "On" : blocked ? "Blocked" : "Off"}
+          </span>
+        </div>
+        <div className="desc">
+          {blocked
+            ? "Enable in browser settings to receive alerts."
+            : "Get notified 30 min and 10 min before each game while this tab is open."}
+        </div>
+      </div>
+      {!on && !blocked && (
+        <button className="btn-primary" onClick={ask}>
+          Enable
+        </button>
+      )}
+    </div>
+  );
+}
+
+function CalendarCard({ origin, eventId, divId, teamId, teamName, gameCount }) {
+  const url = `${origin}/api/calendar.ics?eventId=${eventId}&divId=${divId}&teamId=${teamId}&teamName=${encodeURIComponent(teamName)}`;
+  const webcal = url.replace(/^https?:/, "webcal:");
+
+  async function copy() {
+    try {
+      await navigator.clipboard.writeText(url);
+      alert("Calendar URL copied. Paste it into your calendar app's 'Subscribe' option.");
+    } catch {
+      window.prompt("Copy this URL:", url);
     }
   }
-  return changes;
+
+  return (
+    <div className="calendar-section">
+      <div className="row">
+        <div className="lhs">
+          <div className="icon">📅</div>
+          <div>
+            <div className="label">Subscribe to calendar</div>
+            <div className="sub">
+              {gameCount > 0 ? `${gameCount} game${gameCount === 1 ? "" : "s"} · ` : ""}
+              Auto-updates if schedule changes
+            </div>
+          </div>
+        </div>
+        <a className="btn-mini primary" href={webcal}>
+          Add to iPhone
+        </a>
+      </div>
+      <div style={{ marginTop: 10, display: "flex", gap: 6, flexWrap: "wrap" }}>
+        <button className="btn-mini" onClick={copy}>
+          Copy URL
+        </button>
+        <a className="btn-mini" href={url} target="_blank" rel="noreferrer">
+          Open feed
+        </a>
+      </div>
+    </div>
+  );
+}
+
+function GameCard({ game, opponentInfo, teamName, onShare, onAddCal, justWon }) {
+  const cls = [
+    "card",
+    game.next ? "next" : "",
+    game.result === "W" ? "win" : "",
+    game.result === "L" ? "loss" : "",
+    game.done ? "past" : "",
+    game.live ? "live-card" : "",
+    justWon ? "just-won" : "",
+  ]
+    .filter(Boolean)
+    .join(" ");
+
+  return (
+    <article className={cls}>
+      <div className="card-row">
+        <div style={{ minWidth: 0 }}>
+          <div className="opp">vs {game.opponent}</div>
+          <div className="meta">
+            {game.time || "TBD"} · Court {game.court}
+          </div>
+          {opponentInfo && (
+            <div className="meta">
+              Opp record {opponentInfo.matchesWon}-{opponentInfo.matchesLost}
+              {opponentInfo.rank ? ` · #${opponentInfo.rank} in pool` : ""}
+            </div>
+          )}
+        </div>
+        <div style={{ display: "flex", gap: 6, flexWrap: "wrap", justifyContent: "flex-end" }}>
+          {game.live && <span className="badge live">Live</span>}
+          {game.result === "W" && <span className="badge win">Won</span>}
+          {game.result === "L" && <span className="badge loss">Lost</span>}
+          {!game.done && game.next && !game.live && <span className="badge next">Next</span>}
+          {!game.done && !game.next && !game.live && <span className="badge">Upcoming</span>}
+        </div>
+      </div>
+      {game.score && <div className="sets">Sets: {game.score}</div>}
+      <div className="card-actions">
+        {!game.done && game.timeISO && (
+          <button className="btn-mini" onClick={() => onAddCal(game)}>
+            📅 Add to calendar
+          </button>
+        )}
+        {game.done && game.result && (
+          <button className="btn-mini" onClick={() => onShare(game)}>
+            📣 Share result
+          </button>
+        )}
+      </div>
+    </article>
+  );
 }
 
 export default function Home() {
+  const [tournamentId, setTournamentId] = usePersistentState("tournamentId", TOURNAMENTS[0].id);
+  const [themeId, setThemeId] = usePersistentState("themeId", "208");
+  const tournament = TOURNAMENTS.find((t) => t.id === tournamentId) || TOURNAMENTS[0];
+  const [teamId, setTeamId] = usePersistentState(
+    `teamId-${tournament.id}`,
+    tournament.teamId
+  );
+
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [tab, setTab] = useState("schedule");
   const [changedIds, setChangedIds] = useState(new Set());
-  const [showManual, setShowManual] = useState(false);
-  const [manualGames, setManualGames] = useState(() => {
-    if (typeof window === "undefined") return [];
-    try {
-      return JSON.parse(localStorage.getItem("manualGames") || "[]");
-    } catch {
-      return [];
-    }
-  });
+  const [recentWinIds, setRecentWinIds] = useState(new Set());
+  const [winToast, setWinToast] = useState(null);
+  const [lastLiveChange, setLastLiveChange] = useState(null);
   const prevDataRef = useRef(null);
-
-  async function load(force = false) {
-    try {
-      setLoading(true);
-      const res = await fetch(`/api/tournament${force ? "?force=1" : ""}`);
-      if (!res.ok) throw new Error(`API ${res.status}`);
-      const next = await res.json();
-      const changes = detectChanges(prevDataRef.current, next);
-      if (changes.size) setChangedIds(changes);
-      prevDataRef.current = next;
-      setData(next);
-      setError(null);
-    } catch (e) {
-      setError(String(e.message || e));
-    } finally {
-      setLoading(false);
-    }
-  }
+  const prevLiveRef = useRef(null);
+  const firstLoadRef = useRef(true);
+  const [origin, setOrigin] = useState("");
 
   useEffect(() => {
-    load();
+    if (typeof window !== "undefined") setOrigin(window.location.origin);
   }, []);
+
+  useEffect(() => {
+    if (typeof document === "undefined") return;
+    if (themeId === "default") document.documentElement.removeAttribute("data-theme");
+    else document.documentElement.setAttribute("data-theme", themeId);
+  }, [themeId]);
+
+  const teamName = useMemo(() => {
+    const t = data?.teams?.find((x) => String(x.teamId) === String(teamId));
+    return t?.teamName || tournament.teamName;
+  }, [data, teamId, tournament.teamName]);
+
+  const load = useCallback(
+    async (force = false) => {
+      try {
+        setLoading(true);
+        const url = `/api/tournament?eventId=${encodeURIComponent(tournament.eventId)}&divId=${encodeURIComponent(tournament.divId)}&teamId=${encodeURIComponent(teamId)}&teamName=${encodeURIComponent(teamName)}${force ? "&force=1" : ""}`;
+        const res = await fetch(url);
+        if (!res.ok) throw new Error(`API ${res.status}`);
+        const next = await res.json();
+
+        const changed = detectChangedIds(prevDataRef.current, next);
+        if (changed.size) setChangedIds(changed);
+
+        if (!firstLoadRef.current) {
+          const newWins = detectNewWins(prevDataRef.current, next);
+          if (newWins.length) {
+            setRecentWinIds((s) => {
+              const out = new Set(s);
+              for (const w of newWins) out.add(w.id);
+              return out;
+            });
+            setWinToast(newWins[0]);
+            celebrate(themeId);
+            setTimeout(() => setWinToast(null), 6000);
+            setTimeout(
+              () =>
+                setRecentWinIds((s) => {
+                  const out = new Set(s);
+                  for (const w of newWins) out.delete(w.id);
+                  return out;
+                }),
+              10_000
+            );
+          }
+        }
+
+        const prevLive = prevLiveRef.current;
+        const curLive = next.liveGame;
+        if (curLive) {
+          const sig = JSON.stringify(curLive.rawSets || []);
+          if (!prevLive || prevLive.sig !== sig) {
+            setLastLiveChange(Date.now());
+            prevLiveRef.current = { sig };
+          }
+        } else {
+          prevLiveRef.current = null;
+          setLastLiveChange(null);
+        }
+
+        prevDataRef.current = next;
+        firstLoadRef.current = false;
+        setData(next);
+        setError(null);
+
+        if (typeof navigator !== "undefined" && navigator.vibrate && force) {
+          navigator.vibrate(40);
+        }
+      } catch (e) {
+        setError(String(e.message || e));
+      } finally {
+        setLoading(false);
+      }
+    },
+    [tournament.eventId, tournament.divId, teamId, teamName, themeId]
+  );
+
+  useEffect(() => {
+    firstLoadRef.current = true;
+    prevDataRef.current = null;
+    load();
+  }, [load]);
 
   useInterval(() => load(), REFRESH_MS);
 
-  useEffect(() => {
-    if (typeof window === "undefined") return;
-    localStorage.setItem("manualGames", JSON.stringify(manualGames));
-  }, [manualGames]);
-
-  const games = useMemo(() => {
-    const apiGames = data?.games || [];
-    if (apiGames.length || !manualGames.length) return apiGames;
-    return manualGames
-      .map((g) => ({
-        ...g,
-        next: false,
-      }))
-      .sort((a, b) => (new Date(a.timeISO).getTime() || 0) - (new Date(b.timeISO).getTime() || 0));
-  }, [data, manualGames]);
-
+  const games = data?.games || [];
+  const pastGames = games.filter((g) => g.done);
+  const upcomingGames = games.filter((g) => !g.done);
   const standings = data?.standings || [];
+  const standingsById = useMemo(() => {
+    const m = new Map();
+    for (const s of standings) m.set(s.teamName, s);
+    return m;
+  }, [standings]);
   const work = data?.workAssignments || [];
   const record = data?.record || { wins: 0, losses: 0 };
+  const teamsList = data?.teams || [];
 
-  const nextGame =
-    data?.nextGame ||
-    games.find((g) => !g.done && g.timeISO) ||
-    null;
+  const nextEvent = data?.nextEvent || null;
+  const minutesUntil = useCountdown(nextEvent?.timeISO);
 
-  const minutesUntil = useCountdown(nextGame?.timeISO);
-
-  function exportAll() {
-    const upcoming = games.filter((g) => !g.done && g.timeISO);
-    if (!upcoming.length) return;
-    const ics = buildICS(
-      upcoming.map((g) => ({
-        ...g,
-        summary: `208 vs ${g.opponent}`,
-      }))
-    );
-    downloadICS("208-games.ics", ics);
+  function shareGame(g) {
+    const text = g.result === "W"
+      ? `${teamName} def. ${g.opponent}${g.score ? ` ${g.score}` : ""} 🏐`
+      : `${teamName} fell to ${g.opponent}${g.score ? ` ${g.score}` : ""}`;
+    const full = `${text} #208volleyball #volleyball`;
+    if (typeof navigator !== "undefined" && navigator.share) {
+      navigator.share({ title: "208 Tracker", text: full }).catch(() => {});
+    } else if (typeof navigator !== "undefined" && navigator.clipboard) {
+      navigator.clipboard.writeText(full).then(() => alert("Copied")).catch(() => {});
+    }
   }
 
-  function exportOne(g) {
-    const ics = buildICS([{ ...g, summary: `208 vs ${g.opponent}` }]);
-    downloadICS(`208-${(g.opponent || "game").replace(/\s+/g, "_")}.ics`, ics);
+  function addCalSingle(g) {
+    const ics = buildSingleICS(g, teamName);
+    if (!ics) return;
+    const slug = (g.opponent || "game").replace(/\s+/g, "_");
+    downloadICS(`208-${slug}.ics`, ics);
   }
 
   async function shareSummary() {
     const lines = [];
-    lines.push(`208 U14 Red — ${record.wins}W ${record.losses}L`);
+    lines.push(`${teamName} — ${record.wins}W ${record.losses}L`);
     if (data?.poolPosition) lines.push(`Pool: ${data.poolPosition}`);
-    if (nextGame) {
-      lines.push(`Next: ${nextGame.time} • Ct ${nextGame.court} • vs ${nextGame.opponent}`);
+    if (data?.liveGame) {
+      lines.push(`LIVE: ${data.liveGame.us}-${data.liveGame.them} (Set ${data.liveGame.setNumber})`);
+    } else if (nextEvent) {
+      const what = nextEvent.kind === "work" ? nextEvent.role : `vs ${nextEvent.opponent}`;
+      lines.push(`Next: ${nextEvent.time} · Ct ${nextEvent.court} · ${what}`);
     }
     const text = lines.join("\n");
     try {
-      if (navigator.share) {
-        await navigator.share({ title: "208 Tracker", text });
-      } else {
+      if (navigator.share) await navigator.share({ title: "208 Tracker", text });
+      else {
         await navigator.clipboard.writeText(text);
         alert("Copied to clipboard");
       }
-    } catch {
-      /* user cancelled */
-    }
-  }
-
-  function addManualGame(form) {
-    const entry = {
-      id: `manual-${Date.now()}`,
-      done: form.done,
-      result: form.result || null,
-      score: form.score || null,
-      court: form.court || "TBD",
-      opponent: form.opponent || "TBD",
-      timeISO: form.timeISO || null,
-      time: form.timeISO ? new Date(form.timeISO).toLocaleString() : null,
-      manual: true,
-    };
-    setManualGames((m) => [...m, entry]);
+    } catch {}
   }
 
   return (
@@ -229,25 +619,71 @@ export default function Home() {
         <header className="topbar">
           <div className="brand">
             <div className="logo">🏐</div>
-            <div>
-              <div className="name">208 U14 Red</div>
-              <div className="sub">{data?.cached ? "Live (cached)" : "Live"}</div>
+            <div style={{ minWidth: 0 }}>
+              <div className="name">{teamName}</div>
+              <div className="sub">
+                {tournament.label}
+                {data?.cached ? " · cached" : ""}
+              </div>
             </div>
           </div>
           <div style={{ display: "flex", gap: 8 }}>
-            <button className="iconbtn" onClick={shareSummary} aria-label="Share">
+            <button className="iconbtn" onClick={shareSummary}>
               Share
             </button>
-            <button
-              className="iconbtn"
-              onClick={() => load(true)}
-              disabled={loading}
-              aria-label="Refresh"
-            >
+            <button className="iconbtn" onClick={() => load(true)} disabled={loading}>
               {loading ? "…" : "Refresh"}
             </button>
           </div>
         </header>
+
+        <div className="selectors">
+          <div className="selector">
+            <label>Tournament</label>
+            <select
+              value={tournamentId}
+              onChange={(e) => {
+                setTournamentId(e.target.value);
+                const next = TOURNAMENTS.find((t) => t.id === e.target.value);
+                if (next) setTeamId(next.teamId);
+              }}
+            >
+              {TOURNAMENTS.map((t) => (
+                <option key={t.id} value={t.id}>
+                  {t.label} · {t.date}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div className="selector">
+            <label>Theme</label>
+            <select value={themeId} onChange={(e) => setThemeId(e.target.value)}>
+              {THEMES.map((t) => (
+                <option key={t.id} value={t.id}>
+                  {t.label}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div className="selector full">
+            <label>Team</label>
+            <select value={teamId} onChange={(e) => setTeamId(e.target.value)}>
+              {teamsList.length === 0 && (
+                <option value={teamId}>{teamName}</option>
+              )}
+              {teamsList.map((t) => (
+                <option key={t.teamId} value={t.teamId}>
+                  {t.teamName}
+                  {t.club ? ` · ${t.club}` : ""}
+                </option>
+              ))}
+            </select>
+          </div>
+        </div>
+
+        {data?.liveGame && (
+          <LiveScoreBanner live={data.liveGame} lastChangedAt={lastLiveChange} />
+        )}
 
         <section className="stats">
           <div className="stat win">
@@ -264,42 +700,24 @@ export default function Home() {
           </div>
         </section>
 
-        {nextGame ? (
-          <section className="hero">
-            <h2>Next match</h2>
-            <div className="opp">vs {nextGame.opponent}</div>
-            <div className="meta">
-              {nextGame.time} • Court {nextGame.court}
-            </div>
-            <div className="countdown">
-              <span className="num">
-                {minutesUntil != null
-                  ? minutesUntil > 60
-                    ? `${Math.floor(minutesUntil / 60)}h ${minutesUntil % 60}m`
-                    : `${minutesUntil}`
-                  : "—"}
-              </span>
-              <span className="unit">
-                {minutesUntil != null && minutesUntil <= 60 ? "min until tip" : "until tip"}
-              </span>
-            </div>
-          </section>
-        ) : (
-          <section className="hero empty">
-            <h2>No upcoming match</h2>
-            <div className="meta">
-              {data?.projectedDone
-                ? `Tournament looks done. Projected end: ${new Date(data.projectedDone).toLocaleString()}.`
-                : "Schedule data unavailable from AES. Add games manually below."}
-            </div>
-          </section>
-        )}
+        <NextHero event={nextEvent} minutesUntil={minutesUntil} projectedDone={data?.projectedDone} />
 
-        <nav className="tabs" role="tablist">
+        <NotificationsCard upcoming={upcomingGames} />
+
+        <CalendarCard
+          origin={origin}
+          eventId={tournament.eventId}
+          divId={tournament.divId}
+          teamId={teamId}
+          teamName={teamName}
+          gameCount={upcomingGames.length}
+        />
+
+        <nav className="tabs">
           {[
             ["schedule", "Schedule"],
             ["standings", "Standings"],
-            ["work", "Work duties"],
+            ["work", "Work"],
           ].map(([id, label]) => (
             <button
               key={id}
@@ -313,52 +731,46 @@ export default function Home() {
 
         {tab === "schedule" && (
           <>
-            <div className="bulk-actions">
-              <button className="btn-mini" onClick={exportAll} disabled={!games.some((g) => !g.done)}>
-                Export upcoming → ICS
-              </button>
-              <button className="btn-mini" onClick={() => setShowManual(true)}>
-                Manual entry
-              </button>
-            </div>
-            {games.length === 0 ? (
+            {pastGames.length > 0 && (
+              <>
+                <div className="section-title">Past games · {pastGames.length}</div>
+                <div className="list">
+                  {pastGames.map((g) => (
+                    <GameCard
+                      key={g.id}
+                      game={g}
+                      teamName={teamName}
+                      opponentInfo={standingsById.get(g.opponent)}
+                      onShare={shareGame}
+                      onAddCal={addCalSingle}
+                      justWon={recentWinIds.has(g.id)}
+                    />
+                  ))}
+                </div>
+              </>
+            )}
+            {upcomingGames.length > 0 && (
+              <>
+                <div className="section-title">Upcoming · {upcomingGames.length}</div>
+                <div className="list">
+                  {upcomingGames.map((g) => (
+                    <GameCard
+                      key={g.id}
+                      game={g}
+                      teamName={teamName}
+                      opponentInfo={standingsById.get(g.opponent)}
+                      onShare={shareGame}
+                      onAddCal={addCalSingle}
+                    />
+                  ))}
+                </div>
+              </>
+            )}
+            {pastGames.length === 0 && upcomingGames.length === 0 && (
               <div className="empty">
-                No games returned by AES.
+                No games returned by AES yet for this team.
                 <br />
-                Use “Manual entry” to add games.
-              </div>
-            ) : (
-              <div className="list">
-                {games.map((g) => (
-                  <article
-                    key={g.id}
-                    className={`card ${g.next ? "next" : ""} ${g.result === "W" ? "win" : ""} ${g.result === "L" ? "loss" : ""}`}
-                  >
-                    <div className="card-row">
-                      <div>
-                        <div className="opp">vs {g.opponent}</div>
-                        <div className="meta">
-                          {g.time || "TBD"} • Ct {g.court}
-                        </div>
-                      </div>
-                      <div style={{ display: "flex", gap: 6, flexWrap: "wrap", justifyContent: "flex-end" }}>
-                        {g.result === "W" && <span className="badge win">Won</span>}
-                        {g.result === "L" && <span className="badge loss">Lost</span>}
-                        {!g.done && g.next && <span className="badge next">Next</span>}
-                        {!g.done && !g.next && <span className="badge">Upcoming</span>}
-                        {changedIds.has(g.id) && <span className="badge changed">Changed</span>}
-                      </div>
-                    </div>
-                    {g.score && <div className="meta">Score: {g.score}</div>}
-                    {!g.done && g.timeISO && (
-                      <div className="card-actions">
-                        <button className="btn-mini" onClick={() => exportOne(g)}>
-                          Add to calendar
-                        </button>
-                      </div>
-                    )}
-                  </article>
-                ))}
+                Check back when the tournament starts.
               </div>
             )}
           </>
@@ -386,7 +798,7 @@ export default function Home() {
                       <td>
                         {row.matchesWon}-{row.matchesLost}
                       </td>
-                      <td>{(row.setPercent * 100).toFixed(0)}%</td>
+                      <td>{Math.round((row.setPercent || 0) * 100)}%</td>
                     </tr>
                   ))}
                 </tbody>
@@ -407,7 +819,7 @@ export default function Home() {
                       <div>
                         <div className="opp">{w.role}</div>
                         <div className="meta">
-                          {w.time || "TBD"} • Ct {w.court}
+                          {w.time || "TBD"} · Court {w.court}
                         </div>
                         {w.teams && <div className="meta">{w.teams}</div>}
                       </div>
@@ -426,131 +838,51 @@ export default function Home() {
               ? `Updated ${new Date(data.scrapedAt).toLocaleTimeString()}`
               : "Loading…"}
             {data?.cached && <span className="cached-pill">Cached</span>}
-            {error && <span className="cached-pill" style={{ color: "var(--loss)" }}>{error}</span>}
+            {error && (
+              <span className="cached-pill" style={{ color: "var(--loss)" }}>
+                {error}
+              </span>
+            )}
           </div>
-          <button className="btn-mini" onClick={() => setShowManual(true)}>
-            Edit local games
-          </button>
+          {data?.projectedDone && upcomingGames.length > 0 && (
+            <div>
+              Done ~{new Date(data.projectedDone).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })} (est.)
+            </div>
+          )}
         </footer>
       </div>
 
-      {showManual && (
-        <ManualEntryModal
-          existing={manualGames}
-          onClose={() => setShowManual(false)}
-          onAdd={addManualGame}
-          onClear={() => setManualGames([])}
-        />
+      {winToast && (
+        <div
+          role="status"
+          style={{
+            position: "fixed",
+            top: 12,
+            left: 0,
+            right: 0,
+            display: "grid",
+            placeItems: "center",
+            zIndex: 100,
+            pointerEvents: "none",
+          }}
+        >
+          <div
+            style={{
+              background: "var(--accent)",
+              color: "var(--accent-ink)",
+              padding: "10px 18px",
+              borderRadius: 999,
+              fontWeight: 900,
+              fontFamily: '"Barlow Condensed", sans-serif',
+              fontSize: 18,
+              letterSpacing: "0.06em",
+              boxShadow: "0 8px 30px rgba(0,0,0,0.4)",
+            }}
+          >
+            🏐 W vs {winToast.opponent}!
+          </div>
+        </div>
       )}
     </>
-  );
-}
-
-function ManualEntryModal({ existing, onClose, onAdd, onClear }) {
-  const [opponent, setOpponent] = useState("");
-  const [court, setCourt] = useState("");
-  const [timeLocal, setTimeLocal] = useState("");
-  const [done, setDone] = useState(false);
-  const [result, setResult] = useState("W");
-  const [score, setScore] = useState("");
-
-  function submit(e) {
-    e.preventDefault();
-    onAdd({
-      opponent,
-      court,
-      timeISO: timeLocal ? new Date(timeLocal).toISOString() : null,
-      done,
-      result: done ? result : null,
-      score: done ? score : null,
-    });
-    setOpponent("");
-    setCourt("");
-    setTimeLocal("");
-    setScore("");
-    setDone(false);
-  }
-
-  return (
-    <div className="modal-backdrop" role="dialog" aria-modal="true">
-      <div className="modal">
-        <h3>Manual entry</h3>
-        <form onSubmit={submit}>
-          <div className="field">
-            <label>Opponent</label>
-            <input
-              required
-              value={opponent}
-              onChange={(e) => setOpponent(e.target.value)}
-              placeholder="Club Selah U14 Blue"
-            />
-          </div>
-          <div className="field">
-            <label>Court</label>
-            <input
-              value={court}
-              onChange={(e) => setCourt(e.target.value)}
-              placeholder="HUB Ct 5"
-            />
-          </div>
-          <div className="field">
-            <label>Start time</label>
-            <input
-              type="datetime-local"
-              value={timeLocal}
-              onChange={(e) => setTimeLocal(e.target.value)}
-            />
-          </div>
-          <div className="field">
-            <label>
-              <input
-                type="checkbox"
-                checked={done}
-                onChange={(e) => setDone(e.target.checked)}
-                style={{ marginRight: 6 }}
-              />
-              This game is already played
-            </label>
-          </div>
-          {done && (
-            <>
-              <div className="field">
-                <label>Result</label>
-                <select value={result} onChange={(e) => setResult(e.target.value)}>
-                  <option value="W">Won</option>
-                  <option value="L">Lost</option>
-                </select>
-              </div>
-              <div className="field">
-                <label>Score</label>
-                <input
-                  value={score}
-                  onChange={(e) => setScore(e.target.value)}
-                  placeholder="25-22, 24-26"
-                />
-              </div>
-            </>
-          )}
-          <div className="modal-actions">
-            <button type="button" className="btn-secondary" onClick={onClose}>
-              Close
-            </button>
-            {existing.length > 0 && (
-              <button type="button" className="btn-secondary" onClick={onClear}>
-                Clear all
-              </button>
-            )}
-            <button type="submit" className="btn-primary">
-              Add game
-            </button>
-          </div>
-        </form>
-        {existing.length > 0 && (
-          <div style={{ marginTop: 12, fontSize: 12, color: "var(--muted)" }}>
-            {existing.length} manual game{existing.length === 1 ? "" : "s"} stored locally.
-          </div>
-        )}
-      </div>
-    </div>
   );
 }

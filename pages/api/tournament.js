@@ -1,25 +1,17 @@
 const AES_BASE = "https://results.advancedeventsystems.com";
 
-const EVENT_ID = process.env.EVENT_ID || "PTAwMDAwNDI2MDU90";
-const DIVISION_ID = process.env.DIVISION_ID || "203854";
-const TEAM_ID = process.env.TEAM_ID || "201772";
-const TEAM_NAME = process.env.TEAM_NAME || "208 U14 Red";
+const DEFAULT_EVENT_ID = process.env.EVENT_ID || "PTAwMDAwNDI2MDU90";
+const DEFAULT_DIVISION_ID = process.env.DIVISION_ID || "203854";
+const DEFAULT_TEAM_ID = process.env.TEAM_ID || "201772";
+const DEFAULT_TEAM_NAME = process.env.TEAM_NAME || "208 U14 Red";
 
 const CACHE_TTL_MS = 2 * 60 * 1000;
 
-let cache = {
-  payload: null,
-  fetchedAt: 0,
-  remoteTimestamp: null,
-};
+const cacheByKey = new Map();
 
 async function fetchJson(url) {
-  const res = await fetch(url, {
-    headers: { Accept: "application/json" },
-  });
-  if (!res.ok) {
-    throw new Error(`AES ${res.status} for ${url}`);
-  }
+  const res = await fetch(url, { headers: { Accept: "application/json" } });
+  if (!res.ok) throw new Error(`AES ${res.status} for ${url}`);
   const text = await res.text();
   if (!text) return null;
   try {
@@ -44,19 +36,22 @@ function parseTime(value) {
 }
 
 function setsFromMatch(m) {
-  const setKeys = ["Sets", "MatchSets", "Games", "GameResults"];
-  for (const k of setKeys) {
+  for (const k of ["Sets", "MatchSets", "Games", "GameResults"]) {
     if (Array.isArray(m?.[k])) return m[k];
   }
   return [];
 }
 
+function setScores(s) {
+  const us = pickFirst(s, ["TeamScore", "OurScore", "HomeScore", "Team1Score"]);
+  const them = pickFirst(s, ["OpponentScore", "AwayScore", "Team2Score"]);
+  return { us, them };
+}
+
 function teamWonMatch(m) {
   const ours = pickFirst(m, ["TeamSetsWon", "OurSetsWon", "HomeTeamSetsWon"]);
   const theirs = pickFirst(m, ["OpponentSetsWon", "AwaySetsWon", "AwayTeamSetsWon"]);
-  if (typeof ours === "number" && typeof theirs === "number") {
-    return ours > theirs;
-  }
+  if (typeof ours === "number" && typeof theirs === "number") return ours > theirs;
   if (typeof m?.IsWin === "boolean") return m.IsWin;
   if (typeof m?.Winner === "string") {
     return m.Winner.toLowerCase().includes("us") || m.Winner === "Home";
@@ -69,13 +64,87 @@ function scoreString(m) {
   if (!sets.length) return null;
   const parts = sets
     .map((s) => {
-      const us = pickFirst(s, ["TeamScore", "OurScore", "HomeScore", "Team1Score"]);
-      const them = pickFirst(s, ["OpponentScore", "AwayScore", "Team2Score"]);
+      const { us, them } = setScores(s);
       if (us == null || them == null) return null;
       return `${us}-${them}`;
     })
     .filter(Boolean);
   return parts.length ? parts.join(", ") : null;
+}
+
+function liveScoreShape(m, opponentName) {
+  const sets = setsFromMatch(m);
+  if (!sets.length) return null;
+  const parsed = sets.map((s) => {
+    const { us, them } = setScores(s);
+    return {
+      us: typeof us === "number" ? us : null,
+      them: typeof them === "number" ? them : null,
+      complete: typeof s?.IsComplete === "boolean" ? s.IsComplete : null,
+    };
+  });
+  const inProgressIdx = parsed.findIndex(
+    (s) =>
+      s.us != null && s.them != null && s.complete !== true && (s.us < 25 && s.them < 25 || Math.abs(s.us - s.them) < 2)
+  );
+  const lastIdx = inProgressIdx >= 0 ? inProgressIdx : parsed.length - 1;
+  const cur = parsed[lastIdx] || { us: 0, them: 0 };
+  const setsWon = {
+    us: parsed.filter((s) => s.us > s.them && (s.us >= 25 || s.complete === true)).length,
+    them: parsed.filter((s) => s.them > s.us && (s.them >= 25 || s.complete === true)).length,
+  };
+  return {
+    setIndex: lastIdx,
+    setNumber: lastIdx + 1,
+    us: cur.us ?? 0,
+    them: cur.them ?? 0,
+    setsWon,
+    opponent: opponentName,
+    rawSets: parsed,
+  };
+}
+
+function detectLive(m, opponentName) {
+  const start = pickFirst(m, [
+    "MatchDate",
+    "ScheduledStartDateTime",
+    "StartDateTime",
+    "MatchStartDateTime",
+    "ScheduledStart",
+    "StartTime",
+  ]);
+  const { ms } = parseTime(start);
+  if (ms == null) return null;
+  const now = Date.now();
+  if (ms > now) return null;
+  if (ms < now - 4 * 60 * 60 * 1000) return null;
+  const finalized =
+    typeof m?.IsComplete === "boolean"
+      ? m.IsComplete
+      : typeof m?.IsFinal === "boolean"
+        ? m.IsFinal
+        : null;
+  if (finalized === true) return null;
+  const won = teamWonMatch(m);
+  const sets = setsFromMatch(m);
+  if (won != null && sets.length && sets.every((s) => s?.IsComplete === true)) return null;
+  if (!sets.length && finalized !== false) return null;
+  return liveScoreShape(m, opponentName);
+}
+
+function formatLocalTime(iso) {
+  try {
+    const d = new Date(iso);
+    return d.toLocaleString("en-US", {
+      weekday: "short",
+      month: "short",
+      day: "numeric",
+      hour: "numeric",
+      minute: "2-digit",
+    });
+  } catch {
+    return iso;
+  }
 }
 
 function normalizeMatch(m, { done }) {
@@ -99,42 +168,38 @@ function normalizeMatch(m, { done }) {
 
   let result = null;
   let score = null;
+  let sets = null;
   if (done) {
     const won = teamWonMatch(m);
     if (won === true) result = "W";
     else if (won === false) result = "L";
     score = scoreString(m);
+    const setArr = setsFromMatch(m);
+    if (setArr.length) {
+      sets = setArr
+        .map((s) => {
+          const { us, them } = setScores(s);
+          return us != null && them != null ? { us, them } : null;
+        })
+        .filter(Boolean);
+    }
   }
 
+  const live = !done ? detectLive(m, opponent) : null;
+
   return {
-    id:
-      pickFirst(m, ["MatchId", "Id", "ScheduleId"]) ||
-      `${start || "x"}-${opponent}`,
+    id: pickFirst(m, ["MatchId", "Id", "ScheduleId"]) || `${start || "x"}-${opponent}`,
     done,
     result,
     score,
+    sets,
     court,
     opponent,
     time: iso ? formatLocalTime(iso) : null,
     timeISO: iso,
     timeMs: ms,
-    raw: undefined,
+    live,
   };
-}
-
-function formatLocalTime(iso) {
-  try {
-    const d = new Date(iso);
-    return d.toLocaleString("en-US", {
-      weekday: "short",
-      month: "short",
-      day: "numeric",
-      hour: "numeric",
-      minute: "2-digit",
-    });
-  } catch {
-    return iso;
-  }
 }
 
 function normalizeWork(w) {
@@ -144,16 +209,16 @@ function normalizeWork(w) {
     "StartDateTime",
     "WorkStartDateTime",
   ]);
-  const { iso } = parseTime(start);
+  const { iso, ms } = parseTime(start);
   return {
     id: pickFirst(w, ["MatchId", "WorkAssignmentId", "Id"]) || `${start || "x"}-work`,
-    role:
-      pickFirst(w, ["WorkRole", "Role", "Assignment", "Position"]) || "Work duty",
+    role: pickFirst(w, ["WorkRole", "Role", "Assignment", "Position"]) || "Work duty",
     court:
       pickFirst(w, ["Court", "CourtName", "CourtText"]) ||
       pickFirst(w?.CourtInfo || {}, ["Name", "CourtName"]) ||
       "TBD",
     timeISO: iso,
+    timeMs: ms,
     time: iso ? formatLocalTime(iso) : null,
     teams:
       [
@@ -165,12 +230,12 @@ function normalizeWork(w) {
   };
 }
 
-function normalizeStandings(rows) {
+function normalizeStandings(rows, teamId) {
   if (!Array.isArray(rows)) return [];
   return rows.map((r) => ({
     teamId: r.TeamId,
     teamName: r.TeamName,
-    isUs: String(r.TeamId) === String(TEAM_ID),
+    isUs: String(r.TeamId) === String(teamId),
     rank: r.OverallRank ?? r.FinishRank ?? null,
     rankText: r.FinishRankText ?? null,
     matchesWon: r.MatchesWon ?? 0,
@@ -179,7 +244,19 @@ function normalizeStandings(rows) {
     setsLost: r.SetsLost ?? 0,
     setPercent: r.SetPercent ?? 0,
     pointRatio: r.PointRatio ?? 0,
+    club: r.Club?.Name || null,
   }));
+}
+
+function teamsFromStandings(rows) {
+  if (!Array.isArray(rows)) return [];
+  return rows
+    .map((r) => ({
+      teamId: r.TeamId,
+      teamName: r.TeamName,
+      club: r.Club?.Name || null,
+    }))
+    .sort((a, b) => (a.teamName || "").localeCompare(b.teamName || ""));
 }
 
 function recordFromStandings(standings) {
@@ -188,7 +265,7 @@ function recordFromStandings(standings) {
   return { wins: us.matchesWon, losses: us.matchesLost };
 }
 
-function buildResponse({ team, current, future, work, standings, nextAssignments, remoteTimestamp }) {
+function buildResponse({ team, current, future, work, standings, nextAssignments, remoteTimestamp, ctx }) {
   const playedRaw = Array.isArray(current) ? current : [];
   const upcomingRaw = Array.isArray(future) ? future : [];
 
@@ -198,45 +275,69 @@ function buildResponse({ team, current, future, work, standings, nextAssignments
   const games = [...played, ...upcoming]
     .filter((g) => g.timeMs != null || g.timeISO != null)
     .sort((a, b) => (a.timeMs || 0) - (b.timeMs || 0));
-
   if (!games.length && (played.length || upcoming.length)) {
     games.push(...played, ...upcoming);
   }
 
   let firstUpcomingFlagged = false;
   for (const g of games) {
-    if (!g.done && !firstUpcomingFlagged) {
-      g.next = true;
-      firstUpcomingFlagged = true;
-    } else {
-      g.next = false;
-    }
+    g.next = !g.done && !firstUpcomingFlagged ? (firstUpcomingFlagged = true) : false;
     delete g.timeMs;
   }
 
-  const standingsRows = normalizeStandings(standings?.value);
-  const record = recordFromStandings(standingsRows);
+  const liveGame = games.find((g) => !g.done && g.live);
 
+  const standingsRows = normalizeStandings(standings?.value, ctx.teamId);
+  const teams = teamsFromStandings(standings?.value);
+  const record = recordFromStandings(standingsRows);
   const us = standingsRows.find((s) => s.isUs);
-  const poolPosition = us
-    ? us.rankText || (us.rank ? String(us.rank) : null)
-    : null;
+  const poolPosition = us ? us.rankText || (us.rank ? String(us.rank) : null) : null;
 
   const workAssignments = (Array.isArray(work) ? work : []).map(normalizeWork);
 
   const nextGameObj = games.find((g) => !g.done && g.timeISO);
-  let nextGame = null;
-  if (nextGameObj) {
-    const ms = new Date(nextGameObj.timeISO).getTime();
-    const minutesUntil = Math.max(0, Math.round((ms - Date.now()) / 60000));
-    nextGame = {
-      time: nextGameObj.time,
-      timeISO: nextGameObj.timeISO,
-      court: nextGameObj.court,
-      opponent: nextGameObj.opponent,
-      minutesUntil,
+  const nextWorkObj = workAssignments
+    .filter((w) => w.timeMs && w.timeMs > Date.now())
+    .sort((a, b) => a.timeMs - b.timeMs)[0];
+
+  function asNext(o, kind) {
+    if (!o) return null;
+    const ms = o.timeMs ?? new Date(o.timeISO).getTime();
+    return {
+      kind,
+      time: o.time,
+      timeISO: o.timeISO,
+      court: o.court,
+      opponent: kind === "game" ? o.opponent : null,
+      role: kind === "work" ? o.role : null,
+      teams: kind === "work" ? o.teams : null,
+      minutesUntil: Math.max(0, Math.round((ms - Date.now()) / 60000)),
     };
   }
+
+  let nextEvent = null;
+  const nextGameMs = nextGameObj?.timeISO ? new Date(nextGameObj.timeISO).getTime() : null;
+  const nextWorkMs = nextWorkObj?.timeMs ?? null;
+  if (nextGameMs && nextWorkMs) {
+    nextEvent = nextGameMs <= nextWorkMs ? asNext(nextGameObj, "game") : asNext(nextWorkObj, "work");
+  } else if (nextGameMs) {
+    nextEvent = asNext(nextGameObj, "game");
+  } else if (nextWorkMs) {
+    nextEvent = asNext(nextWorkObj, "work");
+  }
+
+  const nextGame = nextGameObj
+    ? {
+        time: nextGameObj.time,
+        timeISO: nextGameObj.timeISO,
+        court: nextGameObj.court,
+        opponent: nextGameObj.opponent,
+        minutesUntil: Math.max(
+          0,
+          Math.round((new Date(nextGameObj.timeISO).getTime() - Date.now()) / 60000)
+        ),
+      }
+    : null;
 
   let projectedDone = null;
   const lastWithTime = [...games].reverse().find((g) => g.timeISO);
@@ -245,49 +346,58 @@ function buildResponse({ team, current, future, work, standings, nextAssignments
     projectedDone = new Date(ms).toISOString();
   }
 
+  for (const w of workAssignments) delete w.timeMs;
+
   return {
-    teamName: team?.TeamName || TEAM_NAME,
-    teamId: TEAM_ID,
-    eventId: EVENT_ID,
-    divisionId: DIVISION_ID,
+    teamName: team?.TeamName || ctx.teamName,
+    teamId: ctx.teamId,
+    eventId: ctx.eventId,
+    divisionId: ctx.divisionId,
     record,
     poolPosition,
     nextGame,
+    nextEvent,
+    liveGame: liveGame
+      ? {
+          ...liveGame.live,
+          court: liveGame.court,
+          time: liveGame.time,
+          timeISO: liveGame.timeISO,
+          gameId: liveGame.id,
+        }
+      : null,
     projectedDone,
     games,
+    teams,
     standings: standingsRows,
     workAssignments,
-    nextAssignmentsCount: Array.isArray(nextAssignments?.value)
-      ? nextAssignments.value.length
-      : 0,
+    nextAssignmentsCount: Array.isArray(nextAssignments?.value) ? nextAssignments.value.length : 0,
     scrapedAt: new Date().toISOString(),
     remoteTimestamp,
     cached: false,
   };
 }
 
-async function loadFresh() {
+async function loadFresh(ctx) {
+  const { eventId, divisionId, teamId } = ctx;
   const urls = {
-    team: `${AES_BASE}/api/event/${EVENT_ID}/teams/${TEAM_ID}`,
-    current: `${AES_BASE}/api/event/${EVENT_ID}/division/${DIVISION_ID}/team/${TEAM_ID}/schedule/current`,
-    future: `${AES_BASE}/api/event/${EVENT_ID}/division/${DIVISION_ID}/team/${TEAM_ID}/schedule/future`,
-    work: `${AES_BASE}/api/event/${EVENT_ID}/division/${DIVISION_ID}/team/${TEAM_ID}/schedule/work`,
-    standings: `${AES_BASE}/odata/${EVENT_ID}/standings(dId=${DIVISION_ID},cId=null,tIds=[])`,
-    nextAssignments: `${AES_BASE}/odata/${EVENT_ID}/nextassignments(dId=${DIVISION_ID},cId=null,tIds=[])`,
-    timestamp: `${AES_BASE}/api/event/${EVENT_ID}/timestamp`,
+    team: `${AES_BASE}/api/event/${eventId}/teams/${teamId}`,
+    current: `${AES_BASE}/api/event/${eventId}/division/${divisionId}/team/${teamId}/schedule/current`,
+    future: `${AES_BASE}/api/event/${eventId}/division/${divisionId}/team/${teamId}/schedule/future`,
+    work: `${AES_BASE}/api/event/${eventId}/division/${divisionId}/team/${teamId}/schedule/work`,
+    standings: `${AES_BASE}/odata/${eventId}/standings(dId=${divisionId},cId=null,tIds=[])`,
+    nextAssignments: `${AES_BASE}/odata/${eventId}/nextassignments(dId=${divisionId},cId=null,tIds=[])`,
+    timestamp: `${AES_BASE}/api/event/${eventId}/timestamp`,
   };
-
-  const [team, current, future, work, standings, nextAssignments, timestamp] =
-    await Promise.all([
-      fetchJson(urls.team).catch(() => null),
-      fetchJson(urls.current).catch(() => []),
-      fetchJson(urls.future).catch(() => []),
-      fetchJson(urls.work).catch(() => []),
-      fetchJson(urls.standings).catch(() => ({ value: [] })),
-      fetchJson(urls.nextAssignments).catch(() => ({ value: [] })),
-      fetchJson(urls.timestamp).catch(() => null),
-    ]);
-
+  const [team, current, future, work, standings, nextAssignments, timestamp] = await Promise.all([
+    fetchJson(urls.team).catch(() => null),
+    fetchJson(urls.current).catch(() => []),
+    fetchJson(urls.future).catch(() => []),
+    fetchJson(urls.work).catch(() => []),
+    fetchJson(urls.standings).catch(() => ({ value: [] })),
+    fetchJson(urls.nextAssignments).catch(() => ({ value: [] })),
+    fetchJson(urls.timestamp).catch(() => null),
+  ]);
   const remoteTimestamp = timestamp?.LastUpdatedTimestamp || null;
   const payload = buildResponse({
     team,
@@ -297,6 +407,7 @@ async function loadFresh() {
     standings,
     nextAssignments,
     remoteTimestamp,
+    ctx,
   });
   return { payload, remoteTimestamp };
 }
@@ -310,32 +421,34 @@ export default async function handler(req, res) {
     return;
   }
 
+  const ctx = {
+    eventId: String(req.query?.eventId || DEFAULT_EVENT_ID),
+    divisionId: String(req.query?.divId || req.query?.divisionId || DEFAULT_DIVISION_ID),
+    teamId: String(req.query?.teamId || DEFAULT_TEAM_ID),
+    teamName: String(req.query?.teamName || DEFAULT_TEAM_NAME),
+  };
+  const cacheKey = `${ctx.eventId}|${ctx.divisionId}|${ctx.teamId}`;
+
   const force = req.query?.force === "1";
   const now = Date.now();
-  const cacheFresh = now - cache.fetchedAt < CACHE_TTL_MS && cache.payload;
+  const entry = cacheByKey.get(cacheKey);
+  const cacheFresh = entry && now - entry.fetchedAt < CACHE_TTL_MS && entry.payload;
 
   try {
     if (!force && cacheFresh) {
-      const ts = await fetchJson(`${AES_BASE}/api/event/${EVENT_ID}/timestamp`).catch(
-        () => null
-      );
+      const ts = await fetchJson(`${AES_BASE}/api/event/${ctx.eventId}/timestamp`).catch(() => null);
       const remote = ts?.LastUpdatedTimestamp || null;
-      if (remote && cache.remoteTimestamp && remote === cache.remoteTimestamp) {
-        res.status(200).json({ ...cache.payload, cached: true });
+      if (remote && entry.remoteTimestamp && remote === entry.remoteTimestamp) {
+        res.status(200).json({ ...entry.payload, cached: true });
         return;
       }
     }
-
-    const { payload, remoteTimestamp } = await loadFresh();
-    cache = { payload, fetchedAt: now, remoteTimestamp };
+    const { payload, remoteTimestamp } = await loadFresh(ctx);
+    cacheByKey.set(cacheKey, { payload, fetchedAt: now, remoteTimestamp });
     res.status(200).json(payload);
   } catch (err) {
-    if (cache.payload) {
-      res.status(200).json({
-        ...cache.payload,
-        cached: true,
-        staleError: String(err?.message || err),
-      });
+    if (entry?.payload) {
+      res.status(200).json({ ...entry.payload, cached: true, staleError: String(err?.message || err) });
       return;
     }
     res.status(502).json({ error: String(err?.message || err) });
