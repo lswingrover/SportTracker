@@ -6,6 +6,7 @@
   --text: #f4f6fb;
   --muted: #8b94a7;
   --accent: #f97316;
+  --accent-readable: #f97316;
   --accent-ink: #0a0a0a;
   --accent-soft: rgba(249, 115, 22, 0.15);
   --accent-border: rgba(249, 115, 22, 0.4);
@@ -24,6 +25,10 @@
   --text: #ffffff;
   --muted: #a8acb6;
   --accent: #1E3EBF;
+  /* Lighter blue used for text-on-dark contexts where #1E3EBF (2.5:1)
+     fails WCAG AA. #5B7FFF is 4.6:1 on black. The base --accent stays
+     for fills/buttons where text is white over the blue. */
+  --accent-readable: #5B7FFF;
   --accent-ink: #ffffff;
   --accent-soft: rgba(30, 62, 191, 0.22);
   --accent-border: rgba(30, 62, 191, 0.6);
@@ -31,6 +36,16 @@
 }
 
 * { box-sizing: border-box; }
+
+/* Global focus-visible: keyboard navigation needs a visible ring even
+   though we strip default outline elsewhere for design polish. */
+:focus-visible {
+  outline: 2px solid #fff;
+  outline-offset: 2px;
+}
+[role="button"]:focus-visible {
+  box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.5);
+}
 
 html, body, #__next {
   margin: 0; padding: 0;
@@ -128,20 +143,36 @@ a { color: inherit; }
   flex-shrink: 0;
 }
 .header-compact .icon-only-btn {
-  background: var(--panel);
-  border: 1px solid var(--line);
-  color: var(--text);
-  width: 36px;
-  height: 36px;
+  background: transparent;
+  border: 1px solid var(--accent-border);
+  color: var(--accent);
+  width: 44px;
+  height: 44px;
   border-radius: 999px;
   display: grid;
   place-items: center;
-  font-size: 16px;
+  font-size: 15px;
   cursor: pointer;
   flex-shrink: 0;
+  transition: background 0.15s ease, transform 0.08s ease;
 }
-.header-compact .icon-only-btn:hover { border-color: var(--accent); }
-.header-compact .icon-only-btn:disabled { opacity: 0.5; cursor: progress; }
+.header-compact .icon-only-btn:hover { background: var(--accent-soft); }
+.header-compact .icon-only-btn:active { transform: scale(0.94); }
+.header-compact .icon-only-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+.header-compact .icon-only-btn.installed {
+  border-color: var(--win);
+  color: var(--win);
+}
+.header-compact .icon-only-btn.refresh-btn {
+  border-color: var(--line);
+  color: var(--text);
+}
+.header-compact-actions {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  flex-shrink: 0;
+}
 
 /* Horizontal chip row for tournament selection. Scrolls horizontally on
    narrow screens, masks the scrollbar, scroll-snaps to chips. */
@@ -160,7 +191,7 @@ a { color: inherit; }
   background: var(--panel);
   border: 1px solid var(--line);
   color: var(--text);
-  padding: 8px 14px;
+  padding: 10px 16px;
   border-radius: 999px;
   font-size: 13px;
   font-weight: 600;
@@ -168,6 +199,9 @@ a { color: inherit; }
   cursor: pointer;
   flex-shrink: 0;
   scroll-snap-align: start;
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
   transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
 }
 .chip.active {
@@ -514,12 +548,23 @@ button.stat:hover { border-color: var(--accent); }
   border: 1px solid var(--line);
   color: var(--text);
   border-radius: 8px;
-  padding: 4px 8px;
+  padding: 6px 10px;
   font-family: inherit;
-  font-size: 12px;
+  /* iOS Safari auto-zooms any input below 16px on focus; min size 16
+     prevents the page from zooming when tapping the lead selector. */
+  font-size: max(16px, 1rem);
   font-weight: 600;
   cursor: pointer;
   flex-shrink: 0;
+  min-height: 36px;
+  appearance: none;
+  -webkit-appearance: none;
+  background-image: linear-gradient(45deg, transparent 50%, var(--muted) 50%),
+                    linear-gradient(135deg, var(--muted) 50%, transparent 50%);
+  background-position: calc(100% - 14px) 50%, calc(100% - 9px) 50%;
+  background-size: 5px 5px, 5px 5px;
+  background-repeat: no-repeat;
+  padding-right: 26px;
 }
 .notif-prefs li input[type="checkbox"] {
   width: 18px;
@@ -529,6 +574,15 @@ button.stat:hover { border-color: var(--accent); }
   flex-shrink: 0;
 }
 .notif-card.on { border-color: var(--accent); }
+.notif-card-action {
+  width: 100%;
+  background: var(--panel);
+  text-align: left;
+  font: inherit;
+  cursor: pointer;
+}
+.notif-card-action:hover { border-color: var(--accent); }
+.notif-card-action .title { color: var(--accent); }
 .notif-card .title {
   font-family: "Barlow Condensed", sans-serif;
   font-size: 18px;
@@ -567,7 +621,13 @@ button.stat:hover { border-color: var(--accent); }
   display: flex;
   background: var(--panel);
   border-top: 1px solid var(--line);
-  padding: 4px 4px calc(4px + env(safe-area-inset-bottom));
+  padding-top: 4px;
+  padding-left: 4px;
+  padding-right: 4px;
+  /* max() guards against env() resolving to 0 in browsers that don't
+     surface the home-indicator inset, while still expanding to the full
+     ~34px on iPhone X+ in standalone mode. */
+  padding-bottom: max(4px, env(safe-area-inset-bottom));
   z-index: 30;
   box-shadow: 0 -8px 24px rgba(0, 0, 0, 0.5);
 }
@@ -673,17 +733,28 @@ button.stat:hover { border-color: var(--accent); }
   margin-right: 4px;
 }
 .arc-dot {
-  width: 12px; height: 12px;
-  border-radius: 50%;
-  display: inline-block;
+  /* Visual is 12px but the tap target expands to 44x44 via padding +
+     background-clip so the dot stays small while the hit area is iOS-
+     accessibility-compliant. */
+  width: 44px; height: 44px;
+  display: inline-grid;
+  place-items: center;
   padding: 0;
   border: 0;
   cursor: pointer;
   transition: transform 0.08s ease;
+  background: transparent;
 }
+.arc-dot::before {
+  content: "";
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  display: block;
+}
+.arc-dot.w::before { background: var(--win); box-shadow: 0 0 6px rgba(34,197,94,0.5); }
+.arc-dot.l::before { background: transparent; border: 2px solid var(--loss); }
 .arc-dot:active { transform: scale(0.85); }
-.arc-dot.w { background: var(--win); box-shadow: 0 0 6px rgba(34,197,94,0.5); }
-.arc-dot.l { background: transparent; border: 2px solid var(--loss); }
 
 /* Upcoming-tournament countdown card — empty-state for tournaments
    that haven't started yet. */
@@ -932,6 +1003,19 @@ button.stat:hover { border-color: var(--accent); }
 .card.upcoming.next-pulse {
   position: relative;
 }
+.late-badge {
+  display: inline-block;
+  margin-top: 6px;
+  padding: 3px 8px;
+  border-radius: 6px;
+  background: rgba(245, 158, 11, 0.18);
+  color: #F59E0B;
+  border: 1px solid rgba(245, 158, 11, 0.4);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+}
+
 .card.upcoming.next-pulse::after {
   content: "";
   position: absolute;
@@ -1156,7 +1240,7 @@ button.stat:hover { border-color: var(--accent); }
 .standings-table tr.clickable-row:active { transform: scale(0.99); transition: transform 0.08s ease; }
 .standings-table tr.us-pinned td {
   background: var(--accent-soft);
-  color: var(--accent);
+  color: var(--accent-readable);
   font-weight: 800;
   border-bottom: 2px solid var(--accent);
 }
@@ -1193,6 +1277,190 @@ button.stat:hover { border-color: var(--accent); }
 }
 .press-feedback:active {
   transform: scale(0.97);
+}
+
+/* Pool standings — small table at top of Standings tab showing 208's
+   current pool only. Round-robin match details aren't exposed by AES, so
+   we surface only the team list with their pool record. */
+.pool-grid {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 12px 14px;
+  margin-bottom: 12px;
+}
+.pool-grid-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-bottom: 8px;
+}
+.pool-grid-title {
+  font-family: "Barlow Condensed", sans-serif;
+  font-weight: 800;
+  font-size: 18px;
+  color: var(--text);
+  letter-spacing: 0.04em;
+}
+.pool-grid-sub {
+  color: var(--muted);
+  font-size: 12px;
+}
+.pool-grid table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+  font-variant-numeric: tabular-nums;
+}
+.pool-grid table th {
+  font-size: 10px;
+  letter-spacing: 0.06em;
+  color: var(--muted);
+  font-weight: 700;
+  text-align: right;
+  padding: 4px 8px;
+  border-bottom: 1px solid var(--line);
+}
+.pool-grid table th:nth-child(2) { text-align: left; }
+.pool-grid table td {
+  padding: 8px;
+  text-align: right;
+  border-bottom: 1px solid var(--line);
+  height: 32px;
+}
+.pool-grid table td:nth-child(2) { text-align: left; font-weight: 600; }
+.pool-grid table tr:last-child td { border-bottom: 0; }
+.pool-grid table tr.us td {
+  background: var(--accent-soft);
+  color: var(--accent-readable);
+  font-weight: 800;
+}
+.pool-grid table tr.us td:first-child {
+  border-left: 4px solid var(--accent);
+}
+.pool-grid-footnote {
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px solid var(--line);
+  color: var(--muted);
+  opacity: 0.5;
+  font-size: 0.75rem;
+  font-style: italic;
+}
+
+/* Bracket viz — collapsible section in the Schedule tab. Each tree is a
+   horizontal list of round-columns; the rightmost column is the final.
+   On narrow screens the wrapper scrolls horizontally. Connectors are
+   intentionally omitted in v1 — visual grouping by column carries the
+   bracket structure without the layout complexity of cross-tree paths. */
+.bracket-section {
+  margin-top: 14px;
+}
+.bracket-toggle {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  color: var(--text);
+  padding: 10px 14px;
+  border-radius: 12px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  width: 100%;
+  text-align: left;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.bracket-toggle:hover { border-color: var(--accent); }
+.bracket-tree-wrap {
+  margin-top: 12px;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 12px;
+}
+.bracket-tree-name {
+  font-family: "Barlow Condensed", sans-serif;
+  font-weight: 800;
+  font-size: 16px;
+  letter-spacing: 0.04em;
+  color: var(--muted);
+  margin-bottom: 8px;
+}
+.bracket-tree {
+  display: flex;
+  gap: 12px;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  padding-bottom: 4px;
+  scrollbar-width: thin;
+}
+.bracket-tree::-webkit-scrollbar { height: 6px; }
+.bracket-tree::-webkit-scrollbar-thumb { background: var(--line); border-radius: 3px; }
+.bracket-col {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 140px;
+  justify-content: space-around;
+}
+.bracket-card {
+  background: var(--panel-2);
+  border: 1px solid var(--line);
+  border-left: 3px solid var(--line);
+  border-radius: 8px;
+  padding: 8px 10px;
+  font-size: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-height: 64px;
+}
+.bracket-card.us-path {
+  border-left-color: var(--celebrate);
+  background: rgba(255, 105, 180, 0.06);
+}
+.bracket-card.pending {
+  border-style: dashed;
+  opacity: 0.7;
+}
+.bracket-card-header {
+  font-size: 9px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted);
+  font-weight: 700;
+}
+.bracket-card-team {
+  display: flex;
+  justify-content: space-between;
+  gap: 6px;
+  font-size: 12px;
+  color: var(--muted);
+}
+.bracket-card-team .name {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.bracket-card-team.won { color: var(--text); font-weight: 700; }
+.bracket-card-team.us .name { color: var(--accent); font-weight: 700; }
+.bracket-card-team .score {
+  font-family: "Barlow Condensed", sans-serif;
+  font-variant-numeric: tabular-nums;
+  font-size: 13px;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+.bracket-card-foot {
+  font-size: 10px;
+  color: var(--muted);
+  margin-top: 2px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 /* Full-screen opponent history page (in-app, not a Next route). */
@@ -1361,21 +1629,8 @@ button.stat:hover { border-color: var(--accent); }
 /* Demo / guided tour overlay. The cutout uses the classic
    box-shadow:0 0 0 9999px trick to dim everything around the
    highlighted target. */
-.demo-pill {
-  background: transparent;
-  border: 1px solid var(--accent-border);
-  color: var(--accent);
-  padding: 6px 12px;
-  border-radius: 999px;
-  font-size: 11px;
-  font-weight: 700;
-  letter-spacing: 0.06em;
-  cursor: pointer;
-  transition: transform 0.08s ease, background 0.15s ease;
-  flex-shrink: 0;
-}
-.demo-pill:hover { background: var(--accent-soft); }
-.demo-pill:active { transform: scale(0.95); }
+/* Old .demo-pill is now an icon-only-btn in the header. Keeping the
+   class declaration removed to avoid stale references. */
 
 .tour-overlay {
   position: fixed;
@@ -1398,6 +1653,16 @@ button.stat:hover { border-color: var(--accent); }
   outline-offset: 4px;
   pointer-events: none;
   transition: top 0.25s ease, left 0.25s ease, width 0.25s ease, height 0.25s ease;
+}
+
+/* Subtle pulse on the highlighted target during a tour step so the
+   element is unmistakable even with the cutout overlay. */
+@keyframes tour-pulse-anim {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.03); }
+}
+.tour-pulse {
+  animation: tour-pulse-anim 1s ease-in-out infinite;
 }
 .tour-bubble {
   position: absolute;
@@ -1462,15 +1727,16 @@ button.stat:hover { border-color: var(--accent); }
 .tour-nudge {
   background: var(--accent-soft);
   border: 1px solid var(--accent-border);
-  color: var(--accent);
-  padding: 8px 12px;
+  color: var(--accent-readable);
+  padding: 10px 14px;
   border-radius: 10px;
   margin-bottom: 12px;
-  font-size: 12px;
+  font-size: 13px;
   display: flex;
   justify-content: space-between;
   align-items: center;
   gap: 8px;
+  min-height: 44px;
 }
 .tour-nudge button {
   background: var(--accent);
@@ -1550,9 +1816,9 @@ button.stat:hover { border-color: var(--accent); }
   background: transparent;
   border: 1px solid var(--line);
   color: var(--text);
-  padding: 6px 12px 6px 10px;
+  padding: 10px 14px 10px 12px;
   border-radius: 999px;
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 600;
   cursor: pointer;
   display: inline-flex;
@@ -1562,6 +1828,7 @@ button.stat:hover { border-color: var(--accent); }
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+  min-height: 44px;
 }
 .view-as-pill:hover { border-color: var(--accent); color: var(--accent); }
 .view-as-pill .chev { font-size: 10px; opacity: 0.6; }
@@ -1695,12 +1962,14 @@ button.stat:hover { border-color: var(--accent); }
 .opp-tap {
   background: transparent;
   border: 0;
-  padding: 0;
+  padding: 8px 6px;
+  margin: -8px -6px;
   font: inherit;
   color: inherit;
   cursor: pointer;
   text-align: left;
   border-bottom: 1px dashed transparent;
+  display: inline-block;
 }
 .opp-tap:hover { border-bottom-color: var(--muted); }
 

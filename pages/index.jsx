@@ -437,6 +437,11 @@ function NextHero({ event, minutesUntil, projectedDone, eventOver, tz }) {
           {minutesUntil != null && minutesUntil <= 60 ? "min until tip" : "until tip"}
         </span>
       </div>
+      {event.isRunningLate && (
+        <div className="meta" style={{ marginTop: 8, color: "var(--muted)" }}>
+          May start later than scheduled
+        </div>
+      )}
     </section>
   );
 }
@@ -489,7 +494,7 @@ function urlBase64ToUint8Array(base64String) {
   return out;
 }
 
-function NotificationsCard({ teamId }) {
+function NotificationsCard({ teamId, onShowA2HS }) {
   // Stable initial state across SSR and client first render — Safari iOS
   // has no Notification or PushManager global; reading it during render
   // crashes hydration in production minified React.
@@ -610,18 +615,23 @@ function NotificationsCard({ teamId }) {
   if (!mounted) return null;
   if (!supported) {
     return (
-      <div className="notif-card">
-        <div style={{ minWidth: 0 }}>
+      <button
+        type="button"
+        className="notif-card press-feedback notif-card-action"
+        onClick={onShowA2HS}
+        aria-label="Enable notifications by adding to home screen"
+      >
+        <div style={{ minWidth: 0, textAlign: "left" }}>
           <div className="title">
-            <span>🔕</span>
-            <span>Notifications not supported</span>
+            <span>🔔</span>
+            <span>Enable notifications — add to Home Screen →</span>
           </div>
           <div className="desc">
-            Add the app to your iPhone home screen and open it in standalone
-            mode (iOS 16.4+) to enable push alerts.
+            iOS Safari only delivers push alerts in standalone mode. Tap to see
+            the steps.
           </div>
         </div>
-      </div>
+      </button>
     );
   }
 
@@ -802,17 +812,26 @@ function UpcomingTournamentCountdown({ tournament, eventMeta, onTap }) {
 
   return (
     <section className="upcoming-card">
-      <div className="eyebrow">Tournament starts in</div>
       <button
         type="button"
-        className="countdown-num press-feedback"
         onClick={onTap}
-        style={{ background: "transparent", border: 0, cursor: "pointer", color: "inherit", font: "inherit", padding: 0 }}
         aria-label="Tournament details"
+        className="press-feedback"
+        style={{
+          background: "transparent",
+          border: 0,
+          cursor: "pointer",
+          color: "inherit",
+          font: "inherit",
+          padding: "8px 4px",
+          width: "100%",
+          display: "block",
+        }}
       >
-        {daysAway != null ? daysAway : "—"}
+        <div className="eyebrow">Tournament starts in</div>
+        <div className="countdown-num">{daysAway != null ? daysAway : "—"}</div>
+        <div className="countdown-unit">{daysAway === 1 ? "day" : "days"}</div>
       </button>
-      <div className="countdown-unit">{daysAway === 1 ? "day" : "days"}</div>
       {venue?.name && <div className="upcoming-venue">{venue.name}</div>}
       {venue?.address && (
         <div className="upcoming-meta">
@@ -1025,6 +1044,14 @@ function UpcomingGameCard({ game, expanded, onToggle, venue, tz, teamWatchNowLin
   const localized = game.timeISO
     ? `${formatInTz(game.timeISO, tz)}${tzLabel ? ` ${tzLabel}` : ""}`
     : game.time || "TBD";
+  const isLate =
+    game.next &&
+    !game.done &&
+    !game.live &&
+    game.timeISO &&
+    new Date(game.timeISO).getTime() < Date.now() &&
+    !game.score &&
+    !(Array.isArray(game.sets) && game.sets.length > 0);
   const cls = [
     "card upcoming",
     expanded ? "expanded" : "",
@@ -1070,6 +1097,7 @@ function UpcomingGameCard({ game, expanded, onToggle, venue, tz, teamWatchNowLin
             </span>
           </div>
           <div className="matchup-meta">{localized}</div>
+          {isLate && <div className="late-badge">⏱ Running late</div>}
         </div>
         <div className="card-chevron">▸</div>
       </div>
@@ -1286,17 +1314,33 @@ function Tour({ step, onNext, onPrev, onSkip, onSetupTab, onConfetti }) {
       setRect(null);
       return;
     }
-    const id = setTimeout(() => {
+    let pulseEl = null;
+    // Two-stage measurement: scroll first, then re-measure after the
+    // smooth-scroll settles, so the cutout matches the post-scroll
+    // bounding rect rather than the pre-scroll one.
+    const initial = setTimeout(() => {
       const el = document.querySelector(stepData.selector);
       if (!el) {
         setRect(null);
         return;
       }
-      const r = el.getBoundingClientRect();
-      setRect({ top: r.top, left: r.left, width: r.width, height: r.height });
       el.scrollIntoView({ behavior: "smooth", block: "center" });
-    }, 300);
-    return () => clearTimeout(id);
+      el.classList.add("tour-pulse");
+      pulseEl = el;
+      const remeasure = setTimeout(() => {
+        const r = el.getBoundingClientRect();
+        setRect({ top: r.top, left: r.left, width: r.width, height: r.height });
+      }, 350);
+      // Track for cleanup via the outer return.
+      pulseEl._tourRemeasure = remeasure;
+    }, 50);
+    return () => {
+      clearTimeout(initial);
+      if (pulseEl) {
+        if (pulseEl._tourRemeasure) clearTimeout(pulseEl._tourRemeasure);
+        pulseEl.classList.remove("tour-pulse");
+      }
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [step]);
 
@@ -1390,6 +1434,137 @@ function InfoSheet({ data, onClose }) {
         <button className="sheet-close" onClick={onClose}>{d.closeLabel || "Close"}</button>
       </aside>
     </>
+  );
+}
+
+function PoolGrid({ pool, onTeamTap }) {
+  if (!pool || !Array.isArray(pool.teams) || pool.teams.length === 0) return null;
+  return (
+    <section className="pool-grid">
+      <div className="pool-grid-header">
+        <div className="pool-grid-title">{pool.poolName} — 208's pool</div>
+        {pool.matchDescription && <div className="pool-grid-sub">{pool.matchDescription}</div>}
+      </div>
+      <table>
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Team</th>
+            <th>W</th>
+            <th>L</th>
+            <th>Set %</th>
+            <th>Pts</th>
+          </tr>
+        </thead>
+        <tbody>
+          {pool.teams.map((t) => (
+            <tr
+              key={t.teamId}
+              className={t.isUs ? "us" : ""}
+              onClick={() => onTeamTap?.(t.name)}
+              role="button"
+              tabIndex={0}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" || e.key === " ") {
+                  e.preventDefault();
+                  onTeamTap?.(t.name);
+                }
+              }}
+              style={{ cursor: "pointer" }}
+            >
+              <td>{t.rankText || t.rank || ""}</td>
+              <td>{t.name}</td>
+              <td>{t.wins}</td>
+              <td>{t.losses}</td>
+              <td>{Math.round((t.setPercent || 0) * 100)}%</td>
+              <td>{(t.pointRatio || 0).toFixed(2)}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+      <div className="pool-grid-footnote">
+        Round-robin match results not available from AES
+      </div>
+    </section>
+  );
+}
+
+function BracketCard({ match }) {
+  const fts = match.sets.filter((s) => s.first > s.second).length;
+  const sts = match.sets.filter((s) => s.second > s.first).length;
+  const cls = [
+    "bracket-card press-feedback",
+    match.usPath ? "us-path" : "",
+    !match.hasScores ? "pending" : "",
+  ]
+    .filter(Boolean)
+    .join(" ");
+  return (
+    <article className={cls}>
+      <div className="bracket-card-header">{match.shortName || match.fullName || ""}</div>
+      <div
+        className={`bracket-card-team ${match.firstTeam.won ? "won" : ""} ${match.firstTeam.isUs ? "us" : ""}`}
+      >
+        <span className="name" title={match.firstTeam.name}>{match.firstTeam.name}</span>
+        {match.hasScores && <span className="score">{fts}</span>}
+      </div>
+      <div
+        className={`bracket-card-team ${match.secondTeam.won ? "won" : ""} ${match.secondTeam.isUs ? "us" : ""}`}
+      >
+        <span className="name" title={match.secondTeam.name}>{match.secondTeam.name}</span>
+        {match.hasScores && <span className="score">{sts}</span>}
+      </div>
+      {match.court && <div className="bracket-card-foot">{match.court}</div>}
+    </article>
+  );
+}
+
+function BracketTree({ bracket }) {
+  const matches = bracket.matches || [];
+  if (matches.length === 0) return null;
+  const maxDepth = matches.reduce((m, x) => Math.max(m, x.depth), 0);
+  const columns = Array.from({ length: maxDepth + 1 }, () => []);
+  for (const m of matches) columns[m.depth]?.push(m);
+  // Within each column, order by feedsInto so siblings under the same parent stack together.
+  for (const col of columns) {
+    col.sort((a, b) => String(a.feedsInto || "").localeCompare(String(b.feedsInto || "")));
+  }
+  // Render right-to-left: depth 0 (final) is rightmost.
+  const ordered = [...columns].reverse();
+  return (
+    <div className="bracket-tree-wrap">
+      <div className="bracket-tree-name">{bracket.name}</div>
+      <div className="bracket-tree">
+        {ordered.map((col, i) => (
+          <div className="bracket-col" key={i}>
+            {col.map((m) => (
+              <BracketCard key={m.matchId} match={m} />
+            ))}
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function BracketView({ brackets }) {
+  const [open, setOpen] = useState(false);
+  if (!brackets || brackets.length === 0) return null;
+  return (
+    <div className="bracket-section">
+      <button
+        className="bracket-toggle press-feedback"
+        onClick={() => setOpen((v) => !v)}
+        aria-expanded={open}
+      >
+        <span>{open ? "▾" : "▸"}</span>
+        <span>
+          {open ? "Hide bracket" : `View bracket${brackets.length > 1 ? "s" : ""}`}
+          {brackets.length > 1 && !open ? ` (${brackets.length})` : ""}
+        </span>
+      </button>
+      {open && brackets.map((b) => <BracketTree key={b.bracketId} bracket={b} />)}
+    </div>
   );
 }
 
@@ -1828,6 +2003,95 @@ export default function Home() {
   const [dutyDismissed, setDutyDismissed] = useState(false);
   const [opponentSheet, setOpponentSheet] = useState(null);
   const [teamPickerOpen, setTeamPickerOpen] = useState(false);
+
+  // A2HS install handling. Chrome/Android fires beforeinstallprompt;
+  // iOS Safari does not, so we fall back to an instructional sheet.
+  const installPromptRef = useRef(null);
+  const [installPromptable, setInstallPromptable] = useState(false);
+  const [isStandalone, setIsStandalone] = useState(false);
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const standalone =
+      window.matchMedia?.("(display-mode: standalone)").matches ||
+      window.navigator?.standalone === true;
+    setIsStandalone(Boolean(standalone));
+    function handler(e) {
+      e.preventDefault();
+      installPromptRef.current = e;
+      setInstallPromptable(true);
+    }
+    window.addEventListener("beforeinstallprompt", handler);
+    return () => window.removeEventListener("beforeinstallprompt", handler);
+  }, []);
+
+  function showA2HSInstructions() {
+    const isApple =
+      typeof navigator !== "undefined" && /iPhone|iPad|iPod|Macintosh/.test(navigator.userAgent || "");
+    if (isApple) {
+      setInfoSheet({
+        title: "Add to Home Screen",
+        subtitle: "iOS Safari",
+        lines: [
+          { text: "1. Tap the Share button (⎙) in Safari's toolbar." },
+          { text: "2. Scroll down and tap 'Add to Home Screen'." },
+          { text: "3. Tap Add. The app launches like a native app from your home screen." },
+          { text: "Notifications and many features only work in standalone mode.", muted: true },
+        ],
+        closeLabel: "Got it",
+      });
+      return;
+    }
+    setInfoSheet({
+      title: "Add to Home Screen",
+      lines: [
+        { text: "Open this page's browser menu and choose 'Add to Home Screen' or 'Install app'." },
+      ],
+      closeLabel: "Got it",
+    });
+  }
+
+  async function handleInstallTap() {
+    if (isStandalone) {
+      setToast("Already installed");
+      return;
+    }
+    const evt = installPromptRef.current;
+    if (evt && installPromptable) {
+      try {
+        evt.prompt();
+        const choice = await evt.userChoice;
+        installPromptRef.current = null;
+        setInstallPromptable(false);
+        if (choice?.outcome === "accepted") setToast("Installed");
+      } catch {}
+      return;
+    }
+    showA2HSInstructions();
+  }
+
+  async function handleShareApp() {
+    const payload = {
+      title: "208 U14 Red Tracker",
+      text: "Live scores & schedule for 208 U14 Red volleyball",
+      url: typeof window !== "undefined" ? window.location.origin : "https://208tracker.vercel.app",
+    };
+    if (typeof navigator !== "undefined" && typeof navigator.share === "function") {
+      try {
+        await navigator.share(payload);
+        return;
+      } catch {
+        /* user cancelled */
+      }
+    }
+    if (typeof navigator !== "undefined" && navigator.clipboard) {
+      try {
+        await navigator.clipboard.writeText(payload.url);
+        setToast("Link copied!");
+      } catch {
+        setToast(payload.url);
+      }
+    }
+  }
   const [statsAccordion, setStatsAccordion] = useState(null); // 'wins' | 'losses' | null
   const [toast, setToast] = useState(null);
   const [infoSheet, setInfoSheet] = useState(null);
@@ -2187,27 +2451,39 @@ export default function Home() {
         ) : (
         <>
         <header className="header-compact">
-          <div className="team-name" title={teamName}>{teamName}</div>
+          <div className="team-name" title="208 U14 Red">208 🏐</div>
           {data?.liveGame && (
             <span className="live-pill" aria-label="Live game">
               <span className="live-dot" /> LIVE
             </span>
           )}
-          <span className="tournament-chip" title={tournamentName}>
-            {tournament.chipLabel || tournament.label}
-          </span>
-          <button className="demo-pill" onClick={startTour} aria-label="Start guided demo">
-            Demo
-          </button>
-          <button
-            className="icon-only-btn"
-            onClick={() => load(true)}
-            disabled={loading}
-            aria-label="Refresh"
-            title="Refresh"
-          >
-            {loading ? "…" : "↻"}
-          </button>
+          <div className="header-compact-actions">
+            <button
+              className={`icon-only-btn${isStandalone ? " installed" : ""}`}
+              onClick={handleInstallTap}
+              aria-label={isStandalone ? "Already installed" : "Add to Home Screen"}
+              title={isStandalone ? "Already installed" : "Add to Home Screen"}
+              disabled={isStandalone && !installPromptable}
+            >
+              {isStandalone ? "✓" : "⊕"}
+            </button>
+            <button
+              className="icon-only-btn"
+              onClick={handleShareApp}
+              aria-label="Share app"
+              title="Share app"
+            >
+              ↗
+            </button>
+            <button
+              className="icon-only-btn"
+              onClick={startTour}
+              aria-label="Demo tour"
+              title="Demo tour"
+            >
+              ▶
+            </button>
+          </div>
         </header>
 
         {!tourSeen && !tourNudgeDismissed && tourStep === 0 && (
@@ -2224,19 +2500,27 @@ export default function Home() {
           {TOURNAMENTS.map((t) => (
             <button
               key={t.id}
+              id={`chip-${t.id}`}
               className={`chip${tournamentId === t.id ? " active" : ""}`}
               onClick={() => {
                 setTournamentId(t.id);
                 if (!t.static) setTeamId(t.teamId);
               }}
               role="tab"
-              aria-selected={tournamentId === t.id}
+              aria-selected={tournamentId === t.id ? "true" : "false"}
+              aria-controls="tournament-panel"
+              tabIndex={tournamentId === t.id ? 0 : -1}
             >
               {t.chipLabel || t.label}
             </button>
           ))}
         </div>
 
+        <div
+          id="tournament-panel"
+          role="tabpanel"
+          aria-labelledby={`chip-${tournament.id}`}
+        >
         {!tournament.static && teamsList.length > 0 && (
           <div className="view-as-row">
             <span>Viewing as:</span>
@@ -2263,44 +2547,69 @@ export default function Home() {
           />
         )}
 
-        <section className="stats">
-          <button
-            type="button"
-            className={`stat win press-feedback${statsAccordion === "wins" ? " active" : ""}`}
-            onClick={() => setStatsAccordion((s) => (s === "wins" ? null : "wins"))}
-            aria-expanded={statsAccordion === "wins"}
-          >
-            <div className="label">Wins</div>
-            <div className="value">{record.wins}</div>
-          </button>
-          <button
-            type="button"
-            className={`stat loss press-feedback${statsAccordion === "losses" ? " active" : ""}`}
-            onClick={() => setStatsAccordion((s) => (s === "losses" ? null : "losses"))}
-            aria-expanded={statsAccordion === "losses"}
-          >
-            <div className="label">Losses</div>
-            <div className="value">{record.losses}</div>
-          </button>
-          <button
-            type="button"
-            className="stat pos press-feedback"
-            onClick={() => {
-              setTab("standings");
-              setTimeout(() => {
-                if (typeof document !== "undefined") {
-                  document
-                    .querySelector(".standings-table tr.us-pinned")
-                    ?.scrollIntoView({ behavior: "smooth", block: "center" });
-                }
-              }, 100);
-            }}
-            aria-label="View pool standings"
-          >
-            <div className="label">Pool</div>
-            <div className="value">{data?.poolPosition || "—"}</div>
-          </button>
-        </section>
+        {(() => {
+          // Don't show the stat bar at all when the tournament hasn't
+          // started — let the countdown card do the talking. Show
+          // individual stat cards only when they have data: hide zero
+          // wins / losses, hide pool when no rank is known.
+          const showWins = record.wins > 0;
+          const showLosses = record.losses > 0;
+          const rankLabel = data?.poolPosition;
+          const showRank = Boolean(rankLabel);
+          const eventStarted = !data?.event?.startDate
+            ? Boolean(data?.games?.length || data?.standings?.length)
+            : new Date(data.event.startDate).getTime() <= Date.now();
+          if (!eventStarted) return null;
+          if (!showWins && !showLosses && !showRank) return null;
+          return (
+            <section className="stats">
+              {showWins && (
+                <button
+                  type="button"
+                  className={`stat win press-feedback${statsAccordion === "wins" ? " active" : ""}`}
+                  onClick={() => setStatsAccordion((s) => (s === "wins" ? null : "wins"))}
+                  aria-expanded={statsAccordion === "wins"}
+                  aria-label={`${record.wins} wins — tap to see game details`}
+                >
+                  <div className="label">Wins</div>
+                  <div className="value">{record.wins}</div>
+                </button>
+              )}
+              {showLosses && (
+                <button
+                  type="button"
+                  className={`stat loss press-feedback${statsAccordion === "losses" ? " active" : ""}`}
+                  onClick={() => setStatsAccordion((s) => (s === "losses" ? null : "losses"))}
+                  aria-expanded={statsAccordion === "losses"}
+                  aria-label={`${record.losses} losses — tap to see game details`}
+                >
+                  <div className="label">Losses</div>
+                  <div className="value">{record.losses}</div>
+                </button>
+              )}
+              {showRank && (
+                <button
+                  type="button"
+                  className="stat pos press-feedback"
+                  onClick={() => {
+                    setTab("standings");
+                    setTimeout(() => {
+                      if (typeof document !== "undefined") {
+                        document
+                          .querySelector(".standings-table tr.us-pinned")
+                          ?.scrollIntoView({ behavior: "smooth", block: "center" });
+                      }
+                    }, 100);
+                  }}
+                  aria-label={`Pool rank ${rankLabel} — view standings`}
+                >
+                  <div className="label">{eventOver ? "Rank" : "Pool"}</div>
+                  <div className="value">{rankLabel}</div>
+                </button>
+              )}
+            </section>
+          );
+        })()}
 
         <StatsAccordion
           mode={statsAccordion}
@@ -2335,7 +2644,7 @@ export default function Home() {
           );
         })()}
 
-        <NotificationsCard teamId={teamId} />
+        <NotificationsCard teamId={teamId} onShowA2HS={showA2HSInstructions} />
 
         <CalendarCard
           origin={origin}
@@ -2437,11 +2746,13 @@ export default function Home() {
                 Check back when the tournament starts.
               </div>
             )}
+            <BracketView brackets={data?.brackets || []} />
           </>
         )}
 
         {tab === "standings" && (
           <>
+            <PoolGrid pool={data?.pool} onTeamTap={openOpponent} />
             {standings.length === 0 ? (
               <div className="empty">No standings available.</div>
             ) : (
@@ -2565,6 +2876,7 @@ export default function Home() {
         <div className="watermark">
           © 2026 Bella's Dad ·{" "}
           <a href="mailto:lswingrover@gmail.com">lswingrover@gmail.com</a>
+        </div>
         </div>
         </>
         )}

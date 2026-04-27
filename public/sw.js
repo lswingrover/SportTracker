@@ -22,8 +22,8 @@ self.addEventListener("push", (event) => {
   const options = {
     body: data.body || "",
     tag: data.tag || undefined,
-    icon: "/icon-192.svg",
-    badge: "/icon-192.svg",
+    icon: "/icon-192.png",
+    badge: "/badge-96.png",
     data: { url: data.url || "/" },
     requireInteraction: false,
   };

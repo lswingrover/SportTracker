@@ -362,6 +362,112 @@ function extractTeamMatchesFromBrackets(brackets, teamIdStr) {
   return Array.from(found.values());
 }
 
+// Walk a single bracket and emit a flat match list with parent/child
+// relationships preserved via depth + feedsInto. Roots are at depth 0
+// (the championship of each branch), feeders (BottomSource / TopSource)
+// at depth 1+.
+function buildBracketStructure(bracket, teamIdStr) {
+  const teamId = Number(teamIdStr);
+  const matches = [];
+  const stripTag = (s) => String(s || "").replace(/\s*\([^)]*\)\s*$/, "").trim();
+
+  function emitMatch(matchObj, depth, parentId) {
+    if (!matchObj || typeof matchObj !== "object") return null;
+    const ftId = matchObj.FirstTeam?.TeamId;
+    const stId = matchObj.SecondTeam?.TeamId;
+    const usFirst = ftId === teamId;
+    const usSecond = stId === teamId;
+    const isUs = usFirst || usSecond;
+    const sets = (matchObj.Sets || [])
+      .map((s) => {
+        const fs = s.FirstTeamScore;
+        const ss = s.SecondTeamScore;
+        if (fs == null && ss == null) return null;
+        return {
+          first: fs,
+          second: ss,
+          deciding: s.IsDecidingSet === true,
+        };
+      })
+      .filter(Boolean);
+    const id = matchObj.MatchId != null ? String(matchObj.MatchId) : null;
+    const m = {
+      matchId: id,
+      fullName: matchObj.FullName || null,
+      shortName: matchObj.ShortName || null,
+      court: matchObj.Court?.Name || null,
+      scheduledStart: matchObj.ScheduledStartDateTime || null,
+      firstTeam: {
+        teamId: ftId ?? null,
+        name:
+          stripTag(matchObj.FirstTeam?.Name || matchObj.FirstTeamText) || "TBD",
+        isUs: usFirst,
+        won: matchObj.FirstTeamWon === true,
+      },
+      secondTeam: {
+        teamId: stId ?? null,
+        name:
+          stripTag(matchObj.SecondTeam?.Name || matchObj.SecondTeamText) || "TBD",
+        isUs: usSecond,
+        won: matchObj.SecondTeamWon === true,
+      },
+      hasScores: matchObj.HasScores === true,
+      sets,
+      depth,
+      feedsInto: parentId,
+      usPath: isUs,
+    };
+    matches.push(m);
+    return id;
+  }
+
+  function walkRootNode(node, depth, parentId) {
+    if (!node || typeof node !== "object") return;
+    // A root node is { Match, BottomSource, TopSource, X, Y, ... }.
+    // Source nodes have the same shape (recursive feeders).
+    const m = node.Match;
+    let myId = parentId;
+    if (m && m.MatchId != null) {
+      myId = emitMatch(m, depth, parentId);
+    }
+    if (node.BottomSource) walkRootNode(node.BottomSource, depth + 1, myId);
+    if (node.TopSource) walkRootNode(node.TopSource, depth + 1, myId);
+  }
+
+  for (const r of bracket.Roots || []) {
+    walkRootNode(r, 0, null);
+  }
+  return matches;
+}
+
+function extractBracketsForTeam(brackets, teamIdStr) {
+  if (!Array.isArray(brackets) || brackets.length === 0) return [];
+  const teamId = Number(teamIdStr);
+  const out = [];
+  for (const b of brackets) {
+    // Quick check: does this bracket reference our team anywhere?
+    const has = (function check(obj) {
+      if (!obj || typeof obj !== "object") return false;
+      if (obj.TeamId === teamId) return true;
+      if (Array.isArray(obj)) return obj.some(check);
+      for (const v of Object.values(obj)) if (check(v)) return true;
+      return false;
+    })(b);
+    if (!has) continue;
+    const matches = buildBracketStructure(b, teamIdStr);
+    if (matches.length === 0) continue;
+    out.push({
+      bracketId: String(b.PlayId ?? b.ShortName ?? b.FullName),
+      name: b.FullName || b.ShortName || "Bracket",
+      shortName: b.ShortName || null,
+      order: b.Order ?? 0,
+      matches,
+    });
+  }
+  out.sort((a, b) => a.order - b.order);
+  return out;
+}
+
 function bracketMatchToGame(m, teamIdStr) {
   const teamId = Number(teamIdStr);
   const ourSide = m.FirstTeam?.TeamId === teamId ? "first" : "second";
@@ -413,7 +519,43 @@ function bracketMatchToGame(m, teamIdStr) {
   };
 }
 
-function buildResponse({ eventMeta, team, current, future, work, standings, nextAssignments, brackets, remoteTimestamp, ctx }) {
+function extractPoolForTeam(pools, teamIdStr) {
+  if (!Array.isArray(pools) || pools.length === 0) return null;
+  const teamId = Number(teamIdStr);
+  const pool = pools.find((p) =>
+    Array.isArray(p?.Teams) && p.Teams.some((t) => t?.TeamId === teamId)
+  );
+  if (!pool) return null;
+  const teams = (pool.Teams || []).map((t) => ({
+    teamId: t.TeamId,
+    name: t.TeamName,
+    isUs: t.TeamId === teamId,
+    rank: t.FinishRank ?? null,
+    rankText: t.FinishRankText ?? null,
+    wins: t.MatchesWon ?? 0,
+    losses: t.MatchesLost ?? 0,
+    setsWon: t.SetsWon ?? 0,
+    setsLost: t.SetsLost ?? 0,
+    setPercent: t.SetPercent ?? 0,
+    pointRatio: t.PointRatio ?? 0,
+    club: t.Club?.Name || null,
+  }));
+  // Pool API doesn't always populate FinishRank during early/in-progress
+  // play; fall back to sorting by setPercent then pointRatio.
+  teams.sort((a, b) => {
+    if (a.rank != null && b.rank != null && a.rank !== b.rank) return a.rank - b.rank;
+    if (b.setPercent !== a.setPercent) return b.setPercent - a.setPercent;
+    return b.pointRatio - a.pointRatio;
+  });
+  return {
+    poolName: pool.FullName || pool.ShortName || "Pool",
+    matchDescription: pool.MatchDescription || null,
+    courts: (pool.Courts || []).map((c) => c.Name).filter(Boolean),
+    teams,
+  };
+}
+
+function buildResponse({ eventMeta, team, current, future, work, standings, nextAssignments, brackets, pools, remoteTimestamp, ctx }) {
   const playedRaw = Array.isArray(current) ? current : [];
   const upcomingRaw = Array.isArray(future) ? future : [];
 
@@ -468,6 +610,12 @@ function buildResponse({ eventMeta, team, current, future, work, standings, next
   function asNext(o, kind) {
     if (!o) return null;
     const ms = o.timeMs ?? new Date(o.timeISO).getTime();
+    const isRunningLate =
+      kind === "game" &&
+      ms < Date.now() &&
+      !o.live &&
+      !(Array.isArray(o.sets) && o.sets.length > 0) &&
+      !o.score;
     return {
       kind,
       time: o.time,
@@ -477,6 +625,7 @@ function buildResponse({ eventMeta, team, current, future, work, standings, next
       role: kind === "work" ? o.role : null,
       teams: kind === "work" ? o.teams : null,
       minutesUntil: Math.max(0, Math.round((ms - Date.now()) / 60000)),
+      isRunningLate,
     };
   }
 
@@ -491,17 +640,27 @@ function buildResponse({ eventMeta, team, current, future, work, standings, next
     nextEvent = asNext(nextWorkObj, "work");
   }
 
+  // "Running late" = scheduled start has passed but the match hasn't
+  // started yet (no scores logged and no live banner). AES doesn't
+  // expose actual start times, so this is the best signal we can derive
+  // — strictly binary, no minute-count.
   const nextGame = nextGameObj
-    ? {
-        time: nextGameObj.time,
-        timeISO: nextGameObj.timeISO,
-        court: nextGameObj.court,
-        opponent: nextGameObj.opponent,
-        minutesUntil: Math.max(
-          0,
-          Math.round((new Date(nextGameObj.timeISO).getTime() - Date.now()) / 60000)
-        ),
-      }
+    ? (() => {
+        const startMs = new Date(nextGameObj.timeISO).getTime();
+        const isRunningLate =
+          startMs < Date.now() &&
+          !nextGameObj.live &&
+          !(Array.isArray(nextGameObj.sets) && nextGameObj.sets.length > 0) &&
+          !nextGameObj.score;
+        return {
+          time: nextGameObj.time,
+          timeISO: nextGameObj.timeISO,
+          court: nextGameObj.court,
+          opponent: nextGameObj.opponent,
+          minutesUntil: Math.max(0, Math.round((startMs - Date.now()) / 60000)),
+          isRunningLate,
+        };
+      })()
     : null;
 
   let projectedDone = null;
@@ -534,6 +693,9 @@ function buildResponse({ eventMeta, team, current, future, work, standings, next
 
   const teamWatchNowLink = team?.WatchNowLink || null;
 
+  const bracketStructures = extractBracketsForTeam(brackets, ctx.teamId);
+  const pool = extractPoolForTeam(pools, ctx.teamId);
+
   return {
     teamName: team?.TeamName || ctx.teamName,
     teamId: ctx.teamId,
@@ -541,6 +703,8 @@ function buildResponse({ eventMeta, team, current, future, work, standings, next
     divisionId: ctx.divisionId,
     teamWatchNowLink,
     event,
+    brackets: bracketStructures,
+    pool,
     record,
     poolPosition,
     nextGame,
@@ -579,9 +743,10 @@ async function loadFresh(ctx) {
     standings: `${AES_BASE}/odata/${eventId}/standings(dId=${divisionId},cId=null,tIds=[])`,
     nextAssignments: `${AES_BASE}/odata/${eventId}/nextassignments(dId=${divisionId},cId=null,tIds=[])`,
     brackets: `${AES_BASE}/api/event/${eventId}/division/${divisionId}/brackets`,
+    pools: `${AES_BASE}/api/event/${eventId}/division/${divisionId}/pools`,
     timestamp: `${AES_BASE}/api/event/${eventId}/timestamp`,
   };
-  const [eventMeta, team, current, future, work, standings, nextAssignments, brackets, timestamp] = await Promise.all([
+  const [eventMeta, team, current, future, work, standings, nextAssignments, brackets, pools, timestamp] = await Promise.all([
     fetchJson(urls.event).catch(() => null),
     fetchJson(urls.team).catch(() => null),
     fetchJson(urls.current).catch(() => []),
@@ -590,6 +755,7 @@ async function loadFresh(ctx) {
     fetchJson(urls.standings).catch(() => ({ value: [] })),
     fetchJson(urls.nextAssignments).catch(() => ({ value: [] })),
     fetchJson(urls.brackets).catch(() => []),
+    fetchJson(urls.pools).catch(() => []),
     fetchJson(urls.timestamp).catch(() => null),
   ]);
   const remoteTimestamp = timestamp?.LastUpdatedTimestamp || null;
@@ -602,6 +768,7 @@ async function loadFresh(ctx) {
     standings,
     nextAssignments,
     brackets,
+    pools,
     remoteTimestamp,
     ctx,
   });
