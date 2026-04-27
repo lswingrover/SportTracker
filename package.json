@@ -1,0 +1,16 @@
+{
+  "name": "208tracker",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start -p ${PORT:-3000}",
+    "lint": "next lint"
+  },
+  "dependencies": {
+    "next": "15.5.15",
+    "react": "19.0.0",
+    "react-dom": "19.0.0"
+  }
+}
