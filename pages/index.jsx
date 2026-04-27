@@ -895,7 +895,9 @@ export default function Home() {
           </div>
           {data?.projectedDone && upcomingGames.length > 0 && (
             <div>
-              Done ~{new Date(data.projectedDone).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })} (est.)
+              Done ~
+              {new Date(data.projectedDone).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })}
+              {data?.projectedDoneSource === "scheduled" ? " (scheduled)" : " (est.)"}
             </div>
           )}
         </footer>

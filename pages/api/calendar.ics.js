@@ -193,7 +193,8 @@ export default async function handler(req, res) {
       "StartTime",
     ]);
     if (!start) continue;
-    const end = new Date(new Date(start).getTime() + 75 * 60 * 1000).toISOString();
+    const endRaw = pickFirst(m, ["ScheduledEndDateTime", "EndDateTime", "MatchEndDateTime"]);
+    const end = endRaw || new Date(new Date(start).getTime() + 75 * 60 * 1000).toISOString();
     const opponent =
       pickFirst(m, ["OpponentTeamName", "OpponentName", "AwayTeamName"]) ||
       pickFirst(m?.OpponentTeam || {}, ["TeamName", "Name"]) ||
@@ -246,7 +247,8 @@ export default async function handler(req, res) {
       "WorkStartDateTime",
     ]);
     if (!start) continue;
-    const end = new Date(new Date(start).getTime() + 75 * 60 * 1000).toISOString();
+    const endRaw = pickFirst(w, ["ScheduledEndDateTime", "EndDateTime", "WorkEndDateTime"]);
+    const end = endRaw || new Date(new Date(start).getTime() + 75 * 60 * 1000).toISOString();
     const role = pickFirst(w, ["WorkRole", "Role", "Assignment", "Position"]) || "Work duty";
     const court =
       pickFirst(w, ["Court", "CourtName", "CourtText"]) ||

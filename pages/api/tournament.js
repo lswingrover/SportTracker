@@ -192,6 +192,9 @@ function normalizeMatch(m, { done }) {
     }
   }
 
+  const endRaw = pickFirst(m, ["ScheduledEndDateTime", "EndDateTime", "MatchEndDateTime"]);
+  const { iso: endISO } = parseTime(endRaw);
+
   const live = !done ? detectLive(m, opponent) : null;
   const videoLink =
     pickFirst(m?.CourtInfo || {}, ["VideoLink"]) ||
@@ -211,6 +214,7 @@ function normalizeMatch(m, { done }) {
     time: iso ? formatLocalTime(iso) : null,
     timeISO: iso,
     timeMs: ms,
+    endISO,
     live,
   };
 }
@@ -353,10 +357,18 @@ function buildResponse({ eventMeta, team, current, future, work, standings, next
     : null;
 
   let projectedDone = null;
-  const lastWithTime = [...games].reverse().find((g) => g.timeISO);
-  if (lastWithTime) {
-    const ms = new Date(lastWithTime.timeISO).getTime() + 75 * 60 * 1000;
-    projectedDone = new Date(ms).toISOString();
+  let projectedDoneSource = null;
+  const lastWithEnd = [...games].reverse().find((g) => g.endISO);
+  if (lastWithEnd) {
+    projectedDone = lastWithEnd.endISO;
+    projectedDoneSource = "scheduled";
+  } else {
+    const lastWithTime = [...games].reverse().find((g) => g.timeISO);
+    if (lastWithTime) {
+      const ms = new Date(lastWithTime.timeISO).getTime() + 75 * 60 * 1000;
+      projectedDone = new Date(ms).toISOString();
+      projectedDoneSource = "estimate";
+    }
   }
 
   for (const w of workAssignments) delete w.timeMs;
@@ -396,6 +408,7 @@ function buildResponse({ eventMeta, team, current, future, work, standings, next
         }
       : null,
     projectedDone,
+    projectedDoneSource,
     games,
     teams,
     standings: standingsRows,
