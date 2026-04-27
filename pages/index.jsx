@@ -20,7 +20,7 @@ const TOURNAMENTS = [
 
 const THEMES = [
   { id: "default", label: "Sport (orange)" },
-  { id: "208", label: "208 (navy/gold)" },
+  { id: "208", label: "208 (royal blue/black)" },
 ];
 
 const REFRESH_MS = 2 * 60 * 1000;
@@ -163,8 +163,12 @@ function loadConfetti() {
 async function celebrate(themeId) {
   const c = await loadConfetti();
   if (!c) return;
+  // 208 girls volleyball — royal blue + hot pink + white. Default theme keeps
+  // the orange/green/white burst.
   const colors =
-    themeId === "208" ? ["#B8960C", "#002147", "#ffffff"] : ["#f97316", "#ffffff", "#22c55e"];
+    themeId === "208"
+      ? ["#1E3EBF", "#FF69B4", "#ffffff"]
+      : ["#f97316", "#ffffff", "#22c55e"];
   c({ particleCount: 120, spread: 70, origin: { y: 0.6 }, colors });
   setTimeout(() => c({ particleCount: 60, angle: 60, spread: 55, origin: { x: 0 }, colors }), 200);
   setTimeout(() => c({ particleCount: 60, angle: 120, spread: 55, origin: { x: 1 }, colors }), 250);
