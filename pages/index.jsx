@@ -849,7 +849,7 @@ function setsCountForRow(sets) {
   return `${us}–${them}`;
 }
 
-function UpcomingGameCard({ game, expanded, onToggle, venue, tz, teamWatchNowLink, opponentInfo, onAddCal }) {
+function UpcomingGameCard({ game, expanded, onToggle, venue, tz, teamWatchNowLink, opponentInfo, onAddCal, onOpenOpponent }) {
   const watchUrl = game.videoLink || (game.live ? teamWatchNowLink : null);
   const tzLabel = tzShortLabel(tz);
   const localized = game.timeISO
@@ -866,7 +866,27 @@ function UpcomingGameCard({ game, expanded, onToggle, venue, tz, teamWatchNowLin
       <button className="card-summary" onClick={onToggle} aria-expanded={expanded}>
         <div style={{ minWidth: 0 }}>
           <CourtHero court={game.court} venue={venue} />
-          <div className="matchup">vs {game.opponent}</div>
+          <div className="matchup">
+            vs{" "}
+            <span
+              className="opp-tap"
+              role="button"
+              tabIndex={0}
+              onClick={(e) => {
+                e.stopPropagation();
+                onOpenOpponent?.(game.opponent);
+              }}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" || e.key === " ") {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  onOpenOpponent?.(game.opponent);
+                }
+              }}
+            >
+              {game.opponent}
+            </span>
+          </div>
           <div className="matchup-meta">{localized}</div>
         </div>
         <div className="card-chevron">▸</div>
@@ -910,7 +930,7 @@ function UpcomingGameCard({ game, expanded, onToggle, venue, tz, teamWatchNowLin
   );
 }
 
-function PastGameCard({ game, expanded, onToggle, venue, tz, opponentInfo, onShare, justWon }) {
+function PastGameCard({ game, expanded, onToggle, venue, tz, opponentInfo, onShare, justWon, onOpenOpponent }) {
   const tzLabel = tzShortLabel(tz);
   const localized = game.timeISO
     ? `${formatInTz(game.timeISO, tz)}${tzLabel ? ` ${tzLabel}` : ""}`
@@ -928,7 +948,27 @@ function PastGameCard({ game, expanded, onToggle, venue, tz, opponentInfo, onSha
       <button className="card-summary" onClick={onToggle} aria-expanded={expanded}>
         <div className="past-summary-left">
           <div className="score-hero">{setsCount || (game.result === "W" ? "Won" : "Lost")}</div>
-          <div className="score-meta">vs {game.opponent}</div>
+          <div className="score-meta">
+            vs{" "}
+            <span
+              className="opp-tap"
+              role="button"
+              tabIndex={0}
+              onClick={(e) => {
+                e.stopPropagation();
+                onOpenOpponent?.(game.opponent);
+              }}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" || e.key === " ") {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  onOpenOpponent?.(game.opponent);
+                }
+              }}
+            >
+              {game.opponent}
+            </span>
+          </div>
           <div className="score-meta">
             Court {game.court || "?"}
             {localized ? ` · ${localized}` : ""}
@@ -972,6 +1012,58 @@ function PastGameCard({ game, expanded, onToggle, venue, tz, opponentInfo, onSha
         </div>
       )}
     </article>
+  );
+}
+
+function OpponentSheet({ data, onClose }) {
+  // ESC to close. Mounted regardless of open state so the slide-out
+  // animation works on dismiss; visual state driven by .open class.
+  useEffect(() => {
+    if (!data) return;
+    function onKey(e) {
+      if (e.key === "Escape") onClose();
+    }
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [data, onClose]);
+
+  const open = Boolean(data);
+  const o = data || {};
+  return (
+    <>
+      <div className={`sheet-backdrop${open ? " open" : ""}`} onClick={onClose} aria-hidden={!open} />
+      <aside className={`sheet${open ? " open" : ""}`} role="dialog" aria-hidden={!open}>
+        <div className="sheet-handle" />
+        <h3>{o.name || ""}</h3>
+        <div className="sub">
+          {o.club || "—"}
+          {o.divisionName ? ` · ${o.divisionName}` : ""}
+        </div>
+        <div className={`stat-row${o.h2hWins > o.h2hLosses ? " win" : o.h2hLosses > o.h2hWins ? " loss" : ""}`}>
+          <span className="stat-label">Head-to-head this season</span>
+          <span className="stat-value">
+            {o.h2hWins}–{o.h2hLosses}
+          </span>
+        </div>
+        <div className="stat-row">
+          <span className="stat-label">Pool record</span>
+          <span className="stat-value">
+            {o.poolWins != null ? `${o.poolWins}–${o.poolLosses}` : "—"}
+          </span>
+        </div>
+        <div className="stat-row">
+          <span className="stat-label">Pool rank</span>
+          <span className="stat-value">{o.rankText || (o.rank ? `#${o.rank}` : "—")}</span>
+        </div>
+        <div className="stat-row">
+          <span className="stat-label">Set %</span>
+          <span className="stat-value">
+            {o.setPercent != null ? `${Math.round(o.setPercent * 100)}%` : "—"}
+          </span>
+        </div>
+        <button className="sheet-close" onClick={onClose}>Close</button>
+      </aside>
+    </>
   );
 }
 
@@ -1023,6 +1115,7 @@ export default function Home() {
   const [lastLiveChange, setLastLiveChange] = useState(null);
   const [expandedIds, setExpandedIds] = useState(() => new Set());
   const [dutyDismissed, setDutyDismissed] = useState(false);
+  const [opponentSheet, setOpponentSheet] = useState(null);
   const prevDataRef = useRef(null);
   const prevLiveRef = useRef(null);
   const firstLoadRef = useRef(true);
@@ -1034,6 +1127,30 @@ export default function Home() {
       if (next.has(id)) next.delete(id);
       else next.add(id);
       return next;
+    });
+  }
+
+  function openOpponent(name) {
+    if (!name || !data) return;
+    const games = data.games || [];
+    let h2hWins = 0, h2hLosses = 0;
+    for (const g of games) {
+      if (g.opponent !== name || !g.done) continue;
+      if (g.result === "W") h2hWins++;
+      else if (g.result === "L") h2hLosses++;
+    }
+    const row = (data.standings || []).find((s) => s.teamName === name);
+    setOpponentSheet({
+      name,
+      club: row?.club || null,
+      divisionName: data?.event?.name?.includes("Division") ? null : null,
+      h2hWins,
+      h2hLosses,
+      poolWins: row?.matchesWon ?? null,
+      poolLosses: row?.matchesLost ?? null,
+      rank: row?.rank ?? null,
+      rankText: row?.rankText ?? null,
+      setPercent: row?.setPercent ?? null,
     });
   }
 
@@ -1345,6 +1462,7 @@ export default function Home() {
                       teamWatchNowLink={data?.teamWatchNowLink}
                       opponentInfo={standingsById.get(g.opponent)}
                       onAddCal={addCalSingle}
+                      onOpenOpponent={openOpponent}
                     />
                   ))}
                 </div>
@@ -1367,6 +1485,7 @@ export default function Home() {
                       opponentInfo={standingsById.get(g.opponent)}
                       onShare={shareGame}
                       justWon={recentWinIds.has(g.id)}
+                      onOpenOpponent={openOpponent}
                     />
                   ))}
                 </div>
@@ -1479,6 +1598,8 @@ export default function Home() {
           <a href="mailto:lswingrover@gmail.com">lswingrover@gmail.com</a>
         </div>
       </div>
+
+      <OpponentSheet data={opponentSheet} onClose={() => setOpponentSheet(null)} />
 
       {!tournament.static && (tab === "schedule" || tab === "work") && (
         <DutySticky

@@ -1018,6 +1018,104 @@ a { color: inherit; }
 }
 .footer-bar button { font-size: 12px; }
 
+/* Bottom sheet — used for opponent detail. CSS-animated slide-up via
+   transform. Backdrop dims content; tap outside or Close to dismiss. */
+.sheet-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.6);
+  z-index: 60;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s ease;
+}
+.sheet-backdrop.open {
+  opacity: 1;
+  pointer-events: auto;
+}
+.sheet {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: var(--panel);
+  border-top: 1px solid var(--line);
+  border-radius: 18px 18px 0 0;
+  padding: 14px 18px calc(22px + env(safe-area-inset-bottom));
+  z-index: 70;
+  transform: translateY(100%);
+  transition: transform 0.25s ease;
+  max-height: 75vh;
+  overflow-y: auto;
+  box-shadow: 0 -12px 32px rgba(0, 0, 0, 0.5);
+}
+.sheet.open { transform: translateY(0); }
+.sheet-handle {
+  width: 40px;
+  height: 4px;
+  border-radius: 999px;
+  background: var(--line);
+  margin: 0 auto 12px;
+}
+.sheet h3 {
+  font-family: "Barlow Condensed", sans-serif;
+  font-weight: 800;
+  font-size: 22px;
+  margin-bottom: 4px;
+  color: var(--text);
+  letter-spacing: 0.02em;
+}
+.sheet .sub {
+  color: var(--muted);
+  font-size: 13px;
+  margin-bottom: 14px;
+}
+.sheet .stat-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--line);
+  font-size: 14px;
+}
+.sheet .stat-row .stat-label { color: var(--muted); }
+.sheet .stat-row .stat-value {
+  font-family: "Barlow Condensed", sans-serif;
+  font-weight: 800;
+  font-size: 20px;
+  color: var(--text);
+  font-variant-numeric: tabular-nums;
+}
+.sheet .stat-row.win .stat-value { color: var(--win); }
+.sheet .stat-row.loss .stat-value { color: var(--loss); }
+.sheet .sheet-close {
+  display: block;
+  width: 100%;
+  margin-top: 16px;
+  padding: 12px;
+  background: var(--accent);
+  color: var(--accent-ink);
+  border: 0;
+  border-radius: 999px;
+  font-weight: 800;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+/* Tappable opponent name — visually a regular text element with subtle
+   underline-on-hover so users discover it's interactive. */
+.opp-tap {
+  background: transparent;
+  border: 0;
+  padding: 0;
+  font: inherit;
+  color: inherit;
+  cursor: pointer;
+  text-align: left;
+  border-bottom: 1px dashed transparent;
+}
+.opp-tap:hover { border-bottom-color: var(--muted); }
+
 .modal-backdrop {
   position: fixed;
   inset: 0;
