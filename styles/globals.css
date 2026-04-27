@@ -1077,6 +1077,85 @@ a { color: inherit; }
 }
 .footer-bar button { font-size: 12px; }
 
+/* Subtle press-feedback for any tappable element. Adds a ~3% squish on
+   :active so users feel the tap register on touch. */
+.press-feedback {
+  transition: transform 0.08s ease;
+}
+.press-feedback:active {
+  transform: scale(0.97);
+}
+
+/* "Viewing as" team switcher pill — sits below the chip row. Subtle
+   border-only style so it doesn't compete with the active tournament. */
+.view-as-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 12px;
+  font-size: 12px;
+  color: var(--muted);
+}
+.view-as-pill {
+  background: transparent;
+  border: 1px solid var(--line);
+  color: var(--text);
+  padding: 6px 12px 6px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  max-width: 240px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.view-as-pill:hover { border-color: var(--accent); color: var(--accent); }
+.view-as-pill .chev { font-size: 10px; opacity: 0.6; }
+
+/* Team picker sheet content — list of teams with the current one
+   highlighted. Reuses .sheet from the opponent sheet system. */
+.team-list {
+  list-style: none;
+  margin: 8px 0 0;
+  padding: 0;
+}
+.team-list li button {
+  width: 100%;
+  background: transparent;
+  border: 0;
+  padding: 12px 4px;
+  text-align: left;
+  cursor: pointer;
+  border-bottom: 1px solid var(--line);
+  color: var(--text);
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  font-size: 14px;
+}
+.team-list li button:hover { color: var(--accent); }
+.team-list li.current button {
+  color: var(--accent);
+  font-weight: 700;
+}
+.team-list li.current button::before {
+  content: "✓ ";
+}
+.team-list .team-club {
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 400;
+  max-width: 50%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 /* Bottom sheet — used for opponent detail. CSS-animated slide-up via
    transform. Backdrop dims content; tap outside or Close to dismiss. */
 .sheet-backdrop {

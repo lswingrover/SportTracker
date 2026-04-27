@@ -1197,6 +1197,38 @@ function PastGameCard({ game, expanded, onToggle, venue, tz, opponentInfo, onSha
   );
 }
 
+function TeamPickerSheet({ teams, currentTeamId, onPick, onClose }) {
+  const open = teams != null;
+  useEffect(() => {
+    if (!open) return;
+    function onKey(e) {
+      if (e.key === "Escape") onClose();
+    }
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [open, onClose]);
+  return (
+    <>
+      <div className={`sheet-backdrop${open ? " open" : ""}`} onClick={onClose} aria-hidden={!open} />
+      <aside className={`sheet${open ? " open" : ""}`} role="dialog" aria-hidden={!open}>
+        <div className="sheet-handle" />
+        <h3>Switch view</h3>
+        <div className="sub">Pick any team in this division to view their schedule, record, and standings perspective.</div>
+        <ul className="team-list">
+          {(teams || []).map((t) => (
+            <li key={t.teamId} className={String(t.teamId) === String(currentTeamId) ? "current" : ""}>
+              <button onClick={() => onPick(t.teamId)}>
+                <span>{t.teamName}</span>
+                {t.club && <span className="team-club">{t.club}</span>}
+              </button>
+            </li>
+          ))}
+        </ul>
+      </aside>
+    </>
+  );
+}
+
 function OpponentSheet({ data, onClose }) {
   // ESC to close. Mounted regardless of open state so the slide-out
   // animation works on dismiss; visual state driven by .open class.
@@ -1298,6 +1330,7 @@ export default function Home() {
   const [expandedIds, setExpandedIds] = useState(() => new Set());
   const [dutyDismissed, setDutyDismissed] = useState(false);
   const [opponentSheet, setOpponentSheet] = useState(null);
+  const [teamPickerOpen, setTeamPickerOpen] = useState(false);
   const prevDataRef = useRef(null);
   const prevLiveRef = useRef(null);
   const firstLoadRef = useRef(true);
@@ -1549,8 +1582,19 @@ export default function Home() {
           ))}
         </div>
 
-        {/* WorkUrgencyBanner removed — replaced by sticky DutySticky below
-            that floats above the bottom nav and dismisses for the session. */}
+        {!tournament.static && teamsList.length > 0 && (
+          <div className="view-as-row">
+            <span>Viewing as:</span>
+            <button
+              className="view-as-pill press-feedback"
+              onClick={() => setTeamPickerOpen(true)}
+              aria-label="Switch viewing-as team"
+            >
+              <span>{teamName}</span>
+              <span className="chev">▾</span>
+            </button>
+          </div>
+        )}
 
         {tournament.static ? (
           <StaticTournamentCard tournament={tournament} />
@@ -1783,6 +1827,16 @@ export default function Home() {
       </div>
 
       <OpponentSheet data={opponentSheet} onClose={() => setOpponentSheet(null)} />
+
+      <TeamPickerSheet
+        teams={teamPickerOpen ? teamsList : null}
+        currentTeamId={teamId}
+        onPick={(id) => {
+          setTeamId(String(id));
+          setTeamPickerOpen(false);
+        }}
+        onClose={() => setTeamPickerOpen(false)}
+      />
 
       {!tournament.static && (tab === "schedule" || tab === "work") && (
         <DutySticky
