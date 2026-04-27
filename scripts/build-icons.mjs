@@ -1,7 +1,7 @@
 #!/usr/bin/env node
-// Generate PNG app icons from inline SVGs at the sizes Chrome's PWA
-// installability check requires (192 + 512), plus a 96px badge for
-// push notifications. Run once, commit the outputs.
+// Generate PNG app icons from a hand-drawn volleyball SVG. Sharp's SVG
+// renderer keeps the source resolution-independent — we rasterize the
+// same 100x100 viewBox up to 192/512/96 with sharp's resize step.
 //
 // Usage: node scripts/build-icons.mjs
 
@@ -13,33 +13,31 @@ import sharp from "sharp";
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const PUBLIC = resolve(__dirname, "..", "public");
 
-function svgFor(size) {
-  // Emoji rendering across librsvg is inconsistent; we draw the
-  // volleyball geometrically (white disc with black panel curves) so
-  // the result is identical on every renderer. Royal-blue background
-  // mirrors the theme.
-  const cx = size / 2;
-  const cy = size / 2;
-  const r = size * 0.34;
-  const cornerRadius = size * 0.18;
-  const wordmark = size >= 192 ? Math.round(size * 0.16) : 0;
-  return `<?xml version="1.0" encoding="UTF-8"?>
-<svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}" viewBox="0 0 ${size} ${size}">
-  <rect width="${size}" height="${size}" rx="${cornerRadius}" fill="#1E3EBF"/>
-  <g>
-    <circle cx="${cx}" cy="${cy - (wordmark ? size * 0.08 : 0)}" r="${r}" fill="#ffffff"/>
-    <g stroke="#0a0a14" stroke-width="${size * 0.012}" fill="none" stroke-linecap="round">
-      <path d="M ${cx - r} ${cy - (wordmark ? size * 0.08 : 0)} Q ${cx} ${cy - r * 1.4 - (wordmark ? size * 0.08 : 0)}, ${cx + r} ${cy - (wordmark ? size * 0.08 : 0)}" />
-      <path d="M ${cx - r * 0.92} ${cy + r * 0.4 - (wordmark ? size * 0.08 : 0)} Q ${cx - r * 0.1} ${cy + r * 0.05 - (wordmark ? size * 0.08 : 0)}, ${cx + r * 0.4} ${cy + r * 0.94 - (wordmark ? size * 0.08 : 0)}" />
-      <path d="M ${cx - r * 0.4} ${cy + r * 0.94 - (wordmark ? size * 0.08 : 0)} Q ${cx + r * 0.1} ${cy + r * 0.05 - (wordmark ? size * 0.08 : 0)}, ${cx + r * 0.92} ${cy + r * 0.4 - (wordmark ? size * 0.08 : 0)}" />
-    </g>
+// Royal blue background, white ball with three classic meridian curves.
+// Curves picked so the ball reads as a volleyball at small sizes:
+//   - Top arc spans most of the ball, slightly upward.
+//   - Two side meridians sweep from outside the ball toward the top
+//     center, giving the impression of four panels visible from this
+//     angle.
+// Stroke width tuned so the panels stay visible at 96px without dominating.
+const SVG = `<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+  <rect x="0" y="0" width="100" height="100" rx="18" fill="#1E3EBF"/>
+  <circle cx="50" cy="50" r="34" fill="#ffffff"/>
+  <g stroke="#1E3EBF" stroke-width="3" fill="none" stroke-linecap="round">
+    <path d="M 22 42 Q 50 24 78 42"/>
+    <path d="M 22 58 Q 32 38 38 18"/>
+    <path d="M 78 58 Q 68 38 62 18"/>
   </g>
-  ${wordmark ? `<text x="${cx}" y="${size * 0.92}" text-anchor="middle" font-family="Arial,sans-serif" font-weight="900" font-size="${wordmark}" fill="#ffffff">208</text>` : ""}
 </svg>`;
-}
+
+const BG = { r: 30, g: 62, b: 191, alpha: 1 };
 
 async function emit(size, file) {
-  const png = await sharp(Buffer.from(svgFor(size))).png().toBuffer();
+  const png = await sharp(Buffer.from(SVG))
+    .resize(size, size, { fit: "contain", background: BG })
+    .png()
+    .toBuffer();
   writeFileSync(resolve(PUBLIC, file), png);
   console.log(`✓ ${file} (${png.length} bytes)`);
 }
@@ -47,5 +45,4 @@ async function emit(size, file) {
 await emit(192, "icon-192.png");
 await emit(512, "icon-512.png");
 await emit(96, "badge-96.png");
-
 console.log("done");

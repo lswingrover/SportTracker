@@ -1289,7 +1289,7 @@ function PastGameCard({ game, expanded, onToggle, venue, tz, opponentInfo, onSha
 // matches, the bubble centers with a full dim backdrop.
 const TOUR_STEPS = [
   { selector: ".chip-row", title: "Tournaments", body: "Tap any chip to switch tournaments. Past events show final records; future ones show countdowns." },
-  { selector: ".stats", title: "Season record", body: "Tap Wins or Losses to see a game-by-game breakdown." },
+  { selector: ".stats", title: "Tournament record", body: "Tap Wins or Losses to see a game-by-game breakdown." },
   { selector: ".card.upcoming", setupTab: "schedule", title: "Upcoming game", body: "Court number is the hero — tap it for venue details. Tap the opponent name for head-to-head history." },
   { title: "Live score banner", body: "When a game is live, this banner appears with real-time scores pulled from AES every 30 seconds." },
   { sideEffect: "confetti", title: "🎉 Wins!", body: "Win a game and the app celebrates with confetti." },
@@ -1890,7 +1890,7 @@ function OpponentSheet({ data, onClose, onOpenHistory }) {
         {o.isUs ? (
           <>
             <div className={`stat-row${o.seasonWins > o.seasonLosses ? " win" : o.seasonLosses > o.seasonWins ? " loss" : ""}`}>
-              <span className="stat-label">Season record</span>
+              <span className="stat-label">Tournament record</span>
               <span className="stat-value">{o.seasonWins}–{o.seasonLosses}</span>
             </div>
             <div className="stat-row">
