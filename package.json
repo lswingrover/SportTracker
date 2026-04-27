@@ -1,0 +1,19 @@
+{
+  "name": "narwhal-tracker",
+  "version": "0.1.0",
+  "private": true,
+  "description": "North Idaho Narwhals water polo tournament tracker",
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start -p ${PORT:-3000}",
+    "lint": "next lint"
+  },
+  "dependencies": {
+    "@vercel/blob": "^2.3.3",
+    "next": "15.5.15",
+    "react": "19.0.0",
+    "react-dom": "19.0.0",
+    "web-push": "^3.6.7"
+  }
+}

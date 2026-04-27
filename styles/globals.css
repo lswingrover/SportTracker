@@ -1,0 +1,2060 @@
+:root {
+  --bg: #07090f;
+  --panel: #0f131c;
+  --panel-2: #161b27;
+  --line: #232a3a;
+  --text: #f4f6fb;
+  --muted: #8b94a7;
+  --accent: #f97316;
+  --accent-readable: #f97316;
+  --accent-ink: #0a0a0a;
+  --accent-soft: rgba(249, 115, 22, 0.15);
+  --accent-border: rgba(249, 115, 22, 0.4);
+  --win: #22c55e;
+  --loss: #ef4444;
+  --warn: #facc15;
+  --live: #ef4444;
+  --celebrate: #f97316;
+}
+
+[data-theme="narwhal"] {
+  --bg: #000810;
+  --panel: #0a1628;
+  --panel-2: #0f1f38;
+  --line: #1a2f50;
+  --text: #ffffff;
+  --muted: #a8acb6;
+  --accent: #00B4C8;
+  /* Brighter cyan for small text-on-dark contexts where the base teal
+     drops below WCAG AA contrast. */
+  --accent-readable: #00D4E8;
+  --accent-ink: #000810;
+  --accent-soft: rgba(0, 180, 200, 0.18);
+  --accent-border: rgba(0, 180, 200, 0.55);
+  --celebrate: #00E5FF;
+}
+
+* { box-sizing: border-box; }
+
+/* Global focus-visible: keyboard navigation needs a visible ring even
+   though we strip default outline elsewhere for design polish. */
+:focus-visible {
+  outline: 2px solid #fff;
+  outline-offset: 2px;
+}
+[role="button"]:focus-visible {
+  box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.5);
+}
+
+html, body, #__next {
+  margin: 0; padding: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: "Barlow", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  -webkit-font-smoothing: antialiased;
+  min-height: 100%;
+  /* Safety net: never let any rogue child force the document wider than the
+     viewport. The real fix is min-width:0 on flex/grid children below; this
+     just guarantees no horizontal scroll surfaces if something slips. */
+  max-width: 100%;
+  overflow-x: hidden;
+}
+body { padding-bottom: env(safe-area-inset-bottom); }
+
+h1, h2, h3, h4 {
+  font-family: "Barlow Condensed", "Barlow", sans-serif;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  margin: 0;
+}
+button { font-family: inherit; cursor: pointer; }
+a { color: inherit; }
+
+.app {
+  width: 100%;
+  max-width: 720px;
+  margin: 0 auto;
+  /* Top: max() so we always honor the iOS notch / status bar in standalone
+     PWA mode (~47px on notched iPhones), and never go below 16px elsewhere.
+     Bottom: room for the fixed bottom nav + iOS safe area + breathing room. */
+  padding-top: max(env(safe-area-inset-top), 16px);
+  padding-right: max(env(safe-area-inset-right), 16px);
+  padding-bottom: calc(120px + env(safe-area-inset-bottom));
+  padding-left: max(env(safe-area-inset-left), 16px);
+}
+
+/* Compact header — single tight bar, ~48px tall: team name left, optional
+   live pill, active-tournament chip, refresh icon. The full venue/date
+   subtitle moved out of the header into the chip-row + content body. */
+.header-compact {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  min-width: 0;
+  margin-bottom: 10px;
+  min-height: 48px;
+}
+.header-compact .team-name {
+  flex: 1 1 auto;
+  min-width: 0;
+  font-family: "Barlow Condensed", sans-serif;
+  font-weight: 900;
+  font-size: 22px;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  color: var(--text);
+}
+.header-compact .live-pill {
+  background: var(--live);
+  color: #fff;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  padding: 3px 8px;
+  border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  flex-shrink: 0;
+  animation: dot-pulse 1.4s ease-in-out infinite;
+}
+.header-compact .live-pill .live-dot {
+  width: 7px; height: 7px;
+  border-radius: 50%;
+  background: #fff;
+}
+.header-compact .tournament-chip {
+  background: var(--accent-soft);
+  color: var(--accent);
+  border: 1px solid var(--accent-border);
+  font-size: 12px;
+  font-weight: 700;
+  padding: 6px 10px;
+  border-radius: 999px;
+  white-space: nowrap;
+  max-width: 140px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  flex-shrink: 0;
+}
+.header-compact .icon-only-btn {
+  background: transparent;
+  border: 1px solid var(--accent-border);
+  color: var(--accent);
+  width: 44px;
+  height: 44px;
+  border-radius: 999px;
+  display: grid;
+  place-items: center;
+  font-size: 15px;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: background 0.15s ease, transform 0.08s ease;
+}
+.header-compact .icon-only-btn:hover { background: var(--accent-soft); }
+.header-compact .icon-only-btn:active { transform: scale(0.94); }
+.header-compact .icon-only-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+.header-compact .icon-only-btn.installed {
+  border-color: var(--win);
+  color: var(--win);
+}
+.header-compact .icon-only-btn.refresh-btn {
+  border-color: var(--line);
+  color: var(--text);
+}
+.header-compact-actions {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+/* Horizontal chip row for tournament selection. Scrolls horizontally on
+   narrow screens, masks the scrollbar, scroll-snaps to chips. */
+.chip-row {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+  scroll-snap-type: x mandatory;
+  margin-bottom: 14px;
+  padding: 2px 0 6px;
+}
+.chip-row::-webkit-scrollbar { display: none; }
+.chip {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  color: var(--text);
+  padding: 10px 16px;
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 600;
+  white-space: nowrap;
+  cursor: pointer;
+  flex-shrink: 0;
+  scroll-snap-align: start;
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+  transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+}
+.chip.active {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--accent-ink);
+}
+.chip:disabled { opacity: 0.5; cursor: not-allowed; }
+
+.iconbtn {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  color: var(--text);
+  border-radius: 10px;
+  padding: 8px 12px;
+  font-size: 14px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.iconbtn:hover { border-color: var(--accent); }
+.iconbtn:disabled { opacity: 0.6; cursor: progress; }
+
+/* The old .selectors dropdown grid was replaced by .chip-row + the
+   compact header. Theme picker moved to a small footer button. */
+
+.live-banner {
+  background: linear-gradient(135deg, rgba(239, 68, 68, 0.28), rgba(239, 68, 68, 0.08));
+  border: 2px solid var(--live);
+  border-radius: 18px;
+  padding: 18px;
+  margin-bottom: 16px;
+  position: relative;
+  animation: live-pulse 1.6s ease-in-out infinite;
+}
+.live-banner .stacked-sets {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-top: 12px;
+  background: rgba(0,0,0,0.35);
+  border-radius: 10px;
+  padding: 10px 12px;
+  font-family: "Barlow Condensed", sans-serif;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+.live-banner .stacked-sets .set-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  font-size: 16px;
+}
+.live-banner .stacked-sets .set-row.deciding { color: var(--accent); }
+.live-banner .stacked-sets .set-row.in-progress {
+  color: var(--live);
+  font-size: 18px;
+}
+.live-banner .stacked-sets .set-row .label {
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  font-size: 11px;
+  color: var(--muted);
+  font-weight: 600;
+}
+.live-banner .stacked-sets .set-row.deciding .label,
+.live-banner .stacked-sets .set-row.in-progress .label {
+  color: inherit;
+}
+@keyframes live-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.5); }
+  50% { box-shadow: 0 0 0 12px rgba(239, 68, 68, 0); }
+}
+.live-banner .live-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--live);
+  color: #fff;
+  font-weight: 900;
+  font-size: 11px;
+  letter-spacing: 0.18em;
+  padding: 3px 8px;
+  border-radius: 4px;
+  text-transform: uppercase;
+}
+.live-banner .live-dot {
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  background: #fff;
+  animation: dot-pulse 1s ease-in-out infinite;
+}
+@keyframes dot-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.3; }
+}
+.live-banner .matchup {
+  font-family: "Barlow Condensed", sans-serif;
+  font-weight: 800;
+  font-size: 22px;
+  margin-top: 8px;
+  line-height: 1.15;
+}
+.live-banner .scoreline {
+  font-family: "Barlow Condensed", sans-serif;
+  font-weight: 900;
+  font-size: 56px;
+  line-height: 1;
+  color: var(--text);
+  letter-spacing: 0.02em;
+  margin-top: 4px;
+  display: flex;
+  align-items: baseline;
+  gap: 14px;
+  flex-wrap: wrap;
+}
+.live-banner .scoreline .vs {
+  font-size: 26px;
+  color: var(--muted);
+}
+.live-banner .meta {
+  color: var(--muted);
+  font-size: 13px;
+  margin-top: 6px;
+}
+
+.stats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  margin-bottom: 16px;
+}
+.stat {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  padding: 12px;
+  text-align: center;
+}
+.stat .label {
+  font-size: 11px;
+  color: var(--muted);
+  letter-spacing: 0.04em;
+}
+.stat .value {
+  font-family: "Barlow Condensed", sans-serif;
+  font-weight: 900;
+  font-size: 32px;
+  line-height: 1.05;
+  margin-top: 2px;
+}
+.stat.win .value { color: var(--win); }
+.stat.loss .value { color: var(--loss); }
+.stat.pos .value { color: var(--accent); }
+button.stat {
+  cursor: pointer;
+  transition: border-color 0.15s ease, background 0.15s ease, transform 0.08s ease;
+  font: inherit;
+  color: inherit;
+  border: 1px solid var(--line);
+}
+button.stat.active {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+}
+button.stat:hover { border-color: var(--accent); }
+
+/* Inline stats accordion — animates open from the stat bar. Stays in
+   layout flow so the cards below it slide down. */
+.stats-accordion {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  margin: -8px 0 16px;
+  overflow: hidden;
+  animation: stats-accordion-in 0.2s ease;
+}
+@keyframes stats-accordion-in {
+  from { opacity: 0; transform: translateY(-4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.stats-accordion-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 14px 8px;
+  font-family: "Barlow Condensed", sans-serif;
+  font-weight: 800;
+  font-size: 16px;
+  letter-spacing: 0.04em;
+  border-bottom: 1px solid var(--line);
+}
+.stats-accordion.wins .stats-accordion-head { color: var(--win); }
+.stats-accordion.losses .stats-accordion-head { color: var(--loss); }
+.stats-accordion-close {
+  background: transparent;
+  border: 0;
+  color: var(--muted);
+  font-size: 18px;
+  cursor: pointer;
+  width: 28px;
+  height: 28px;
+  border-radius: 999px;
+}
+.stats-accordion-close:hover { color: var(--text); background: var(--panel-2); }
+.stats-accordion-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.stats-accordion-list li {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--line);
+}
+.stats-accordion-list li:last-child { border-bottom: 0; }
+.stats-accordion-list .opp {
+  font-family: "Barlow Condensed", sans-serif;
+  font-weight: 700;
+  font-size: 15px;
+  color: var(--text);
+}
+.stats-accordion-list .row-score {
+  font-family: "Barlow Condensed", sans-serif;
+  font-weight: 900;
+  font-size: 22px;
+  font-variant-numeric: tabular-nums;
+}
+.stats-accordion.wins .row-score { color: var(--win); }
+.stats-accordion.losses .row-score { color: var(--loss); }
+.stats-accordion-footnote {
+  padding: 8px 14px 12px;
+  font-size: 0.75rem;
+  color: var(--muted);
+  opacity: 0.5;
+  border-top: 1px solid var(--line);
+  font-style: italic;
+}
+
+.hero {
+  background: linear-gradient(135deg, var(--accent-soft), rgba(0,0,0,0));
+  border: 1px solid var(--accent-border);
+  border-radius: 18px;
+  padding: 18px;
+  margin-bottom: 16px;
+}
+.hero.work {
+  background: linear-gradient(135deg, rgba(250, 204, 21, 0.12), rgba(0,0,0,0));
+  border-color: rgba(250, 204, 21, 0.5);
+}
+.hero h2 {
+  font-size: 13px;
+  color: var(--accent);
+  letter-spacing: 0.18em;
+  margin-bottom: 8px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.hero.work h2 { color: var(--warn); }
+.hero .opp {
+  font-family: "Barlow Condensed", sans-serif;
+  font-size: 28px;
+  font-weight: 800;
+  margin-bottom: 6px;
+}
+.hero .meta {
+  color: var(--muted);
+  font-size: 14px;
+  margin-bottom: 14px;
+}
+.hero .countdown {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+}
+.hero .countdown .num {
+  font-family: "Barlow Condensed", sans-serif;
+  font-size: 56px;
+  font-weight: 900;
+  color: var(--text);
+  line-height: 1;
+}
+.hero .countdown .unit {
+  color: var(--muted);
+  text-transform: uppercase;
+  font-size: 13px;
+  letter-spacing: 0.12em;
+}
+.hero.empty {
+  background: var(--panel);
+  border-color: var(--line);
+}
+.hero.empty h2 { color: var(--muted); }
+
+.notif-card {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  padding: 14px;
+  margin-bottom: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.notif-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+.notif-prefs {
+  list-style: none;
+  margin: 4px 0 0;
+  padding: 0;
+  border-top: 1px solid var(--line);
+  padding-top: 10px;
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 6px;
+}
+.notif-prefs li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  min-height: 28px;
+}
+.notif-prefs li label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  font-size: 13px;
+  color: var(--text);
+  flex: 1 1 auto;
+  min-width: 0;
+}
+.notif-prefs li .lead-select {
+  background: var(--panel-2);
+  border: 1px solid var(--line);
+  color: var(--text);
+  border-radius: 8px;
+  padding: 6px 10px;
+  font-family: inherit;
+  /* iOS Safari auto-zooms any input below 16px on focus; min size 16
+     prevents the page from zooming when tapping the lead selector. */
+  font-size: max(16px, 1rem);
+  font-weight: 600;
+  cursor: pointer;
+  flex-shrink: 0;
+  min-height: 36px;
+  appearance: none;
+  -webkit-appearance: none;
+  background-image: linear-gradient(45deg, transparent 50%, var(--muted) 50%),
+                    linear-gradient(135deg, var(--muted) 50%, transparent 50%);
+  background-position: calc(100% - 14px) 50%, calc(100% - 9px) 50%;
+  background-size: 5px 5px, 5px 5px;
+  background-repeat: no-repeat;
+  padding-right: 26px;
+}
+.notif-prefs li input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  accent-color: var(--accent);
+  cursor: pointer;
+  flex-shrink: 0;
+}
+.notif-card.on { border-color: var(--accent); }
+.notif-card-action {
+  width: 100%;
+  background: var(--panel);
+  text-align: left;
+  font: inherit;
+  cursor: pointer;
+}
+.notif-card-action:hover { border-color: var(--accent); }
+.notif-card-action .title { color: var(--accent); }
+.notif-card .title {
+  font-family: "Barlow Condensed", sans-serif;
+  font-size: 18px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.notif-card .desc {
+  color: var(--muted);
+  font-size: 12px;
+  margin-top: 2px;
+}
+.notif-card .state {
+  font-size: 11px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  padding: 3px 8px;
+  border-radius: 4px;
+  background: var(--panel-2);
+  color: var(--muted);
+  border: 1px solid var(--line);
+}
+.notif-card .state.on { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
+.notif-card .state.blocked { background: rgba(239,68,68,0.15); color: var(--loss); border-color: rgba(239,68,68,0.4); }
+
+/* Bottom-pinned tab navigation — mobile sports-app pattern. Sits above
+   the iOS safe area, extra height for thumb taps. */
+.tabs {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  background: var(--panel);
+  border-top: 1px solid var(--line);
+  padding-top: 4px;
+  padding-left: 4px;
+  padding-right: 4px;
+  /* max() guards against env() resolving to 0 in browsers that don't
+     surface the home-indicator inset, while still expanding to the full
+     ~34px on iPhone X+ in standalone mode. */
+  padding-bottom: max(4px, env(safe-area-inset-bottom));
+  z-index: 30;
+  box-shadow: 0 -8px 24px rgba(0, 0, 0, 0.5);
+}
+.tabs button {
+  flex: 1;
+  background: transparent;
+  border: 0;
+  color: var(--muted);
+  padding: 8px 4px 6px;
+  min-height: 56px;
+  border-radius: 10px;
+  font-weight: 600;
+  font-size: 12px;
+  letter-spacing: 0.02em;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  transition: color 0.15s ease, background 0.15s ease;
+}
+.tabs button .icon {
+  font-size: 20px;
+  line-height: 1;
+}
+.tabs button.active {
+  color: var(--accent);
+}
+.tabs button.active .icon {
+  filter: drop-shadow(0 0 6px var(--accent-soft));
+}
+
+.section-title {
+  font-family: "Barlow Condensed", sans-serif;
+  font-size: 16px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  color: var(--muted);
+  margin: 14px 0 8px;
+}
+
+.static-card {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  padding: 22px;
+  margin-bottom: 16px;
+}
+.static-eyebrow {
+  font-size: 13px;
+  letter-spacing: 0.04em;
+  color: var(--accent);
+  margin-bottom: 10px;
+}
+.static-name {
+  font-family: "Barlow Condensed", sans-serif;
+  font-weight: 900;
+  font-size: 28px;
+  line-height: 1.1;
+  margin-bottom: 6px;
+}
+.static-venue {
+  font-family: "Barlow Condensed", sans-serif;
+  font-weight: 700;
+  font-size: 18px;
+  margin-top: 8px;
+}
+.static-meta {
+  color: var(--muted);
+  font-size: 14px;
+  margin-top: 4px;
+}
+.static-meta a { color: var(--accent); text-decoration: none; }
+.static-meta a:hover { text-decoration: underline; }
+.static-divider {
+  height: 1px;
+  background: var(--line);
+  margin: 16px 0;
+}
+.static-note {
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+/* Season arc — compact W/L dot row above the schedule list. */
+.season-arc {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin-bottom: 12px;
+  padding: 8px 12px;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+}
+.season-arc .arc-label {
+  font-size: 10px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-right: 4px;
+}
+.arc-dot {
+  /* Visual is 12px but the tap target expands to 44x44 via padding +
+     background-clip so the dot stays small while the hit area is iOS-
+     accessibility-compliant. */
+  width: 44px; height: 44px;
+  display: inline-grid;
+  place-items: center;
+  padding: 0;
+  border: 0;
+  cursor: pointer;
+  transition: transform 0.08s ease;
+  background: transparent;
+}
+.arc-dot::before {
+  content: "";
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  display: block;
+}
+.arc-dot.w::before { background: var(--win); box-shadow: 0 0 6px rgba(34,197,94,0.5); }
+.arc-dot.l::before { background: transparent; border: 2px solid var(--loss); }
+.arc-dot:active { transform: scale(0.85); }
+
+/* Upcoming-tournament countdown card — empty-state for tournaments
+   that haven't started yet. */
+.upcoming-card {
+  background: linear-gradient(135deg, var(--accent-soft), rgba(0,0,0,0));
+  border: 1px solid var(--accent-border);
+  border-radius: 18px;
+  padding: 22px;
+  margin-bottom: 16px;
+  text-align: center;
+}
+.upcoming-card .eyebrow {
+  font-size: 13px;
+  letter-spacing: 0.04em;
+  color: var(--accent);
+}
+.upcoming-card .countdown-num {
+  font-family: "Barlow Condensed", sans-serif;
+  font-weight: 900;
+  font-size: 64px;
+  line-height: 1;
+  margin: 8px 0 4px;
+  color: var(--text);
+}
+.upcoming-card .countdown-unit {
+  letter-spacing: 0.04em;
+  color: var(--muted);
+  font-size: 13px;
+}
+.upcoming-card .upcoming-venue {
+  margin-top: 14px;
+  font-family: "Barlow Condensed", sans-serif;
+  font-weight: 700;
+  font-size: 18px;
+  color: var(--text);
+}
+.upcoming-card .upcoming-meta {
+  margin-top: 4px;
+  color: var(--muted);
+  font-size: 13px;
+}
+.upcoming-card .upcoming-meta a { color: var(--accent); text-decoration: none; }
+
+/* Work-duty urgency banner — sticky at top when work duty starts within
+   60 minutes. */
+.work-urgent {
+  background: linear-gradient(90deg, rgba(250, 204, 21, 0.2), rgba(239, 68, 68, 0.18));
+  border: 2px solid var(--warn);
+  border-radius: 14px;
+  padding: 12px 14px;
+  margin-bottom: 14px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  animation: live-pulse 1.6s ease-in-out infinite;
+}
+.work-urgent .icon { font-size: 24px; }
+.work-urgent .role {
+  font-family: "Barlow Condensed", sans-serif;
+  font-weight: 800;
+  font-size: 18px;
+  color: var(--warn);
+  letter-spacing: 0.04em;
+  line-height: 1.1;
+}
+.work-urgent .meta { color: var(--text); font-size: 13px; margin-top: 2px; }
+
+.record-summary {
+  background: var(--accent-soft);
+  border: 1px solid var(--accent-border);
+  border-radius: 12px;
+  padding: 10px 14px;
+  margin-bottom: 10px;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px;
+}
+.record-final {
+  font-family: "Barlow Condensed", sans-serif;
+  font-weight: 900;
+  font-size: 22px;
+  letter-spacing: 0.04em;
+  color: var(--accent);
+}
+.record-sub {
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.calendar-section {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  padding: 14px;
+  margin-bottom: 16px;
+}
+.calendar-section .row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+.calendar-section .lhs {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+.calendar-section .icon {
+  font-size: 22px;
+  width: 38px; height: 38px;
+  background: var(--accent-soft);
+  border-radius: 10px;
+  display: grid; place-items: center;
+}
+.calendar-section .label {
+  font-family: "Barlow Condensed", sans-serif;
+  font-weight: 800;
+  font-size: 17px;
+}
+.calendar-section .sub {
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.list { display: flex; flex-direction: column; gap: 10px; }
+
+/* Two-column game grid at tablet width and up. The .app container caps at
+   720px so two columns get ~320px each — comfortable for the card hero. */
+@media (min-width: 640px) {
+  .list-2col {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+  }
+}
+
+.card {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-left-width: 4px;
+  border-left-color: var(--accent);
+  border-radius: 14px;
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.card.next {
+  box-shadow: 0 0 0 1px var(--accent-soft);
+}
+.card.win { border-left-color: var(--win); }
+.card.loss { border-left-color: var(--loss); }
+/* Past games stay full-opacity; the W/L stripe + badge carry the signal. */
+.card.live-card {
+  border-left-color: var(--live);
+  border-left-width: 5px;
+  animation: live-card-pulse 1.4s ease-in-out infinite;
+}
+@keyframes live-card-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.45); }
+  50% { box-shadow: 0 0 0 6px rgba(239, 68, 68, 0); }
+}
+
+/* Card row — collapsed/expanded structure. */
+.card-summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  width: 100%;
+  cursor: pointer;
+  background: transparent;
+  border: 0;
+  padding: 0;
+  font: inherit;
+  color: inherit;
+  text-align: left;
+  /* div role=button needs an explicit focus outline for keyboard users
+     since browsers don't auto-style non-button focusables. */
+  outline: 0;
+}
+.card-summary:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 4px;
+  border-radius: 8px;
+}
+.card-chevron {
+  flex-shrink: 0;
+  font-size: 14px;
+  color: var(--muted);
+  transition: transform 0.2s ease;
+}
+.card.expanded .card-chevron { transform: rotate(90deg); }
+
+.card-expanded {
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px solid var(--line);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+/* Court number — dominant on upcoming, smaller on past where the score
+   takes the spotlight. */
+.court-hero {
+  font-family: "Barlow Condensed", sans-serif;
+  font-weight: 900;
+  line-height: 1;
+  color: var(--accent);
+  letter-spacing: 0.02em;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: baseline;
+  gap: 6px;
+  background: transparent;
+  border: 0;
+  padding: 0;
+  cursor: pointer;
+  transition: transform 0.08s ease;
+}
+.court-hero:active { transform: scale(0.97); }
+.card.upcoming .court-hero { font-size: 64px; }
+.card.past .court-hero, .card.live-card .court-hero { font-size: 22px; }
+.court-hero .court-pin { font-size: 0.32em; opacity: 0.7; }
+.court-hero:hover { text-decoration: underline; text-underline-offset: 4px; }
+
+/* Upcoming card — court hero is the headline, time + opponent below. */
+.card.upcoming {
+  padding: 18px 16px;
+}
+.card.upcoming .matchup {
+  font-family: "Barlow Condensed", sans-serif;
+  font-weight: 800;
+  font-size: 18px;
+  margin-top: 8px;
+  color: var(--text);
+}
+.card.upcoming .matchup-meta {
+  font-size: 13px;
+  color: var(--muted);
+  margin-top: 2px;
+}
+.card.upcoming.next-pulse {
+  position: relative;
+}
+.late-badge {
+  display: inline-block;
+  margin-top: 6px;
+  padding: 3px 8px;
+  border-radius: 6px;
+  background: rgba(245, 158, 11, 0.18);
+  color: #F59E0B;
+  border: 1px solid rgba(245, 158, 11, 0.4);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+}
+
+.card.upcoming.next-pulse::after {
+  content: "";
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--accent);
+  box-shadow: 0 0 0 0 var(--accent-soft);
+  animation: dot-pulse 1.4s ease-in-out infinite;
+}
+
+/* Past card — score is dominant, badge + opponent secondary. */
+.card.past .score-hero {
+  font-family: "Barlow Condensed", sans-serif;
+  font-weight: 900;
+  font-size: 48px;
+  line-height: 1;
+  color: var(--text);
+  letter-spacing: 0.02em;
+  font-variant-numeric: tabular-nums;
+}
+.card.past .score-meta {
+  font-size: 13px;
+  color: var(--muted);
+  margin-top: 4px;
+}
+.card.past .past-summary-left {
+  min-width: 0;
+}
+.card.past .matchup {
+  font-family: "Barlow Condensed", sans-serif;
+  font-weight: 700;
+  font-size: 16px;
+  color: var(--text);
+}
+
+/* Set-by-set table inside the expanded past-game card. */
+.set-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-variant-numeric: tabular-nums;
+  font-family: "Barlow Condensed", sans-serif;
+  font-size: 15px;
+}
+.set-table thead th {
+  font-size: 10px;
+  letter-spacing: 0.06em;
+  color: var(--muted);
+  font-weight: 700;
+  text-align: right;
+  padding: 4px 8px;
+  border-bottom: 1px solid var(--line);
+}
+.set-table thead th:first-child { text-align: left; }
+.set-table tbody td {
+  padding: 6px 8px;
+  text-align: right;
+  border-bottom: 1px solid var(--line);
+  font-weight: 700;
+}
+.set-table tbody td:first-child {
+  text-align: left;
+  color: var(--muted);
+  font-weight: 600;
+}
+.set-table tbody tr:last-child td { border-bottom: 0; }
+.set-table tbody tr.deciding td:first-child { color: var(--accent); }
+.set-table tbody td.win-side { color: var(--win); }
+.set-table tbody td.loss-side { color: var(--loss); }
+.set-table .deciding-mark {
+  margin-left: 4px;
+  color: var(--accent);
+  font-size: 0.8em;
+}
+
+/* Sticky work-duty alert: floats above the bottom nav when a duty is
+   within 2 hours, dismissable. Lives on schedule + duties tabs only. */
+.duty-sticky {
+  position: fixed;
+  left: 12px;
+  right: 12px;
+  bottom: calc(76px + env(safe-area-inset-bottom));
+  background: linear-gradient(90deg, rgba(250, 204, 21, 0.95), rgba(239, 68, 68, 0.92));
+  color: #1a1a1a;
+  padding: 10px 14px;
+  border-radius: 14px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  z-index: 25;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+  font-size: 13px;
+  font-weight: 700;
+}
+.duty-sticky .icon { font-size: 18px; }
+.duty-sticky .text { flex: 1 1 auto; min-width: 0; line-height: 1.2; }
+.duty-sticky .dismiss {
+  background: rgba(0, 0, 0, 0.2);
+  color: inherit;
+  border: 0;
+  width: 28px;
+  height: 28px;
+  border-radius: 999px;
+  font-weight: 800;
+  font-size: 14px;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+.card.just-won {
+  animation: win-glow 1.6s ease-in-out 6;
+  border-color: var(--accent);
+}
+@keyframes win-glow {
+  0%, 100% { box-shadow: 0 0 0 0 var(--accent-soft); }
+  50% { box-shadow: 0 0 0 8px var(--accent-soft); }
+}
+
+.card-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+.card .opp {
+  font-family: "Barlow Condensed", sans-serif;
+  font-weight: 800;
+  font-size: 18px;
+  color: var(--text);
+}
+.card .meta { color: var(--muted); font-size: 13px; }
+.card .sets {
+  font-family: "Barlow Condensed", sans-serif;
+  font-weight: 700;
+  color: var(--text);
+  font-size: 16px;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.02em;
+}
+
+.badge {
+  font-size: 11px;
+  font-weight: 800;
+  padding: 4px 8px;
+  border-radius: 6px;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  background: var(--panel-2);
+  color: var(--muted);
+  border: 1px solid var(--line);
+  white-space: nowrap;
+}
+.badge.win { background: rgba(34,197,94,0.15); color: var(--win); border-color: rgba(34,197,94,0.4); }
+.badge.loss { background: rgba(239,68,68,0.15); color: var(--loss); border-color: rgba(239,68,68,0.4); }
+.badge.next { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
+.badge.changed { background: rgba(250,204,21,0.15); color: var(--warn); border-color: rgba(250,204,21,0.4); }
+.badge.live {
+  background: var(--live);
+  color: #fff;
+  border-color: var(--live);
+  animation: dot-pulse 1.5s ease-in-out infinite;
+}
+
+.card-actions { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 6px; }
+.btn-mini {
+  background: var(--panel-2);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  color: var(--text);
+  font-size: 12px;
+  padding: 6px 10px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.btn-mini:hover { border-color: var(--accent); }
+.btn-mini.primary { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); font-weight: 700; }
+.btn-mini.primary:hover { filter: brightness(1.05); }
+
+/* Compact standings table — 32px rows, 208 always pinned at the top with
+   an accent left border. Decorative thead rows dropped; columns are
+   Rank / Team (truncate 20ch) / W / L / Pts. */
+.standings-table {
+  width: 100%;
+  border-collapse: collapse;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  overflow: hidden;
+  font-size: 13px;
+  font-variant-numeric: tabular-nums;
+}
+.standings-table td {
+  padding: 6px 10px;
+  text-align: left;
+  border-bottom: 1px solid var(--line);
+  height: 32px;
+  vertical-align: middle;
+}
+.standings-table td:first-child { padding-left: 12px; }
+.standings-table td.num {
+  text-align: right;
+  width: 36px;
+  color: var(--muted);
+}
+.standings-table td.team {
+  max-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-weight: 600;
+}
+.standings-table td.rank {
+  width: 32px;
+  color: var(--muted);
+  font-weight: 700;
+}
+.standings-table tr:last-child td { border-bottom: 0; }
+.standings-table tr.clickable-row { cursor: pointer; }
+.standings-table tr.clickable-row:hover td { background: var(--panel-2); }
+.standings-table tr.clickable-row:active { transform: scale(0.99); transition: transform 0.08s ease; }
+.standings-table tr.us-pinned td {
+  background: var(--accent-soft);
+  color: var(--accent-readable);
+  font-weight: 800;
+  border-bottom: 2px solid var(--accent);
+}
+.standings-table tr.us-pinned td:first-child {
+  border-left: 4px solid var(--accent);
+  padding-left: 8px;
+}
+
+.empty {
+  background: var(--panel);
+  border: 1px dashed var(--line);
+  border-radius: 14px;
+  padding: 24px;
+  text-align: center;
+  color: var(--muted);
+}
+
+.footer-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 16px;
+  font-size: 12px;
+  color: var(--muted);
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.footer-bar button { font-size: 12px; }
+
+/* Subtle press-feedback for any tappable element. Adds a ~3% squish on
+   :active so users feel the tap register on touch. */
+.press-feedback {
+  transition: transform 0.08s ease;
+}
+.press-feedback:active {
+  transform: scale(0.97);
+}
+
+/* Pool standings — small table at top of Standings tab showing 208's
+   current pool only. Round-robin match details aren't exposed by AES, so
+   we surface only the team list with their pool record. */
+.pool-grid {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 12px 14px;
+  margin-bottom: 12px;
+}
+.pool-grid-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-bottom: 8px;
+}
+.pool-grid-title {
+  font-family: "Barlow Condensed", sans-serif;
+  font-weight: 800;
+  font-size: 18px;
+  color: var(--text);
+  letter-spacing: 0.04em;
+}
+.pool-grid-sub {
+  color: var(--muted);
+  font-size: 12px;
+}
+.pool-grid table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+  font-variant-numeric: tabular-nums;
+}
+.pool-grid table th {
+  font-size: 10px;
+  letter-spacing: 0.06em;
+  color: var(--muted);
+  font-weight: 700;
+  text-align: right;
+  padding: 4px 8px;
+  border-bottom: 1px solid var(--line);
+}
+.pool-grid table th:nth-child(2) { text-align: left; }
+.pool-grid table td {
+  padding: 8px;
+  text-align: right;
+  border-bottom: 1px solid var(--line);
+  height: 32px;
+}
+.pool-grid table td:nth-child(2) { text-align: left; font-weight: 600; }
+.pool-grid table tr:last-child td { border-bottom: 0; }
+.pool-grid table tr.us td {
+  background: var(--accent-soft);
+  color: var(--accent-readable);
+  font-weight: 800;
+}
+.pool-grid table tr.us td:first-child {
+  border-left: 4px solid var(--accent);
+}
+.pool-grid-footnote {
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px solid var(--line);
+  color: var(--muted);
+  opacity: 0.5;
+  font-size: 0.75rem;
+  font-style: italic;
+}
+
+/* Bracket viz — collapsible section in the Schedule tab. Each tree is a
+   horizontal list of round-columns; the rightmost column is the final.
+   On narrow screens the wrapper scrolls horizontally. Connectors are
+   intentionally omitted in v1 — visual grouping by column carries the
+   bracket structure without the layout complexity of cross-tree paths. */
+.bracket-section {
+  margin-top: 14px;
+}
+.bracket-toggle {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  color: var(--text);
+  padding: 10px 14px;
+  border-radius: 12px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  width: 100%;
+  text-align: left;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.bracket-toggle:hover { border-color: var(--accent); }
+.bracket-tree-wrap {
+  margin-top: 12px;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 12px;
+}
+.bracket-tree-name {
+  font-family: "Barlow Condensed", sans-serif;
+  font-weight: 800;
+  font-size: 16px;
+  letter-spacing: 0.04em;
+  color: var(--muted);
+  margin-bottom: 8px;
+}
+.bracket-tree {
+  display: flex;
+  gap: 12px;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  padding-bottom: 4px;
+  scrollbar-width: thin;
+}
+.bracket-tree::-webkit-scrollbar { height: 6px; }
+.bracket-tree::-webkit-scrollbar-thumb { background: var(--line); border-radius: 3px; }
+.bracket-col {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 140px;
+  justify-content: space-around;
+}
+.bracket-card {
+  background: var(--panel-2);
+  border: 1px solid var(--line);
+  border-left: 3px solid var(--line);
+  border-radius: 8px;
+  padding: 8px 10px;
+  font-size: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-height: 64px;
+}
+.bracket-card.us-path {
+  border-left-color: var(--celebrate);
+  background: rgba(255, 105, 180, 0.06);
+}
+.bracket-card.pending {
+  border-style: dashed;
+  opacity: 0.7;
+}
+.bracket-card-header {
+  font-size: 9px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted);
+  font-weight: 700;
+}
+.bracket-card-team {
+  display: flex;
+  justify-content: space-between;
+  gap: 6px;
+  font-size: 12px;
+  color: var(--muted);
+}
+.bracket-card-team .name {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.bracket-card-team.won { color: var(--text); font-weight: 700; }
+.bracket-card-team.us .name { color: var(--accent); font-weight: 700; }
+.bracket-card-team .score {
+  font-family: "Barlow Condensed", sans-serif;
+  font-variant-numeric: tabular-nums;
+  font-size: 13px;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+.bracket-card-foot {
+  font-size: 10px;
+  color: var(--muted);
+  margin-top: 2px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Full-screen opponent history page (in-app, not a Next route). */
+.history-page {
+  width: 100%;
+}
+.history-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 12px;
+  min-height: 44px;
+}
+.history-back {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  color: var(--text);
+  width: 36px;
+  height: 36px;
+  border-radius: 999px;
+  display: grid;
+  place-items: center;
+  font-size: 18px;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+.history-back:hover { border-color: var(--accent); }
+.history-title {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+.history-title h2 {
+  font-family: "Barlow Condensed", sans-serif;
+  font-weight: 800;
+  font-size: 22px;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  color: var(--text);
+}
+.history-title .sub {
+  color: var(--muted);
+  font-size: 12px;
+  letter-spacing: 0.04em;
+  margin-top: 2px;
+}
+
+.history-summary {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+  margin-bottom: 14px;
+}
+@media (min-width: 480px) {
+  .history-summary { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+}
+.history-summary .stat {
+  text-align: center;
+}
+
+.history-section {
+  margin-top: 18px;
+}
+.history-section .head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  margin-bottom: 6px;
+  font-family: "Barlow Condensed", sans-serif;
+  font-weight: 700;
+  font-size: 14px;
+  letter-spacing: 0.04em;
+  color: var(--muted);
+}
+.history-section .games {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  overflow: hidden;
+}
+.history-section .games li {
+  display: grid;
+  grid-template-columns: 1fr auto auto;
+  gap: 10px;
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--line);
+  align-items: center;
+  font-size: 13px;
+}
+.history-section .games li:last-child { border-bottom: 0; }
+.history-section .games .meta { color: var(--muted); font-size: 12px; }
+.history-section .games .score {
+  font-family: "Barlow Condensed", sans-serif;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  font-size: 18px;
+}
+.history-section .games .score.win { color: var(--win); }
+.history-section .games .score.loss { color: var(--loss); }
+.history-section .games .badge { white-space: nowrap; }
+.history-section .games .sets-detail {
+  grid-column: 1 / -1;
+  color: var(--muted);
+  font-size: 12px;
+  margin-top: 4px;
+}
+
+.history-loading {
+  text-align: center;
+  color: var(--muted);
+  font-size: 13px;
+  padding: 14px;
+}
+.history-empty {
+  text-align: center;
+  color: var(--muted);
+  font-size: 14px;
+  padding: 40px 20px;
+  border: 1px dashed var(--line);
+  border-radius: 14px;
+}
+
+.history-filter {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin-bottom: 10px;
+}
+.history-filter button {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  color: var(--text);
+  padding: 6px 12px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.history-filter button.active {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--accent-ink);
+}
+
+/* See Full History action inside OpponentSheet. */
+.history-link {
+  display: block;
+  width: 100%;
+  text-align: center;
+  margin-top: 8px;
+  padding: 10px;
+  background: transparent;
+  border: 1px solid var(--accent-border);
+  color: var(--accent);
+  border-radius: 999px;
+  font-weight: 700;
+  font-size: 13px;
+  cursor: pointer;
+}
+.history-link:hover { background: var(--accent-soft); }
+
+/* Demo / guided tour overlay. The cutout uses the classic
+   box-shadow:0 0 0 9999px trick to dim everything around the
+   highlighted target. */
+/* Old .demo-pill is now an icon-only-btn in the header. Keeping the
+   class declaration removed to avoid stale references. */
+
+.tour-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  pointer-events: auto;
+}
+.tour-fullbackdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.72);
+  pointer-events: none;
+  animation: toast-in 0.2s ease;
+}
+.tour-cutout {
+  position: absolute;
+  border-radius: 14px;
+  box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.72);
+  outline: 2px solid var(--accent);
+  outline-offset: 4px;
+  pointer-events: none;
+  transition: top 0.25s ease, left 0.25s ease, width 0.25s ease, height 0.25s ease;
+}
+
+/* Subtle pulse on the highlighted target during a tour step so the
+   element is unmistakable even with the cutout overlay. */
+@keyframes tour-pulse-anim {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.03); }
+}
+.tour-pulse {
+  animation: tour-pulse-anim 1s ease-in-out infinite;
+}
+.tour-bubble {
+  position: absolute;
+  left: 50%;
+  bottom: calc(96px + env(safe-area-inset-bottom));
+  transform: translateX(-50%);
+  background: var(--panel);
+  border: 1px solid var(--accent);
+  border-radius: 16px;
+  padding: 16px 18px;
+  width: calc(100% - 32px);
+  max-width: 360px;
+  color: var(--text);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.5);
+  pointer-events: auto;
+  animation: toast-in 0.2s ease;
+}
+.tour-step-num {
+  font-size: 10px;
+  letter-spacing: 0.16em;
+  color: var(--accent);
+  font-weight: 700;
+  margin-bottom: 6px;
+}
+.tour-title {
+  font-family: "Barlow Condensed", sans-serif;
+  font-weight: 800;
+  font-size: 22px;
+  letter-spacing: 0.02em;
+  margin-bottom: 6px;
+  color: var(--text);
+}
+.tour-body {
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--text);
+  margin-bottom: 14px;
+}
+.tour-controls {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  justify-content: space-between;
+}
+.tour-controls button {
+  background: transparent;
+  border: 1px solid var(--line);
+  color: var(--text);
+  padding: 8px 14px;
+  border-radius: 999px;
+  font-weight: 700;
+  font-size: 13px;
+  cursor: pointer;
+}
+.tour-controls button.primary {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--accent-ink);
+}
+.tour-controls .skip-btn { color: var(--muted); border: 0; }
+
+.tour-nudge {
+  background: var(--accent-soft);
+  border: 1px solid var(--accent-border);
+  color: var(--accent-readable);
+  padding: 10px 14px;
+  border-radius: 10px;
+  margin-bottom: 12px;
+  font-size: 13px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+  min-height: 44px;
+}
+.tour-nudge button {
+  background: var(--accent);
+  color: var(--accent-ink);
+  border: 0;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 700;
+  cursor: pointer;
+}
+.tour-nudge .dismiss {
+  background: transparent;
+  color: var(--muted);
+  font-size: 18px;
+  width: 24px;
+  height: 24px;
+  padding: 0;
+}
+
+/* Lightweight transient toast — auto-dismisses, top of screen, replaces
+   the legacy winToast inline style. */
+.toast {
+  position: fixed;
+  top: max(env(safe-area-inset-top), 12px);
+  left: 0;
+  right: 0;
+  display: grid;
+  place-items: center;
+  z-index: 100;
+  pointer-events: none;
+}
+.toast .toast-pill {
+  background: var(--accent);
+  color: var(--accent-ink);
+  padding: 10px 16px;
+  border-radius: 999px;
+  font-weight: 700;
+  font-family: "Barlow Condensed", sans-serif;
+  font-size: 15px;
+  letter-spacing: 0.04em;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+  max-width: 360px;
+  text-align: center;
+  animation: toast-in 0.2s ease;
+}
+@keyframes toast-in {
+  from { opacity: 0; transform: translateY(-8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* InfoSheet body styles (reuses .sheet skeleton). */
+.sheet .info-line {
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--text);
+  margin-bottom: 6px;
+}
+.sheet .info-line.muted { color: var(--muted); font-size: 13px; }
+.sheet .info-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 14px;
+}
+
+/* "Viewing as" team switcher pill — sits below the chip row. Subtle
+   border-only style so it doesn't compete with the active tournament. */
+.view-as-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 12px;
+  font-size: 12px;
+  color: var(--muted);
+}
+.view-as-pill {
+  background: transparent;
+  border: 1px solid var(--line);
+  color: var(--text);
+  padding: 10px 14px 10px 12px;
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  max-width: 240px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  min-height: 44px;
+}
+.view-as-pill:hover { border-color: var(--accent); color: var(--accent); }
+.view-as-pill .chev { font-size: 10px; opacity: 0.6; }
+
+/* Team picker sheet content — list of teams with the current one
+   highlighted. Reuses .sheet from the opponent sheet system. */
+.team-list {
+  list-style: none;
+  margin: 8px 0 0;
+  padding: 0;
+}
+.team-list li button {
+  width: 100%;
+  background: transparent;
+  border: 0;
+  padding: 12px 4px;
+  text-align: left;
+  cursor: pointer;
+  border-bottom: 1px solid var(--line);
+  color: var(--text);
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  font-size: 14px;
+}
+.team-list li button:hover { color: var(--accent); }
+.team-list li.current button {
+  color: var(--accent);
+  font-weight: 700;
+}
+.team-list li.current button::before {
+  content: "✓ ";
+}
+.team-list .team-club {
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 400;
+  max-width: 50%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Bottom sheet — used for opponent detail. CSS-animated slide-up via
+   transform. Backdrop dims content; tap outside or Close to dismiss. */
+.sheet-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.6);
+  z-index: 60;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s ease;
+}
+.sheet-backdrop.open {
+  opacity: 1;
+  pointer-events: auto;
+}
+.sheet {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: var(--panel);
+  border-top: 1px solid var(--line);
+  border-radius: 18px 18px 0 0;
+  padding: 14px 18px calc(22px + env(safe-area-inset-bottom));
+  z-index: 70;
+  transform: translateY(100%);
+  transition: transform 0.25s ease;
+  max-height: 75vh;
+  overflow-y: auto;
+  box-shadow: 0 -12px 32px rgba(0, 0, 0, 0.5);
+}
+.sheet.open { transform: translateY(0); }
+.sheet-handle {
+  width: 40px;
+  height: 4px;
+  border-radius: 999px;
+  background: var(--line);
+  margin: 0 auto 12px;
+}
+.sheet h3 {
+  font-family: "Barlow Condensed", sans-serif;
+  font-weight: 800;
+  font-size: 22px;
+  margin-bottom: 4px;
+  color: var(--text);
+  letter-spacing: 0.02em;
+}
+.sheet .sub {
+  color: var(--muted);
+  font-size: 13px;
+  margin-bottom: 14px;
+}
+.sheet .stat-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--line);
+  font-size: 14px;
+}
+.sheet .stat-row .stat-label { color: var(--muted); }
+.sheet .stat-row .stat-value {
+  font-family: "Barlow Condensed", sans-serif;
+  font-weight: 800;
+  font-size: 20px;
+  color: var(--text);
+  font-variant-numeric: tabular-nums;
+}
+.sheet .stat-row.win .stat-value { color: var(--win); }
+.sheet .stat-row.loss .stat-value { color: var(--loss); }
+.sheet .sheet-close {
+  display: block;
+  width: 100%;
+  margin-top: 16px;
+  padding: 12px;
+  background: var(--accent);
+  color: var(--accent-ink);
+  border: 0;
+  border-radius: 999px;
+  font-weight: 800;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+/* Tappable opponent name — visually a regular text element with subtle
+   underline-on-hover so users discover it's interactive. */
+.opp-tap {
+  background: transparent;
+  border: 0;
+  padding: 8px 6px;
+  margin: -8px -6px;
+  font: inherit;
+  color: inherit;
+  cursor: pointer;
+  text-align: left;
+  border-bottom: 1px dashed transparent;
+  display: inline-block;
+}
+.opp-tap:hover { border-bottom-color: var(--muted); }
+
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.7);
+  display: grid;
+  place-items: center;
+  padding: 16px;
+  z-index: 50;
+}
+.modal {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  padding: 18px;
+  width: 100%;
+  max-width: 420px;
+}
+.modal h3 {
+  font-size: 16px;
+  letter-spacing: 0.1em;
+  margin-bottom: 12px;
+}
+.field {
+  display: flex; flex-direction: column;
+  gap: 4px; margin-bottom: 10px;
+}
+.field label {
+  font-size: 11px;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+}
+.field input, .field select {
+  background: var(--panel-2);
+  border: 1px solid var(--line);
+  color: var(--text);
+  border-radius: 8px;
+  padding: 10px 12px;
+  font-family: inherit;
+  font-size: 14px;
+}
+.modal-actions {
+  display: flex; gap: 8px; justify-content: flex-end;
+}
+.btn-primary {
+  background: var(--accent);
+  border: 0;
+  color: var(--accent-ink);
+  font-weight: 800;
+  border-radius: 10px;
+  padding: 10px 16px;
+}
+.btn-secondary {
+  background: var(--panel-2);
+  border: 1px solid var(--line);
+  color: var(--text);
+  border-radius: 10px;
+  padding: 10px 16px;
+}
+
+.watermark {
+  margin-top: 24px;
+  text-align: center;
+  font-size: 10px;
+  letter-spacing: 0.04em;
+  color: var(--muted);
+  opacity: 0.6;
+}
+.watermark a {
+  color: inherit;
+  text-decoration: none;
+  border-bottom: 1px dotted currentColor;
+}
+
+.cached-pill {
+  display: inline-block;
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--muted);
+  background: var(--panel-2);
+  border: 1px solid var(--line);
+  padding: 2px 6px;
+  border-radius: 4px;
+  margin-left: 6px;
+}
