@@ -1,4 +1,5 @@
 import { diffAndPush } from "../../lib/stateDiff.js";
+import { maybeSnapshot } from "../../lib/snapshots.js";
 
 // Deferred for v3 (intentionally not implemented yet):
 //   - Pool standings tab: render `/division/{div}/pools` so we can show
@@ -649,6 +650,13 @@ export default async function handler(req, res) {
       teamName: payload?.teamName || ctx.teamName,
       payload,
     }).catch((err) => console.error("[diffAndPush]", err?.message || err));
+    // Fire-and-forget snapshot — rate-limited to one write per 5 min in
+    // the helper, plus a single terminal write when the event ends.
+    maybeSnapshot({
+      eventId: ctx.eventId,
+      tournamentId: req.query?.tournamentId || null,
+      payload,
+    }).catch((err) => console.error("[snapshot]", err?.message || err));
   } catch (err) {
     if (entry?.payload) {
       res.status(200).json({ ...entry.payload, cached: true, staleError: String(err?.message || err) });

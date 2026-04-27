@@ -401,6 +401,14 @@ button.stat:hover { border-color: var(--accent); }
 }
 .stats-accordion.wins .row-score { color: var(--win); }
 .stats-accordion.losses .row-score { color: var(--loss); }
+.stats-accordion-footnote {
+  padding: 8px 14px 12px;
+  font-size: 0.75rem;
+  color: var(--muted);
+  opacity: 0.5;
+  border-top: 1px solid var(--line);
+  font-style: italic;
+}
 
 .hero {
   background: linear-gradient(135deg, var(--accent-soft), rgba(0,0,0,0));
@@ -855,6 +863,14 @@ button.stat:hover { border-color: var(--accent); }
   font: inherit;
   color: inherit;
   text-align: left;
+  /* div role=button needs an explicit focus outline for keyboard users
+     since browsers don't auto-style non-button focusables. */
+  outline: 0;
+}
+.card-summary:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 4px;
+  border-radius: 8px;
 }
 .card-chevron {
   flex-shrink: 0;

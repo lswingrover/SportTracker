@@ -1033,7 +1033,19 @@ function UpcomingGameCard({ game, expanded, onToggle, venue, tz, teamWatchNowLin
   ].filter(Boolean).join(" ");
   return (
     <article className={cls}>
-      <button className="card-summary" onClick={onToggle} aria-expanded={expanded}>
+      <div
+        className="card-summary"
+        role="button"
+        tabIndex={0}
+        onClick={onToggle}
+        onKeyDown={(e) => {
+          if (e.key === "Enter" || e.key === " ") {
+            e.preventDefault();
+            onToggle();
+          }
+        }}
+        aria-expanded={expanded}
+      >
         <div style={{ minWidth: 0 }}>
           <CourtHero court={game.court} venue={venue} onTap={onCourtTap} />
           <div className="matchup">
@@ -1060,7 +1072,7 @@ function UpcomingGameCard({ game, expanded, onToggle, venue, tz, teamWatchNowLin
           <div className="matchup-meta">{localized}</div>
         </div>
         <div className="card-chevron">▸</div>
-      </button>
+      </div>
       {expanded && (
         <div className="card-expanded">
           {opponentInfo && (
@@ -1115,7 +1127,19 @@ function PastGameCard({ game, expanded, onToggle, venue, tz, opponentInfo, onSha
   ].filter(Boolean).join(" ");
   return (
     <article className={cls} id={`game-${game.id}`}>
-      <button className="card-summary" onClick={onToggle} aria-expanded={expanded}>
+      <div
+        className="card-summary"
+        role="button"
+        tabIndex={0}
+        onClick={onToggle}
+        onKeyDown={(e) => {
+          if (e.key === "Enter" || e.key === " ") {
+            e.preventDefault();
+            onToggle();
+          }
+        }}
+        aria-expanded={expanded}
+      >
         <div className="past-summary-left">
           <div className="score-hero">{setsCount || (game.result === "W" ? "Won" : "Lost")}</div>
           <div className="score-meta">
@@ -1173,7 +1197,7 @@ function PastGameCard({ game, expanded, onToggle, venue, tz, opponentInfo, onSha
           )}
           <div className="card-chevron">▸</div>
         </div>
-      </button>
+      </div>
       {expanded && (
         <div className="card-expanded">
           {Array.isArray(game.sets) && game.sets.length > 0 ? (
@@ -1369,11 +1393,17 @@ function InfoSheet({ data, onClose }) {
   );
 }
 
-function StatsAccordion({ mode, games, tz, onClose }) {
+function StatsAccordion({ mode, games, tz, onClose, record }) {
   if (!mode) return null;
   const filtered = (games || []).filter(
     (g) => g.done && (mode === "wins" ? g.result === "W" : g.result === "L")
   );
+  // The standings-derived record (4-1 for ERVA) counts pool play matches
+  // that AES doesn't expose on public endpoints. games[] only has the
+  // bracket-derived matches we can pull. When the gap is non-zero, surface
+  // a footnote so users aren't confused why the count differs.
+  const totalForMode = mode === "wins" ? record?.wins ?? 0 : record?.losses ?? 0;
+  const missing = Math.max(0, totalForMode - filtered.length);
   const tzLabel = tzShortLabel(tz);
   return (
     <section className={`stats-accordion ${mode}`} aria-live="polite">
@@ -1385,7 +1415,9 @@ function StatsAccordion({ mode, games, tz, onClose }) {
       </div>
       {filtered.length === 0 ? (
         <div className="meta" style={{ padding: "10px 14px" }}>
-          No {mode === "wins" ? "wins" : "losses"} yet this tournament.
+          {missing > 0
+            ? `${missing} ${mode === "wins" ? "win" : "loss"}${missing === 1 ? "" : "es"} in pool play — match details not available from AES.`
+            : `No ${mode === "wins" ? "wins" : "losses"} yet this tournament.`}
         </div>
       ) : (
         <ul className="stats-accordion-list">
@@ -1409,6 +1441,12 @@ function StatsAccordion({ mode, games, tz, onClose }) {
             );
           })}
         </ul>
+      )}
+      {filtered.length > 0 && missing > 0 && (
+        <div className="stats-accordion-footnote">
+          + {missing} pool play {mode === "wins" ? "win" : "loss"}
+          {missing === 1 ? "" : mode === "wins" ? "s" : "es"} — match details not available from AES
+        </div>
       )}
     </section>
   );
@@ -2268,6 +2306,7 @@ export default function Home() {
           mode={statsAccordion}
           games={data?.games || []}
           tz={tournament.venue?.tz}
+          record={record}
           onClose={() => setStatsAccordion(null)}
         />
 
