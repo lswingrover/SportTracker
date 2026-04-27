@@ -383,91 +383,151 @@ function NextHero({ event, minutesUntil, projectedDone, eventOver }) {
   );
 }
 
-function NotificationsCard({ upcoming }) {
-  // Initial state is identical on server and client first render to avoid
-  // hydration mismatches. The real permission state is read in the effect
-  // below after mount. Safari iOS has no Notification global at all, so we
-  // must not touch it during render.
+// Convert URL-safe base64 (VAPID public key format) to Uint8Array required
+// by PushManager.subscribe.
+function urlBase64ToUint8Array(base64String) {
+  const padding = "=".repeat((4 - (base64String.length % 4)) % 4);
+  const base64 = (base64String + padding).replace(/-/g, "+").replace(/_/g, "/");
+  const raw = atob(base64);
+  const out = new Uint8Array(raw.length);
+  for (let i = 0; i < raw.length; i++) out[i] = raw.charCodeAt(i);
+  return out;
+}
+
+function NotificationsCard({ teamId }) {
+  // Stable initial state across SSR and client first render — Safari iOS
+  // has no Notification or PushManager global; reading it during render
+  // crashes hydration in production minified React.
   const [perm, setPerm] = useState("default");
   const [mounted, setMounted] = useState(false);
-  const timersRef = useRef([]);
+  const [supported, setSupported] = useState(false);
+  const [subscribed, setSubscribed] = useState(false);
+  const [working, setWorking] = useState(false);
 
   useEffect(() => {
     setMounted(true);
     if (typeof window === "undefined") return;
-    if (typeof window.Notification === "undefined") {
-      setPerm("unsupported");
-      return;
-    }
+    const ok =
+      typeof window.Notification !== "undefined" &&
+      "serviceWorker" in navigator &&
+      "PushManager" in window;
+    setSupported(ok);
+    if (!ok) return;
     setPerm(window.Notification.permission);
+    // Reflect existing subscription if there is one.
+    navigator.serviceWorker.getRegistration().then(async (reg) => {
+      if (!reg) return;
+      const sub = await reg.pushManager.getSubscription();
+      setSubscribed(Boolean(sub));
+    });
   }, []);
 
-  useEffect(() => {
-    if (typeof window === "undefined") return;
-    if (perm !== "granted") return;
-    for (const t of timersRef.current) clearTimeout(t);
-    timersRef.current = [];
-    const now = Date.now();
-    for (const g of upcoming) {
-      if (!g.timeISO) continue;
-      const ms = new Date(g.timeISO).getTime();
-      for (const lead of [30, 10]) {
-        const fireAt = ms - lead * 60 * 1000;
-        const delay = fireAt - now;
-        if (delay <= 0) continue;
-        const id = setTimeout(() => {
-          try {
-            new window.Notification(`208 vs ${g.opponent} in ${lead} min`, {
-              body: `Court ${g.court} · ${g.time}`,
-              tag: `${g.id}-${lead}`,
-              icon: "/icon-192.svg",
-            });
-          } catch {}
-        }, delay);
-        timersRef.current.push(id);
-      }
-    }
-    return () => {
-      for (const t of timersRef.current) clearTimeout(t);
-      timersRef.current = [];
-    };
-  }, [upcoming, perm]);
-
-  async function ask() {
-    if (typeof window === "undefined" || typeof window.Notification === "undefined") return;
+  async function subscribe() {
+    if (typeof window === "undefined" || !supported) return;
+    setWorking(true);
     try {
       const result = await window.Notification.requestPermission();
       setPerm(result);
-    } catch {
-      setPerm("unsupported");
+      if (result !== "granted") return;
+      const reg =
+        (await navigator.serviceWorker.getRegistration()) ||
+        (await navigator.serviceWorker.register("/sw.js"));
+      const vapid = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY;
+      if (!vapid) {
+        alert("Push not configured (no VAPID public key)");
+        return;
+      }
+      const subscription = await reg.pushManager.subscribe({
+        userVisibleOnly: true,
+        applicationServerKey: urlBase64ToUint8Array(vapid),
+      });
+      const res = await fetch("/api/push-subscribe", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ subscription, teamId }),
+      });
+      if (!res.ok) {
+        const err = await res.text().catch(() => "");
+        console.warn("subscribe failed:", err);
+        return;
+      }
+      setSubscribed(true);
+    } catch (err) {
+      console.warn("Web Push subscribe error:", err);
+    } finally {
+      setWorking(false);
     }
   }
 
-  if (!mounted || perm === "unsupported") return null;
-  const on = perm === "granted";
+  async function unsubscribe() {
+    if (!supported) return;
+    setWorking(true);
+    try {
+      const reg = await navigator.serviceWorker.getRegistration();
+      const sub = await reg?.pushManager.getSubscription();
+      if (sub) {
+        await fetch("/api/push-unsubscribe", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ endpoint: sub.endpoint, teamId }),
+        }).catch(() => {});
+        await sub.unsubscribe();
+      }
+      setSubscribed(false);
+    } finally {
+      setWorking(false);
+    }
+  }
+
+  if (!mounted) return null;
+  if (!supported) {
+    return (
+      <div className="notif-card">
+        <div style={{ minWidth: 0 }}>
+          <div className="title">
+            <span>🔕</span>
+            <span>Game alerts not supported</span>
+          </div>
+          <div className="desc">
+            Add the app to your iPhone home screen and open it in standalone
+            mode (iOS 16.4+) to enable push alerts.
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   const blocked = perm === "denied";
+  const on = subscribed && perm === "granted";
 
   return (
     <div className={`notif-card${on ? " on" : ""}`}>
       <div style={{ minWidth: 0 }}>
         <div className="title">
           <span>🔔</span>
-          <span>Game alerts</span>
+          <span>Game Alerts</span>
           <span className={`state${on ? " on" : blocked ? " blocked" : ""}`}>
             {on ? "On" : blocked ? "Blocked" : "Off"}
           </span>
         </div>
         <div className="desc">
           {blocked
-            ? "Enable in browser settings to receive alerts."
-            : "Get notified 30 min and 10 min before each game while this tab is open."}
+            ? "Notifications are blocked in browser settings — enable them there to receive alerts."
+            : on
+              ? "You'll get pushed live: scores, results, court changes, 30/10 min countdowns. Works even when this tab is closed."
+              : "Get pushed live for scores, results, court changes, and 30/10 min countdowns — even when this tab is closed."}
         </div>
       </div>
-      {!on && !blocked && (
-        <button className="btn-primary" onClick={ask}>
-          Enable
-        </button>
-      )}
+      {!blocked &&
+        (on ? (
+          <button className="btn-secondary" onClick={unsubscribe} disabled={working}>
+            {working ? "…" : "Off"}
+          </button>
+        ) : (
+          <button className="btn-primary" onClick={subscribe} disabled={working}>
+            {working ? "…" : "Enable"}
+          </button>
+        ))}
     </div>
   );
 }
@@ -1060,7 +1120,7 @@ export default function Home() {
           );
         })()}
 
-        <NotificationsCard upcoming={upcomingGames} />
+        <NotificationsCard teamId={teamId} />
 
         <CalendarCard
           origin={origin}
@@ -1230,6 +1290,11 @@ export default function Home() {
             </div>
           )}
         </footer>
+
+        <div className="watermark">
+          © 2026 Bella's Dad ·{" "}
+          <a href="mailto:lswingrover@gmail.com">lswingrover@gmail.com</a>
+        </div>
       </div>
 
       {winToast && (

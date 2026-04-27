@@ -1,3 +1,5 @@
+import { diffAndPush } from "../../lib/stateDiff.js";
+
 // Deferred for v3 (intentionally not implemented yet):
 //   - Pool standings tab: render `/division/{div}/pools` so we can show
 //     "Pool 3, 4th of 4" pool breakdown next to the overall standings.
@@ -530,6 +532,14 @@ export default async function handler(req, res) {
     const { payload, remoteTimestamp } = await loadFresh(ctx);
     cacheByKey.set(cacheKey, { payload, fetchedAt: now, remoteTimestamp });
     res.status(200).json(payload);
+    // Fire-and-forget state diff + push. Awaited best-effort; failure is
+    // logged but never affects the API response.
+    diffAndPush({
+      eventId: ctx.eventId,
+      teamId: ctx.teamId,
+      teamName: payload?.teamName || ctx.teamName,
+      payload,
+    }).catch((err) => console.error("[diffAndPush]", err?.message || err));
   } catch (err) {
     if (entry?.payload) {
       res.status(200).json({ ...entry.payload, cached: true, staleError: String(err?.message || err) });
