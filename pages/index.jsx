@@ -1250,31 +1250,63 @@ function OpponentSheet({ data, onClose }) {
         <div className="sheet-handle" />
         <h3>{o.name || ""}</h3>
         <div className="sub">
-          {o.club || "—"}
-          {o.divisionName ? ` · ${o.divisionName}` : ""}
+          {o.isUs ? "Season summary" : o.club || "—"}
         </div>
-        <div className={`stat-row${o.h2hWins > o.h2hLosses ? " win" : o.h2hLosses > o.h2hWins ? " loss" : ""}`}>
-          <span className="stat-label">Head-to-head this season</span>
-          <span className="stat-value">
-            {o.h2hWins}–{o.h2hLosses}
-          </span>
-        </div>
-        <div className="stat-row">
-          <span className="stat-label">Pool record</span>
-          <span className="stat-value">
-            {o.poolWins != null ? `${o.poolWins}–${o.poolLosses}` : "—"}
-          </span>
-        </div>
-        <div className="stat-row">
-          <span className="stat-label">Pool rank</span>
-          <span className="stat-value">{o.rankText || (o.rank ? `#${o.rank}` : "—")}</span>
-        </div>
-        <div className="stat-row">
-          <span className="stat-label">Set %</span>
-          <span className="stat-value">
-            {o.setPercent != null ? `${Math.round(o.setPercent * 100)}%` : "—"}
-          </span>
-        </div>
+        {o.isUs ? (
+          <>
+            <div className={`stat-row${o.seasonWins > o.seasonLosses ? " win" : o.seasonLosses > o.seasonWins ? " loss" : ""}`}>
+              <span className="stat-label">Season record</span>
+              <span className="stat-value">{o.seasonWins}–{o.seasonLosses}</span>
+            </div>
+            <div className="stat-row">
+              <span className="stat-label">Sets</span>
+              <span className="stat-value">
+                {o.setsWon != null ? `${o.setsWon}–${o.setsLost}` : "—"}
+              </span>
+            </div>
+            <div className="stat-row">
+              <span className="stat-label">Set %</span>
+              <span className="stat-value">
+                {o.setPercent != null ? `${Math.round(o.setPercent * 100)}%` : "—"}
+              </span>
+            </div>
+            <div className="stat-row">
+              <span className="stat-label">Avg margin / set</span>
+              <span className="stat-value">
+                {o.avgMargin != null ? `${o.avgMargin > 0 ? "+" : ""}${o.avgMargin.toFixed(1)}` : "—"}
+              </span>
+            </div>
+            <div className="stat-row">
+              <span className="stat-label">Pool rank</span>
+              <span className="stat-value">{o.rankText || (o.rank ? `#${o.rank}` : "—")}</span>
+            </div>
+          </>
+        ) : (
+          <>
+            <div className={`stat-row${o.h2hWins > o.h2hLosses ? " win" : o.h2hLosses > o.h2hWins ? " loss" : ""}`}>
+              <span className="stat-label">Head-to-head this season</span>
+              <span className="stat-value">
+                {o.h2hWins}–{o.h2hLosses}
+              </span>
+            </div>
+            <div className="stat-row">
+              <span className="stat-label">Pool record</span>
+              <span className="stat-value">
+                {o.poolWins != null ? `${o.poolWins}–${o.poolLosses}` : "—"}
+              </span>
+            </div>
+            <div className="stat-row">
+              <span className="stat-label">Pool rank</span>
+              <span className="stat-value">{o.rankText || (o.rank ? `#${o.rank}` : "—")}</span>
+            </div>
+            <div className="stat-row">
+              <span className="stat-label">Set %</span>
+              <span className="stat-value">
+                {o.setPercent != null ? `${Math.round(o.setPercent * 100)}%` : "—"}
+              </span>
+            </div>
+          </>
+        )}
         <button className="sheet-close" onClick={onClose}>Close</button>
       </aside>
     </>
@@ -1348,17 +1380,48 @@ export default function Home() {
   function openOpponent(name) {
     if (!name || !data) return;
     const games = data.games || [];
+    const row = (data.standings || []).find((s) => s.teamName === name);
+    const isUs = row?.isUs || name === teamName;
+
+    if (isUs) {
+      // Season summary for the viewing team — total record, set %, avg
+      // per-set margin computed from played games' sets[].
+      let totalUs = 0, totalThem = 0, setCount = 0;
+      for (const g of games) {
+        if (!g.done || !Array.isArray(g.sets)) continue;
+        for (const s of g.sets) {
+          totalUs += s.us ?? 0;
+          totalThem += s.them ?? 0;
+          setCount++;
+        }
+      }
+      const avgMargin = setCount > 0 ? (totalUs - totalThem) / setCount : null;
+      setOpponentSheet({
+        isUs: true,
+        name: teamName,
+        club: row?.club || null,
+        seasonWins: data.record?.wins ?? row?.matchesWon ?? 0,
+        seasonLosses: data.record?.losses ?? row?.matchesLost ?? 0,
+        setsWon: row?.setsWon ?? null,
+        setsLost: row?.setsLost ?? null,
+        setPercent: row?.setPercent ?? null,
+        rankText: row?.rankText ?? null,
+        rank: row?.rank ?? null,
+        avgMargin,
+      });
+      return;
+    }
+
     let h2hWins = 0, h2hLosses = 0;
     for (const g of games) {
       if (g.opponent !== name || !g.done) continue;
       if (g.result === "W") h2hWins++;
       else if (g.result === "L") h2hLosses++;
     }
-    const row = (data.standings || []).find((s) => s.teamName === name);
     setOpponentSheet({
+      isUs: false,
       name,
       club: row?.club || null,
-      divisionName: data?.event?.name?.includes("Division") ? null : null,
       h2hWins,
       h2hLosses,
       poolWins: row?.matchesWon ?? null,
@@ -1737,7 +1800,19 @@ export default function Home() {
                 const us = standings.find((s) => s.isUs);
                 const others = standings.filter((s) => !s.isUs);
                 const renderRow = (row, pinned = false) => (
-                  <tr key={row.teamId} className={pinned ? "us-pinned" : ""}>
+                  <tr
+                    key={row.teamId}
+                    className={`${pinned ? "us-pinned" : ""} clickable-row`}
+                    onClick={() => openOpponent(row.teamName)}
+                    role="button"
+                    tabIndex={0}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter" || e.key === " ") {
+                        e.preventDefault();
+                        openOpponent(row.teamName);
+                      }
+                    }}
+                  >
                     <td className="rank">{row.rank ?? ""}</td>
                     <td className="team">
                       {row.teamName}

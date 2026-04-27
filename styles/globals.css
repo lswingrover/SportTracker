@@ -1045,6 +1045,9 @@ a { color: inherit; }
   font-weight: 700;
 }
 .standings-table tr:last-child td { border-bottom: 0; }
+.standings-table tr.clickable-row { cursor: pointer; }
+.standings-table tr.clickable-row:hover td { background: var(--panel-2); }
+.standings-table tr.clickable-row:active { transform: scale(0.99); transition: transform 0.08s ease; }
 .standings-table tr.us-pinned td {
   background: var(--accent-soft);
   color: var(--accent);
