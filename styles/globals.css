@@ -1179,6 +1179,169 @@ button.stat:hover { border-color: var(--accent); }
   transform: scale(0.97);
 }
 
+/* Full-screen opponent history page (in-app, not a Next route). */
+.history-page {
+  width: 100%;
+}
+.history-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 12px;
+  min-height: 44px;
+}
+.history-back {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  color: var(--text);
+  width: 36px;
+  height: 36px;
+  border-radius: 999px;
+  display: grid;
+  place-items: center;
+  font-size: 18px;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+.history-back:hover { border-color: var(--accent); }
+.history-title {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+.history-title h2 {
+  font-family: "Barlow Condensed", sans-serif;
+  font-weight: 800;
+  font-size: 22px;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  color: var(--text);
+}
+.history-title .sub {
+  color: var(--muted);
+  font-size: 12px;
+  letter-spacing: 0.04em;
+  margin-top: 2px;
+}
+
+.history-summary {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+  margin-bottom: 14px;
+}
+@media (min-width: 480px) {
+  .history-summary { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+}
+.history-summary .stat {
+  text-align: center;
+}
+
+.history-section {
+  margin-top: 18px;
+}
+.history-section .head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  margin-bottom: 6px;
+  font-family: "Barlow Condensed", sans-serif;
+  font-weight: 700;
+  font-size: 14px;
+  letter-spacing: 0.04em;
+  color: var(--muted);
+}
+.history-section .games {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  overflow: hidden;
+}
+.history-section .games li {
+  display: grid;
+  grid-template-columns: 1fr auto auto;
+  gap: 10px;
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--line);
+  align-items: center;
+  font-size: 13px;
+}
+.history-section .games li:last-child { border-bottom: 0; }
+.history-section .games .meta { color: var(--muted); font-size: 12px; }
+.history-section .games .score {
+  font-family: "Barlow Condensed", sans-serif;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  font-size: 18px;
+}
+.history-section .games .score.win { color: var(--win); }
+.history-section .games .score.loss { color: var(--loss); }
+.history-section .games .badge { white-space: nowrap; }
+.history-section .games .sets-detail {
+  grid-column: 1 / -1;
+  color: var(--muted);
+  font-size: 12px;
+  margin-top: 4px;
+}
+
+.history-loading {
+  text-align: center;
+  color: var(--muted);
+  font-size: 13px;
+  padding: 14px;
+}
+.history-empty {
+  text-align: center;
+  color: var(--muted);
+  font-size: 14px;
+  padding: 40px 20px;
+  border: 1px dashed var(--line);
+  border-radius: 14px;
+}
+
+.history-filter {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin-bottom: 10px;
+}
+.history-filter button {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  color: var(--text);
+  padding: 6px 12px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.history-filter button.active {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--accent-ink);
+}
+
+/* See Full History action inside OpponentSheet. */
+.history-link {
+  display: block;
+  width: 100%;
+  text-align: center;
+  margin-top: 8px;
+  padding: 10px;
+  background: transparent;
+  border: 1px solid var(--accent-border);
+  color: var(--accent);
+  border-radius: 999px;
+  font-weight: 700;
+  font-size: 13px;
+  cursor: pointer;
+}
+.history-link:hover { background: var(--accent-soft); }
+
 /* Demo / guided tour overlay. The cutout uses the classic
    box-shadow:0 0 0 9999px trick to dim everything around the
    highlighted target. */

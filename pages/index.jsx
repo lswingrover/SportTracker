@@ -1414,6 +1414,201 @@ function StatsAccordion({ mode, games, tz, onClose }) {
   );
 }
 
+// Full-screen opponent history view. Renders in place of the normal
+// content (chip nav, schedule, etc.) when opponentHistory is set.
+// Pulls every loaded tournament's data from the cache, fetches missing
+// ones in the background, then renders a season summary + per-tournament
+// breakdown + a flat sortable game list.
+function OpponentHistoryPage({ opponentName, tournaments, dataByTournament, loading, onBack, tz }) {
+  const [filter, setFilter] = useState("all"); // 'all' | 'wins' | 'losses'
+  const [sortDesc, setSortDesc] = useState(true);
+
+  // Flatten games from every tournament where the opponent appears.
+  const allGames = [];
+  for (const t of tournaments) {
+    if (t.static) continue;
+    const data = dataByTournament[t.id];
+    if (!data?.games) continue;
+    for (const g of data.games) {
+      if (!g.done || g.opponent !== opponentName) continue;
+      allGames.push({ ...g, _tournamentId: t.id, _tournamentLabel: t.label, _tournamentDate: t.date });
+    }
+  }
+  allGames.sort((a, b) =>
+    sortDesc ? (b.timeISO || "").localeCompare(a.timeISO || "") : (a.timeISO || "").localeCompare(b.timeISO || "")
+  );
+
+  const filtered = allGames.filter(
+    (g) => filter === "all" || (filter === "wins" ? g.result === "W" : g.result === "L")
+  );
+
+  // Season summary
+  const wins = allGames.filter((g) => g.result === "W").length;
+  const losses = allGames.filter((g) => g.result === "L").length;
+  let setsWon = 0, setsLost = 0, totalUs = 0, totalThem = 0, setCount = 0;
+  for (const g of allGames) {
+    if (!Array.isArray(g.sets)) continue;
+    for (const s of g.sets) {
+      if (s.us > s.them) setsWon++;
+      else if (s.them > s.us) setsLost++;
+      totalUs += s.us ?? 0;
+      totalThem += s.them ?? 0;
+      setCount++;
+    }
+  }
+  const avgMargin = setCount > 0 ? (totalUs - totalThem) / setCount : null;
+  const winRate = wins + losses > 0 ? Math.round((wins / (wins + losses)) * 100) : null;
+
+  // Group by tournament for the breakdown
+  const byTournament = new Map();
+  for (const g of allGames) {
+    if (!byTournament.has(g._tournamentId)) byTournament.set(g._tournamentId, []);
+    byTournament.get(g._tournamentId).push(g);
+  }
+
+  const tzLabel = tzShortLabel(tz);
+
+  return (
+    <section className="history-page">
+      <div className="history-header">
+        <button className="history-back press-feedback" onClick={onBack} aria-label="Back">
+          ←
+        </button>
+        <div className="history-title">
+          <h2>{opponentName}</h2>
+          <div className="sub">208 vs {opponentName} · season history</div>
+        </div>
+      </div>
+
+      {allGames.length === 0 && !loading ? (
+        <div className="history-empty">
+          No games found against {opponentName} in this season's data.
+        </div>
+      ) : (
+        <>
+          <section className="stats history-summary">
+            <div className="stat win">
+              <div className="label">Record</div>
+              <div className="value">{wins}–{losses}</div>
+            </div>
+            <div className="stat">
+              <div className="label">Sets</div>
+              <div className="value">{setsWon}–{setsLost}</div>
+            </div>
+            <div className="stat pos">
+              <div className="label">Win rate</div>
+              <div className="value">{winRate != null ? `${winRate}%` : "—"}</div>
+            </div>
+            <div className="stat">
+              <div className="label">Avg margin</div>
+              <div className="value">
+                {avgMargin != null ? `${avgMargin > 0 ? "+" : ""}${avgMargin.toFixed(1)}` : "—"}
+              </div>
+            </div>
+          </section>
+
+          {loading && <div className="history-loading">Loading other tournaments…</div>}
+
+          {[...byTournament.entries()].map(([tid, games]) => {
+            const t = tournaments.find((x) => x.id === tid);
+            return (
+              <section key={tid} className="history-section">
+                <div className="head">
+                  <span>{t?.label || tid}</span>
+                  <span>{t?.date}</span>
+                </div>
+                <ul className="games">
+                  {games.map((g) => {
+                    const dateLabel = g.timeISO
+                      ? `${formatInTz(g.timeISO, tz, { weekday: "short", month: "short", day: "numeric" })}${tzLabel ? ` ${tzLabel}` : ""}`
+                      : g.time || "";
+                    const setsLabel = setsCountForRow(g.sets);
+                    return (
+                      <li key={g.id}>
+                        <div>
+                          <div>{dateLabel}</div>
+                          <div className="meta">Court {g.court || "?"}</div>
+                        </div>
+                        <div className={`score ${g.result === "W" ? "win" : "loss"}`}>{setsLabel || (g.result === "W" ? "W" : "L")}</div>
+                        <span className={`badge ${g.result === "W" ? "win" : "loss"}`}>{g.result === "W" ? "Won" : "Lost"}</span>
+                        {Array.isArray(g.sets) && g.sets.length > 0 && (
+                          <div className="sets-detail">
+                            {g.sets.map((s, i) => (
+                              <span key={i}>
+                                {i > 0 ? ", " : ""}
+                                {s.us}–{s.them}
+                              </span>
+                            ))}
+                          </div>
+                        )}
+                      </li>
+                    );
+                  })}
+                </ul>
+              </section>
+            );
+          })}
+
+          <div className="section-title" style={{ marginTop: 22 }}>All games</div>
+          <div className="history-filter">
+            {[
+              ["all", "All"],
+              ["wins", "Wins"],
+              ["losses", "Losses"],
+            ].map(([id, label]) => (
+              <button
+                key={id}
+                className={filter === id ? "active" : ""}
+                onClick={() => setFilter(id)}
+              >
+                {label}
+              </button>
+            ))}
+            <button
+              onClick={() => setSortDesc((s) => !s)}
+              aria-label="Toggle sort order"
+              style={{ marginLeft: "auto" }}
+            >
+              Date {sortDesc ? "↓" : "↑"}
+            </button>
+          </div>
+          <ul className="games" style={{ background: "var(--panel)", border: "1px solid var(--line)", borderRadius: 12, listStyle: "none", margin: 0, padding: 0 }}>
+            {filtered.map((g) => {
+              const dateLabel = g.timeISO
+                ? formatInTz(g.timeISO, tz, { month: "short", day: "numeric" })
+                : "—";
+              const setsLabel = setsCountForRow(g.sets);
+              return (
+                <li
+                  key={`${g._tournamentId}-${g.id}`}
+                  style={{
+                    display: "grid",
+                    gridTemplateColumns: "60px 1fr auto",
+                    gap: 10,
+                    padding: "10px 12px",
+                    borderBottom: "1px solid var(--line)",
+                    alignItems: "center",
+                    fontSize: 13,
+                  }}
+                >
+                  <div className="meta">{dateLabel}</div>
+                  <div style={{ minWidth: 0 }}>
+                    <div>{g._tournamentLabel}</div>
+                    <div className="meta">Court {g.court || "?"}</div>
+                  </div>
+                  <div className={`score ${g.result === "W" ? "win" : "loss"}`}>
+                    {setsLabel || g.result}
+                  </div>
+                </li>
+              );
+            })}
+          </ul>
+        </>
+      )}
+    </section>
+  );
+}
+
 function TeamPickerSheet({ teams, currentTeamId, onPick, onClose }) {
   const open = teams != null;
   useEffect(() => {
@@ -1446,7 +1641,7 @@ function TeamPickerSheet({ teams, currentTeamId, onPick, onClose }) {
   );
 }
 
-function OpponentSheet({ data, onClose }) {
+function OpponentSheet({ data, onClose, onOpenHistory }) {
   // ESC to close. Mounted regardless of open state so the slide-out
   // animation works on dismiss; visual state driven by .open class.
   useEffect(() => {
@@ -1524,6 +1719,11 @@ function OpponentSheet({ data, onClose }) {
             </div>
           </>
         )}
+        {!o.isUs && o.name && o.name !== "TBD" && onOpenHistory && (
+          <button className="history-link press-feedback" onClick={() => onOpenHistory(o.name)}>
+            See full history →
+          </button>
+        )}
         <button className="sheet-close" onClick={onClose}>Close</button>
       </aside>
     </>
@@ -1586,6 +1786,37 @@ export default function Home() {
   const [tourStep, setTourStep] = useState(0);
   const [tourSeen, setTourSeen] = usePersistentState("tourSeen", false);
   const [tourNudgeDismissed, setTourNudgeDismissed] = usePersistentState("tourNudgeDismissed", false);
+  const [opponentHistory, setOpponentHistory] = useState(null); // opponent name | null
+  const [historyData, setHistoryData] = useState({}); // tournamentId -> payload
+  const [historyLoading, setHistoryLoading] = useState(false);
+
+  async function openOpponentHistory(name) {
+    setOpponentSheet(null);
+    setOpponentHistory(name);
+    // Seed cache with current tournament's data so the page renders immediately.
+    const initial = {};
+    if (data && tournament && !tournament.static) {
+      initial[tournament.id] = data;
+    }
+    setHistoryData(initial);
+    setHistoryLoading(true);
+    // Fetch missing tournaments in parallel.
+    const todo = TOURNAMENTS.filter(
+      (t) => !t.static && !initial[t.id]
+    );
+    await Promise.all(
+      todo.map(async (t) => {
+        try {
+          const url = `/api/tournament?eventId=${encodeURIComponent(t.eventId)}&divId=${encodeURIComponent(t.divId)}&teamId=${encodeURIComponent(t.teamId)}&teamName=${encodeURIComponent(t.teamName)}`;
+          const res = await fetch(url);
+          if (!res.ok) return;
+          const json = await res.json();
+          setHistoryData((prev) => ({ ...prev, [t.id]: json }));
+        } catch {}
+      })
+    );
+    setHistoryLoading(false);
+  }
 
   function startTour() {
     setTourStep(1);
@@ -1896,6 +2127,17 @@ export default function Home() {
         <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
       </Head>
       <div className="app">
+        {opponentHistory ? (
+          <OpponentHistoryPage
+            opponentName={opponentHistory}
+            tournaments={TOURNAMENTS}
+            dataByTournament={historyData}
+            loading={historyLoading}
+            tz={tournament.venue?.tz}
+            onBack={() => setOpponentHistory(null)}
+          />
+        ) : (
+        <>
         <header className="header-compact">
           <div className="team-name" title={teamName}>{teamName}</div>
           {data?.liveGame && (
@@ -2261,9 +2503,15 @@ export default function Home() {
           © 2026 Bella's Dad ·{" "}
           <a href="mailto:lswingrover@gmail.com">lswingrover@gmail.com</a>
         </div>
+        </>
+        )}
       </div>
 
-      <OpponentSheet data={opponentSheet} onClose={() => setOpponentSheet(null)} />
+      <OpponentSheet
+        data={opponentSheet}
+        onClose={() => setOpponentSheet(null)}
+        onOpenHistory={openOpponentHistory}
+      />
       <InfoSheet data={infoSheet} onClose={() => setInfoSheet(null)} />
       <Toast text={toast} onClose={() => setToast(null)} />
 
