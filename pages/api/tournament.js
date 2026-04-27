@@ -178,7 +178,7 @@ function formatLocalTime(iso) {
   }
 }
 
-function normalizeMatch(m, { done }) {
+function normalizeMatch(m, { done, idx = 0, kind = "match" }) {
   const start = pickFirst(m, [
     "MatchDate",
     "ScheduledStartDateTime",
@@ -231,7 +231,9 @@ function normalizeMatch(m, { done }) {
     null;
 
   return {
-    id: pickFirst(m, ["MatchId", "Id", "ScheduleId"]) || `${start || "x"}-${opponent}`,
+    id:
+      pickFirst(m, ["MatchId", "Id", "ScheduleId"])?.toString() ||
+      `${kind}-${idx}-${start || "x"}-${opponent}`,
     done,
     result,
     score,
@@ -248,7 +250,7 @@ function normalizeMatch(m, { done }) {
   };
 }
 
-function normalizeWork(w) {
+function normalizeWork(w, idx = 0) {
   const start = pickFirst(w, [
     "MatchDate",
     "ScheduledStartDateTime",
@@ -257,7 +259,9 @@ function normalizeWork(w) {
   ]);
   const { iso, ms } = parseTime(start);
   return {
-    id: pickFirst(w, ["MatchId", "WorkAssignmentId", "Id"]) || `${start || "x"}-work`,
+    id:
+      pickFirst(w, ["MatchId", "WorkAssignmentId", "Id"])?.toString() ||
+      `work-${idx}-${start || "x"}`,
     role: pickFirst(w, ["WorkRole", "Role", "Assignment", "Position"]) || "Work duty",
     court:
       pickFirst(w, ["Court", "CourtName", "CourtText"]) ||
@@ -321,8 +325,8 @@ function buildResponse({ eventMeta, team, current, future, work, standings, next
   const playedRaw = Array.isArray(current) ? current : [];
   const upcomingRaw = Array.isArray(future) ? future : [];
 
-  const played = playedRaw.map((m) => normalizeMatch(m, { done: true }));
-  const upcoming = upcomingRaw.map((m) => normalizeMatch(m, { done: false }));
+  const played = playedRaw.map((m, i) => normalizeMatch(m, { done: true, idx: i, kind: "past" }));
+  const upcoming = upcomingRaw.map((m, i) => normalizeMatch(m, { done: false, idx: i, kind: "next" }));
 
   const games = [...played, ...upcoming]
     .filter((g) => g.timeMs != null || g.timeISO != null)
@@ -345,7 +349,7 @@ function buildResponse({ eventMeta, team, current, future, work, standings, next
   const us = standingsRows.find((s) => s.isUs);
   const poolPosition = us ? us.rankText || (us.rank ? String(us.rank) : null) : null;
 
-  const workAssignments = (Array.isArray(work) ? work : []).map(normalizeWork);
+  const workAssignments = (Array.isArray(work) ? work : []).map((w, i) => normalizeWork(w, i));
 
   const nextGameObj = games.find((g) => !g.done && g.timeISO);
   const nextWorkObj = workAssignments

@@ -366,6 +366,29 @@ a { color: inherit; }
   margin: 14px 0 8px;
 }
 
+.record-summary {
+  background: var(--accent-soft);
+  border: 1px solid var(--accent-border);
+  border-radius: 12px;
+  padding: 10px 14px;
+  margin-bottom: 10px;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px;
+}
+.record-final {
+  font-family: "Barlow Condensed", sans-serif;
+  font-weight: 900;
+  font-size: 22px;
+  letter-spacing: 0.04em;
+  color: var(--accent);
+}
+.record-sub {
+  color: var(--muted);
+  font-size: 13px;
+}
+
 .calendar-section {
   background: var(--panel);
   border: 1px solid var(--line);
@@ -419,8 +442,8 @@ a { color: inherit; }
 }
 .card.win { border-left: 4px solid var(--win); }
 .card.loss { border-left: 4px solid var(--loss); }
-.card.past { opacity: 0.78; }
-.card.past:hover { opacity: 1; }
+/* Past games stay full-opacity; the W/L color stripe and badge carry the
+   "completed" signal without dimming the result text the parents want to see. */
 .card.live-card { border-color: var(--live); box-shadow: 0 0 0 1px rgba(239,68,68,0.25); }
 .card.just-won {
   animation: win-glow 1.6s ease-in-out 6;

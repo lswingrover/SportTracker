@@ -1,20 +1,52 @@
 import { useEffect, useMemo, useRef, useState, useCallback } from "react";
 import Head from "next/head";
 
+// Confirmed by scanning AES /api/event/{key}/standings for TeamId 201772 across
+// every 2025-26 PNW event that lists 208vbc as a participating club. Order is
+// most-recent-first so the upcoming tournament sits at the top of the dropdown
+// and is the default selection.
 const TOURNAMENTS = [
   {
-    id: "liberty-lake-2026",
-    label: "Liberty Lake Crossover",
+    id: "big-sky-volleyfest-2026",
+    label: "Big Sky VolleyFest",
+    eventId: "PTAwMDAwNDI5NjU90",
+    divId: "205376",
+    teamId: "201772",
+    teamName: "208 U14 Red",
+    venue: {
+      name: "Billings Metra Park",
+      address: "Billings, MT",
+      tz: "America/Denver",
+    },
+    date: "May 2, 2026",
+  },
+  {
+    id: "erva-regional-2026",
+    label: "ERVA Regional Championship",
     eventId: "PTAwMDAwNDI2MDU90",
     divId: "203854",
     teamId: "201772",
     teamName: "208 U14 Red",
     venue: {
-      name: "Liberty Lake Sports Complex",
-      address: "1421 N Pepper Ln, Liberty Lake, WA 99019",
+      name: "The Podium & HUB Sports Center",
+      address: "Spokane, WA",
       tz: "America/Los_Angeles",
     },
-    date: "2026-04",
+    date: "Apr 25, 2026",
+  },
+  {
+    id: "erva-power-league-jan-2026",
+    label: "ERVA Power League",
+    eventId: "PTAwMDAwNDI2MDY90",
+    divId: "203858",
+    teamId: "201772",
+    teamName: "208 U14 Red",
+    venue: {
+      name: "HUB Sports Center & Prairie Athletic Center, EWU",
+      address: "Spokane & Post Falls",
+      tz: "America/Los_Angeles",
+    },
+    date: "Jan 3, 2026",
   },
 ];
 
@@ -415,6 +447,23 @@ function CalendarCard({ origin, eventId, divId, teamId, teamName, gameCount }) {
           Open feed
         </a>
       </div>
+    </div>
+  );
+}
+
+function PastGamesSummary({ standings, record }) {
+  const us = standings.find((s) => s.isUs);
+  const setsWon = us?.setsWon ?? null;
+  const setsLost = us?.setsLost ?? null;
+  return (
+    <div className="record-summary">
+      <span className="record-final">Final: {record.wins}–{record.losses}</span>
+      {setsWon != null && setsLost != null && (
+        <span className="record-sub">
+          · {setsWon} set{setsWon === 1 ? "" : "s"} won, {setsLost} lost
+        </span>
+      )}
+      {us?.rankText && <span className="record-sub"> · {us.rankText} in pool</span>}
     </div>
   );
 }
@@ -822,6 +871,7 @@ export default function Home() {
             {pastGames.length > 0 && (
               <>
                 <div className="section-title">Past games · {pastGames.length}</div>
+                <PastGamesSummary standings={data?.standings || []} record={record} />
                 <div className="list">
                   {pastGames.map((g) => (
                     <GameCard
