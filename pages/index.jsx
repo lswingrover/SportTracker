@@ -982,20 +982,34 @@ function PastGameCard({ game, expanded, onToggle, venue, tz, opponentInfo, onSha
       </button>
       {expanded && (
         <div className="card-expanded">
-          {Array.isArray(game.sets) && game.sets.length > 0 && (
-            <div className="sets">
-              Sets:{" "}
-              {game.sets.map((s, i) => (
-                <span key={i}>
-                  {i > 0 ? ", " : ""}
-                  <span style={s.deciding ? { color: "var(--accent)", fontWeight: 700 } : undefined}>
-                    {s.us}–{s.them}
-                    {s.deciding ? " ●" : ""}
-                  </span>
-                </span>
-              ))}
-            </div>
-          )}
+          {Array.isArray(game.sets) && game.sets.length > 0 ? (
+            <table className="set-table">
+              <thead>
+                <tr>
+                  <th>Set</th>
+                  <th>208</th>
+                  <th>Opp</th>
+                </tr>
+              </thead>
+              <tbody>
+                {game.sets.map((s, i) => {
+                  const usWin = s.us > s.them;
+                  return (
+                    <tr key={i} className={s.deciding ? "deciding" : ""}>
+                      <td>
+                        {i + 1}
+                        {s.deciding ? <span className="deciding-mark">●</span> : null}
+                      </td>
+                      <td className={usWin ? "win-side" : ""}>{s.us}</td>
+                      <td className={!usWin ? "loss-side" : ""}>{s.them}</td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          ) : game.score ? (
+            <div className="meta">Score: {game.score}</div>
+          ) : null}
           {opponentInfo && (
             <div className="meta">
               Opp record: {opponentInfo.matchesWon}–{opponentInfo.matchesLost}

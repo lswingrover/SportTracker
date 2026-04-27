@@ -844,6 +844,45 @@ a { color: inherit; }
   color: var(--text);
 }
 
+/* Set-by-set table inside the expanded past-game card. */
+.set-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-variant-numeric: tabular-nums;
+  font-family: "Barlow Condensed", sans-serif;
+  font-size: 15px;
+}
+.set-table thead th {
+  font-size: 10px;
+  letter-spacing: 0.06em;
+  color: var(--muted);
+  font-weight: 700;
+  text-align: right;
+  padding: 4px 8px;
+  border-bottom: 1px solid var(--line);
+}
+.set-table thead th:first-child { text-align: left; }
+.set-table tbody td {
+  padding: 6px 8px;
+  text-align: right;
+  border-bottom: 1px solid var(--line);
+  font-weight: 700;
+}
+.set-table tbody td:first-child {
+  text-align: left;
+  color: var(--muted);
+  font-weight: 600;
+}
+.set-table tbody tr:last-child td { border-bottom: 0; }
+.set-table tbody tr.deciding td:first-child { color: var(--accent); }
+.set-table tbody td.win-side { color: var(--win); }
+.set-table tbody td.loss-side { color: var(--loss); }
+.set-table .deciding-mark {
+  margin-left: 4px;
+  color: var(--accent);
+  font-size: 0.8em;
+}
+
 /* Sticky work-duty alert: floats above the bottom nav when a duty is
    within 2 hours, dismissable. Lives on schedule + duties tabs only. */
 .duty-sticky {
