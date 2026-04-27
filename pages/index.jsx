@@ -88,14 +88,17 @@ function useInterval(callback, ms) {
 }
 
 function useCountdown(targetISO) {
-  const [now, setNow] = useState(() => Date.now());
+  // Initial state is null on both server and client first render to avoid
+  // hydration mismatches when an upcoming event is present. Time ticks in
+  // after mount via useEffect.
+  const [now, setNow] = useState(null);
   useEffect(() => {
+    setNow(Date.now());
     const id = setInterval(() => setNow(Date.now()), 30 * 1000);
     return () => clearInterval(id);
   }, []);
-  if (!targetISO) return null;
-  const diff = new Date(targetISO).getTime() - now;
-  return Math.round(diff / 60000);
+  if (!targetISO || now == null) return null;
+  return Math.round((new Date(targetISO).getTime() - now) / 60000);
 }
 
 function usePersistentState(key, initial) {
@@ -282,18 +285,22 @@ function NextHero({ event, minutesUntil, projectedDone, eventOver }) {
 }
 
 function NotificationsCard({ upcoming }) {
-  const [perm, setPerm] = useState(
-    typeof window === "undefined" ? "default" : Notification?.permission || "unsupported"
-  );
+  // Initial state is identical on server and client first render to avoid
+  // hydration mismatches. The real permission state is read in the effect
+  // below after mount. Safari iOS has no Notification global at all, so we
+  // must not touch it during render.
+  const [perm, setPerm] = useState("default");
+  const [mounted, setMounted] = useState(false);
   const timersRef = useRef([]);
 
   useEffect(() => {
+    setMounted(true);
     if (typeof window === "undefined") return;
-    if (!("Notification" in window)) {
+    if (typeof window.Notification === "undefined") {
       setPerm("unsupported");
       return;
     }
-    setPerm(Notification.permission);
+    setPerm(window.Notification.permission);
   }, []);
 
   useEffect(() => {
@@ -311,7 +318,7 @@ function NotificationsCard({ upcoming }) {
         if (delay <= 0) continue;
         const id = setTimeout(() => {
           try {
-            new Notification(`208 vs ${g.opponent} in ${lead} min`, {
+            new window.Notification(`208 vs ${g.opponent} in ${lead} min`, {
               body: `Court ${g.court} · ${g.time}`,
               tag: `${g.id}-${lead}`,
               icon: "/icon-192.svg",
@@ -328,12 +335,16 @@ function NotificationsCard({ upcoming }) {
   }, [upcoming, perm]);
 
   async function ask() {
-    if (typeof window === "undefined" || !("Notification" in window)) return;
-    const result = await Notification.requestPermission();
-    setPerm(result);
+    if (typeof window === "undefined" || typeof window.Notification === "undefined") return;
+    try {
+      const result = await window.Notification.requestPermission();
+      setPerm(result);
+    } catch {
+      setPerm("unsupported");
+    }
   }
 
-  if (perm === "unsupported") return null;
+  if (!mounted || perm === "unsupported") return null;
   const on = perm === "granted";
   const blocked = perm === "denied";
 
