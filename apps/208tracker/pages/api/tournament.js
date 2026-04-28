@@ -299,7 +299,7 @@ function normalizeStandings(rows, teamId) {
       setsWon: r.SetsWon ?? 0,
       setsLost: r.SetsLost ?? 0,
       setPercent: r.SetPercent ?? 0,
-      pointRatio: r.PointRatio ?? 0,
+      pointRatio: parseFloat(r.PointRatio ?? 0) || 0,
       club: r.Club?.Name || null,
       earnedBid,
       bidAlias: earnedBid ? r?.BidIdentification?.DivisionAlias || null : null,
@@ -537,7 +537,7 @@ function extractPoolForTeam(pools, teamIdStr) {
     setsWon: t.SetsWon ?? 0,
     setsLost: t.SetsLost ?? 0,
     setPercent: t.SetPercent ?? 0,
-    pointRatio: t.PointRatio ?? 0,
+    pointRatio: parseFloat(t.PointRatio ?? 0) || 0,
     club: t.Club?.Name || null,
   }));
   // Pool API doesn't always populate FinishRank during early/in-progress
