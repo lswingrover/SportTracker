@@ -1,5 +1,5 @@
-import { diffAndPush } from "../../lib/stateDiff.js";
-import { maybeSnapshot } from "../../lib/snapshots.js";
+import { diffAndPush } from "@sport-tracker/core/stateDiff.js";
+import { maybeSnapshot } from "@sport-tracker/core/snapshots.js";
 
 // Deferred for v3 (intentionally not implemented yet):
 //   - Pool standings tab: render `/division/{div}/pools` so we can show

@@ -2,7 +2,7 @@
 // if it exists. Frontend uses this to discover what longitudinal data
 // is available before requesting an individual snapshot via /api/snapshot.
 
-import { listSnapshots } from "../../lib/snapshots.js";
+import { listSnapshots } from "@sport-tracker/core/snapshots.js";
 
 // Mirror of the client TOURNAMENTS config so callers can pass either
 // `eventId=...` (canonical AES key) or `tournamentId=...` (the local

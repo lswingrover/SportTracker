@@ -2,7 +2,7 @@
 // from the browser; production state-diff pushes are emitted from
 // /api/tournament directly via lib/push.js without going through HTTP.
 
-import { pushToTeam, pushConfigured } from "../../lib/push.js";
+import { pushToTeam, pushConfigured } from "@sport-tracker/core/push.js";
 
 export default async function handler(req, res) {
   res.setHeader("Access-Control-Allow-Origin", "*");

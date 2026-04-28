@@ -3,7 +3,7 @@
 //   ?ts=terminal  → the terminal (final) snapshot, if one exists
 //   ?ts=<isoLike> → exact match against the snapshot pathname
 
-import { getSnapshot } from "../../lib/snapshots.js";
+import { getSnapshot } from "@sport-tracker/core/snapshots.js";
 
 const TOURNAMENT_TO_EVENT = {
   "big-sky-volleyfest-2026": "PTAwMDAwNDI5NjU90",

@@ -1,4 +1,4 @@
-import { addSubscription, pushConfigured } from "../../lib/push.js";
+import { addSubscription, pushConfigured } from "@sport-tracker/core/push.js";
 
 export default async function handler(req, res) {
   res.setHeader("Access-Control-Allow-Origin", "*");

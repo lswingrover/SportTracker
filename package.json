@@ -1,0 +1,12 @@
+{
+  "name": "sport-tracker",
+  "private": true,
+  "workspaces": [
+    "packages/*",
+    "apps/*"
+  ],
+  "scripts": {
+    "dev:volleyball": "npm run dev --workspace=apps/208tracker",
+    "dev:waterpolo":  "npm run dev --workspace=apps/narwhaltracker"
+  }
+}
