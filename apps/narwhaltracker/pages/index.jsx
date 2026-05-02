@@ -856,7 +856,7 @@ async function shareGameImage({ game, teamName, tz }) {
   ctx.font = '600 10px system-ui, sans-serif';
   ctx.textAlign = "right";
   ctx.textBaseline = "bottom";
-  ctx.fillText("narwhaltracker.vercel.app", W - 18, H - 16);
+  ctx.fillText("narwatch.vercel.app", W - 18, H - 16);
   ctx.textAlign = "left";
 
   // Convert to blob → File and share / download
@@ -1910,7 +1910,7 @@ export default function Home() {
     const payload = {
       title: "North Idaho Narwhals Tracker",
       text: "Live scores & schedule for North Idaho Narwhals water polo",
-      url: typeof window !== "undefined" ? window.location.origin : "https://narwhaltracker.vercel.app",
+      url: typeof window !== "undefined" ? window.location.origin : "https://narwatch.vercel.app",
     };
     if (typeof navigator !== "undefined" && typeof navigator.share === "function") {
       try {
