@@ -1,4 +1,4 @@
-// Narwhal Tracker tournament API.
+// NarWatch tournament API.
 // v1 reads from a static lib (lib/tournamentData.js). Future versions can
 // add a live data branch — the response shape mirrors what the AES-backed
 // client expected so the UI components didn't need rework.

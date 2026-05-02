@@ -81,7 +81,7 @@ function buildSingleICS(g, teamName) {
   return [
     "BEGIN:VCALENDAR",
     "VERSION:2.0",
-    "PRODID:-//Narwhal Tracker//EN",
+    "PRODID:-//NarWatch//EN",
     "CALSCALE:GREGORIAN",
     "BEGIN:VEVENT",
     `UID:${g.id}@narwhaltracker`,
@@ -1158,7 +1158,7 @@ const TOUR_STEPS = [
   { sideEffect: "confetti", title: "🎉 Wins!", body: "Win a game and the app celebrates with confetti." },
   { selector: ".card.past", setupTab: "schedule", title: "Past games", body: "Tap any past game to expand. See set-by-set scores and share the result as an image." },
   { selector: ".tabs button:nth-child(2)", setupTab: "standings", title: "Standings", body: "Tap any team row to see their record and your head-to-head history. The Narwhals row pinned at the top opens a season summary." },
-  { selector: ".tabs button:nth-child(3)", setupTab: "notifications", title: "Notifications", body: "Subscribe to get pushed updates: scores, results, schedule changes. Coming soon for Narwhal Tracker." },
+  { selector: ".tabs button:nth-child(3)", setupTab: "notifications", title: "Notifications", body: "Subscribe to get pushed updates: scores, results, schedule changes. Coming soon for NarWatch." },
   { selector: ".notif-card", setupTab: "schedule", title: "Notifications", body: "Subscribe to push alerts. Each alert type has its own timing — set how early you want the heads-up." },
   { selector: ".calendar-section", title: "Calendar", body: "Subscribe to the team calendar so every tournament auto-appears in your phone's calendar app." },
   { title: "Add to Home Screen", body: "Add this app to your home screen for a native app experience — Safari → Share → Add to Home Screen. No App Store required." },
@@ -2217,7 +2217,7 @@ export default function Home() {
       : `${teamName} fell to ${g.opponent}${g.score ? ` ${g.score}` : ""}`;
     const full = `${text} #NarwhalWaterPolo #waterpolo`;
     if (typeof navigator !== "undefined" && navigator.share) {
-      navigator.share({ title: "Narwhal Tracker", text: full }).catch(() => {});
+      navigator.share({ title: "NarWatch", text: full }).catch(() => {});
     } else if (typeof navigator !== "undefined" && navigator.clipboard) {
       navigator.clipboard.writeText(full).then(() => alert("Copied")).catch(() => {});
     }
@@ -2242,7 +2242,7 @@ export default function Home() {
     }
     const text = lines.join("\n");
     try {
-      if (navigator.share) await navigator.share({ title: "Narwhal Tracker", text });
+      if (navigator.share) await navigator.share({ title: "NarWatch", text });
       else {
         await navigator.clipboard.writeText(text);
         alert("Copied to clipboard");
@@ -2253,7 +2253,7 @@ export default function Home() {
   return (
     <>
       <Head>
-        <title>Narwhal Tracker</title>
+        <title>NarWatch</title>
         <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
       </Head>
       <div className="app">

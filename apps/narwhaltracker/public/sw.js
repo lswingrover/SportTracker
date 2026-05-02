@@ -1,4 +1,4 @@
-// Service worker for Narwhal Tracker Web Push.
+// Service worker for NarWatch Web Push.
 // Receives `push` events from the browser's push service and surfaces them
 // as native OS notifications. Click → focus or open the app.
 
@@ -16,9 +16,9 @@ self.addEventListener("push", (event) => {
   try {
     data = event.data ? event.data.json() : {};
   } catch {
-    data = { title: "Narwhal Tracker", body: event.data ? event.data.text() : "" };
+    data = { title: "NarWatch", body: event.data ? event.data.text() : "" };
   }
-  const title = data.title || "Narwhal Tracker";
+  const title = data.title || "NarWatch";
   const options = {
     body: data.body || "",
     tag: data.tag || undefined,

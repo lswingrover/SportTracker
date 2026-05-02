@@ -290,7 +290,7 @@ export default async function handler(req, res) {
   const ics = [
     "BEGIN:VCALENDAR",
     "VERSION:2.0",
-    "PRODID:-//Narwhal Tracker//EN",
+    "PRODID:-//NarWatch//EN",
     "METHOD:PUBLISH",
     "CALSCALE:GREGORIAN",
     `X-WR-CALNAME:${escapeText(calendarName)}`,

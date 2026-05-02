@@ -16,7 +16,7 @@ export default async function handler(req, res) {
   const { teamId, payload } = req.body || {};
   if (!teamId) return res.status(400).json({ error: "missing_teamId" });
   const safe = {
-    title: String(payload?.title || "Narwhal Tracker").slice(0, 100),
+    title: String(payload?.title || "NarWatch").slice(0, 100),
     body: String(payload?.body || "").slice(0, 300),
     tag: payload?.tag ? String(payload.tag).slice(0, 80) : undefined,
     url: payload?.url ? String(payload.url).slice(0, 500) : undefined,

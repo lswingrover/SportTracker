@@ -1,4 +1,4 @@
-// Static tournament data for Narwhal Tracker. v1 has no live data source —
+// Static tournament data for NarWatch. v1 has no live data source —
 // the API reads from this file. Future versions can swap in a live data
 // source (e.g., a water-polo scoring system) by replacing the lookup
 // function or adding a `dataSource: "api"` branch in /api/tournament.
