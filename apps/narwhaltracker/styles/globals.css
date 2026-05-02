@@ -99,14 +99,27 @@ a { color: inherit; }
 .header-compact .team-name {
   flex: 1 1 auto;
   min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  white-space: nowrap;
+  overflow: hidden;
+}
+.header-logo {
+  width: 36px;
+  height: 36px;
+  object-fit: contain;
+  flex-shrink: 0;
+  border-radius: 6px;
+}
+.header-brand {
   font-family: "Barlow Condensed", sans-serif;
   font-weight: 900;
   font-size: 22px;
   letter-spacing: 0.02em;
-  white-space: nowrap;
+  color: var(--text);
   overflow: hidden;
   text-overflow: ellipsis;
-  color: var(--text);
 }
 .header-compact .live-pill {
   background: var(--live);

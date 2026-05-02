@@ -2269,7 +2269,10 @@ export default function Home() {
         ) : (
         <>
         <header className="header-compact">
-          <div className="team-name" title="North Idaho Narwhals">Narwhals 🌊</div>
+          <div className="team-name" title="North Idaho Narwhals">
+            <img src="/narwhal-logo.png" alt="North Idaho Narwhals" className="header-logo" />
+            <span className="header-brand">NarWatch</span>
+          </div>
           {data?.liveGame && (
             <span className="live-pill" aria-label="Live game">
               <span className="live-dot" /> LIVE
