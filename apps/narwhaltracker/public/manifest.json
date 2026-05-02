@@ -1,6 +1,6 @@
 {
   "name": "NarWatch",
-  "short_name": "Narwhal",
+  "short_name": "NarWatch",
   "description": "North Idaho Narwhals water polo tournament tracker",
   "start_url": "/",
   "display": "standalone",
