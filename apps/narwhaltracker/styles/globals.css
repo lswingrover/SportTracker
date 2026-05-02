@@ -179,6 +179,19 @@ a { color: inherit; }
   border-color: var(--line);
   color: var(--text);
 }
+.header-compact .icon-only-btn.refresh-btn.spinning {
+  animation: spin-refresh 0.7s linear infinite;
+  border-color: var(--accent);
+  color: var(--accent);
+}
+.header-compact .icon-only-btn.refresh-btn.done {
+  border-color: var(--win);
+  color: var(--win);
+}
+@keyframes spin-refresh {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
 .header-compact-actions {
   display: flex;
   gap: 6px;

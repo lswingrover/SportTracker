@@ -1035,7 +1035,7 @@ function PastGameCard({ game, expanded, onToggle, venue, tz, opponentInfo, onSha
         aria-expanded={expanded}
       >
         <div className="past-summary-left">
-          <div className="score-hero">{setsCount || (game.result === "W" ? "Won" : "Lost")}</div>
+          <div className="score-hero">{setsCount || game.score || (game.result === "W" ? "Won" : game.result === "L" ? "Lost" : "—")}</div>
           <div className="score-meta">
             vs{" "}
             <span
@@ -1932,6 +1932,8 @@ export default function Home() {
   const [statsAccordion, setStatsAccordion] = useState(null); // 'wins' | 'losses' | null
   const [toast, setToast] = useState(null);
   const [infoSheet, setInfoSheet] = useState(null);
+  const [userRefreshing, setUserRefreshing] = useState(false);
+  const [refreshDone, setRefreshDone] = useState(false);
   const [tourStep, setTourStep] = useState(0);
   const [tourSeen, setTourSeen] = usePersistentState("tourSeen", false);
   const [tourNudgeDismissed, setTourNudgeDismissed] = usePersistentState("tourNudgeDismissed", false);
@@ -2100,6 +2102,7 @@ export default function Home() {
 
   const load = useCallback(
     async (force = false) => {
+      if (force) setUserRefreshing(true);
       if (tournament.static) {
         // Static tournaments aren't on AES — no data to fetch. Reset state so
         // switching from a live tournament doesn't leak its games/standings.
@@ -2169,6 +2172,7 @@ export default function Home() {
         setError(String(e.message || e));
       } finally {
         setLoading(false);
+        if (force) { setUserRefreshing(false); setRefreshDone(true); setTimeout(() => setRefreshDone(false), 2000); }
       }
     },
     [tournament.eventId, tournament.divId, teamId, teamName, themeId]
@@ -2279,6 +2283,15 @@ export default function Home() {
             </span>
           )}
           <div className="header-compact-actions">
+            <button
+              className={`icon-only-btn refresh-btn${userRefreshing ? " spinning" : ""}${refreshDone ? " done" : ""}`}
+              onClick={() => { if (!userRefreshing) load(true); }}
+              aria-label="Refresh"
+              title="Refresh data"
+              disabled={userRefreshing || !tournament.eventId}
+            >
+              {refreshDone ? "✓" : "↺"}
+            </button>
             <button
               className={`icon-only-btn${isStandalone ? " installed" : ""}`}
               onClick={handleInstallTap}
