@@ -1261,7 +1261,7 @@ const TOUR_STEPS = [
   { selector: ".chip-row", title: "Tournaments", body: "Tap any chip to switch tournaments. Past events show final records; future ones show countdowns." },
   { selector: ".stats", title: "Tournament record", body: "Tap Wins or Losses to see a game-by-game breakdown." },
   { selector: ".card.upcoming", setupTab: "schedule", title: "Upcoming game", body: "Court number is the hero — tap it for venue details. Tap the opponent name for head-to-head history." },
-  { title: "Live score banner", body: "When a game is live, this banner appears with real-time scores pulled from AES every 30 seconds." },
+  { title: "Live score banner", body: "When a game is live, this banner appears with real-time scores updated every 30 seconds." },
   { sideEffect: "confetti", title: "🎉 Wins!", body: "Win a game and the app celebrates with confetti." },
   { selector: ".card.past", setupTab: "schedule", title: "Past games", body: "Tap any past game to expand. See set-by-set scores and share the result as an image." },
   { selector: ".tabs button:nth-child(2)", setupTab: "standings", title: "Standings", body: "Tap any team row to see their record and your head-to-head history. The Narwhals row pinned at the top opens a season summary." },
@@ -1453,7 +1453,7 @@ function PoolGrid({ pool, onTeamTap }) {
         </tbody>
       </table>
       <div className="pool-grid-footnote">
-        Round-robin match results not available from AES
+        Round-robin match results not available
       </div>
     </section>
   );
@@ -1561,7 +1561,7 @@ function StatsAccordion({ mode, games, tz, onClose, record }) {
       {filtered.length === 0 ? (
         <div className="meta" style={{ padding: "10px 14px" }}>
           {missing > 0
-            ? `${missing} ${mode === "wins" ? "win" : "loss"}${missing === 1 ? "" : "es"} in pool play — match details not available from AES.`
+            ? `${missing} ${mode === "wins" ? "win" : "loss"}${missing === 1 ? "" : "es"} in pool play — match details not available.`
             : `No ${mode === "wins" ? "wins" : "losses"} yet this tournament.`}
         </div>
       ) : (
@@ -1590,7 +1590,7 @@ function StatsAccordion({ mode, games, tz, onClose, record }) {
       {filtered.length > 0 && missing > 0 && (
         <div className="stats-accordion-footnote">
           + {missing} pool play {mode === "wins" ? "win" : "loss"}
-          {missing === 1 ? "" : mode === "wins" ? "s" : "es"} — match details not available from AES
+          {missing === 1 ? "" : mode === "wins" ? "s" : "es"} — match details not available
         </div>
       )}
     </section>
@@ -2919,10 +2919,22 @@ export default function Home() {
   const activeTzLabel = tzOverride === "local" ? null : tzShortLabel(venueTz);
 
   const games = data?.games || [];
-  // Apply schedule team filter (only meaningful in NIWP mode where subteam is set).
-  const visibleGames = scheduleTeamFilter === "all"
+  // Only show the team filter when ≥2 subteams are tagged in games[]. With
+  // 0 or 1 subteams represented, the dropdown is either useless or would
+  // produce zero-result filter options.
+  const availableSubteams = useMemo(() => {
+    const s = new Set();
+    for (const g of games) if (g.subteam) s.add(g.subteam);
+    return s;
+  }, [games]);
+  const showTeamFilter = availableSubteams.size >= 2;
+  const effectiveTeamFilter =
+    scheduleTeamFilter === "all" || availableSubteams.has(scheduleTeamFilter)
+      ? scheduleTeamFilter
+      : "all";
+  const visibleGames = effectiveTeamFilter === "all"
     ? games
-    : games.filter((g) => g.subteam === scheduleTeamFilter);
+    : games.filter((g) => g.subteam === effectiveTeamFilter);
   const pastGames = visibleGames.filter((g) => g.done);
   const upcomingGames = visibleGames.filter((g) => !g.done);
   const standings = data?.standings || [];
@@ -3252,8 +3264,7 @@ export default function Home() {
 
         {tab === "schedule" && (
           <>
-            {/* Team filter dropdown — shown in NIWP mode (niwpWeeks loaded) */}
-            {niwpWeeks && (
+            {niwpWeeks && showTeamFilter && (
               <div className="schedule-filter-row">
                 <label htmlFor="schedule-team-select" className="schedule-filter-label">
                   Team
@@ -3261,12 +3272,14 @@ export default function Home() {
                 <select
                   id="schedule-team-select"
                   className="team-select"
-                  value={scheduleTeamFilter}
+                  value={effectiveTeamFilter}
                   onChange={(e) => setScheduleTeamFilter(e.target.value)}
                 >
-                  {NIWP_TEAM_FILTERS.map(({ key, label }) => (
-                    <option key={key} value={key}>{label}</option>
-                  ))}
+                  {NIWP_TEAM_FILTERS
+                    .filter(({ key }) => key === "all" || availableSubteams.has(key))
+                    .map(({ key, label }) => (
+                      <option key={key} value={key}>{label}</option>
+                    ))}
                 </select>
               </div>
             )}
@@ -3336,7 +3349,7 @@ export default function Home() {
             )}
             {pastGames.length === 0 && upcomingGames.length === 0 && (
               <div className="empty">
-                No games returned by AES yet for this team.
+                No games found yet.
                 <br />
                 Check back when the tournament starts.
               </div>
