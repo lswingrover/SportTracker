@@ -24,6 +24,33 @@ const DEFAULT_REFRESH_MS = 2 * 60 * 1000;
 const CLIENT_DATA_CACHE = new Map(); // url → { payload, fetchedAt }
 const CLIENT_CACHE_TTL_MS = 60 * 1000; // 1 minute — matches server-side TTL
 
+// ─── Client-side stats cache ──────────────────────────────────────────────────
+// Module-level so stats survive component unmounts (collapsing a game card).
+// Re-expanding an already-loaded card is instant. Prefetch populates this in
+// the background as soon as game data arrives so the first tap feels instant.
+const STATS_CACHE = new Map();    // gameId (string) → stats array
+const STATS_INFLIGHT = new Map(); // gameId (string) → Promise<stats[]>
+
+// Warm the stats cache for every NIWP game in the current data payload.
+// Fire-and-forget — called after setData(). Skips games already cached.
+function prefetchGameStats(games) {
+  if (!Array.isArray(games)) return;
+  for (const g of games) {
+    if (!g._gameId || g._source !== "niwp") continue;
+    const id = String(g._gameId);
+    if (STATS_CACHE.has(id) || STATS_INFLIGHT.has(id)) continue;
+    const promise = fetch(`/api/stats?game_id=${encodeURIComponent(id)}`)
+      .then((r) => (r.ok ? r.json() : Promise.reject(new Error(`HTTP ${r.status}`))))
+      .then((data) => {
+        STATS_CACHE.set(id, data.stats || []);
+        return STATS_CACHE.get(id);
+      })
+      .catch(() => null)
+      .finally(() => STATS_INFLIGHT.delete(id));
+    STATS_INFLIGHT.set(id, promise);
+  }
+}
+
 // NIWP schedule team filter options (mirrors LB_TEAM_FILTERS in the Leaderboard).
 const NIWP_TEAM_FILTERS = [
   { key: "all",  label: "All teams" },
@@ -1041,27 +1068,58 @@ function UpcomingGameCard({ game, expanded, onToggle, venue, tz, teamWatchNowLin
 // Only rendered when expanded and game._source === "niwp".
 
 function StatsPanel({ gameId }) {
-  const [status, setStatus] = useState("idle"); // idle | loading | ready | error
-  const [stats, setStats]   = useState(null);
+  const id = gameId ? String(gameId) : null;
+  // Check module-level cache first — if already fetched, skip network entirely.
+  const cached = id ? STATS_CACHE.get(id) : undefined;
+  const [status, setStatus] = useState(cached !== undefined ? "ready" : "idle");
+  const [stats, setStats]   = useState(cached !== undefined ? cached : null);
   const [errorMsg, setErrorMsg] = useState(null);
 
   useEffect(() => {
-    if (!gameId) return;
+    if (!id) return;
+    // Already in cache — nothing to do.
+    if (STATS_CACHE.has(id)) {
+      setStats(STATS_CACHE.get(id));
+      setStatus("ready");
+      return;
+    }
+    // Piggyback on an in-flight prefetch request if one is already running.
+    const inflight = STATS_INFLIGHT.get(id);
+    if (inflight) {
+      setStatus("loading");
+      inflight.then((result) => {
+        setStats(result || []);
+        setStatus(result !== null ? "ready" : "error");
+        if (result === null) setErrorMsg("Stats unavailable");
+      });
+      return;
+    }
+    // Cache miss and no prefetch in flight — fetch directly.
     setStatus("loading");
-    fetch(`/api/stats?game_id=${encodeURIComponent(gameId)}`)
+    const promise = fetch(`/api/stats?game_id=${encodeURIComponent(id)}`)
       .then((r) => {
         if (!r.ok) throw new Error(`HTTP ${r.status}`);
         return r.json();
       })
       .then((data) => {
-        setStats(data.stats || []);
-        setStatus("ready");
+        const result = data.stats || [];
+        STATS_CACHE.set(id, result);
+        return result;
       })
       .catch((err) => {
         setErrorMsg(err.message);
         setStatus("error");
-      });
-  }, [gameId]);
+        return null;
+      })
+      .finally(() => STATS_INFLIGHT.delete(id));
+    STATS_INFLIGHT.set(id, promise);
+    promise.then((result) => {
+      if (result !== null) {
+        setStats(result);
+        setStatus("ready");
+      }
+    });
+  }, [id]);
 
   if (status === "idle" || status === "loading") {
     return <div className="stats-panel-loading">Loading player stats…</div>;
@@ -2833,6 +2891,11 @@ export default function Home() {
         firstLoadRef.current = false;
         setData(next);
         setError(null);
+
+        // Warm the stats cache in the background for every NIWP game.
+        // By the time the user taps a game card to expand stats, the fetch
+        // will have already completed (or be nearly done).
+        prefetchGameStats(next.games);
 
         if (typeof navigator !== "undefined" && navigator.vibrate && force) {
           navigator.vibrate(40);
