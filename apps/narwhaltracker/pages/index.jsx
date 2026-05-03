@@ -11,6 +11,19 @@ const THEMES = [
 // Once the NIWP API responds, _pollSchedule overrides this dynamically.
 const DEFAULT_REFRESH_MS = 2 * 60 * 1000;
 
+// ─── Client-side data cache ───────────────────────────────────────────────────
+// Module-level Map: persists across re-renders, resets on page reload.
+// Key: fetch URL (without &force=1 suffix). Value: { payload, fetchedAt }.
+//
+// Strategy: stale-while-revalidate.
+//   • Fresh  (age < TTL) → serve from cache, skip fetch entirely.
+//   • Stale  (age ≥ TTL) → serve stale immediately (no spinner), then
+//                           re-fetch in the background and update silently.
+//   • Miss                → show spinner, fetch, populate cache.
+//   • force=true          → bypass cache, re-fetch, overwrite cache entry.
+const CLIENT_DATA_CACHE = new Map(); // url → { payload, fetchedAt }
+const CLIENT_CACHE_TTL_MS = 60 * 1000; // 1 minute — matches server-side TTL
+
 // NIWP schedule team filter options (mirrors LB_TEAM_FILTERS in the Leaderboard).
 const NIWP_TEAM_FILTERS = [
   { key: "all",  label: "All teams" },
@@ -2727,13 +2740,9 @@ export default function Home() {
   const load = useCallback(
     async (force = false) => {
       if (force) setUserRefreshing(true);
+
       // Static-tournament early bail: only applies when NOT in NIWP mode.
-      // When niwpWeeks is populated, the chip row is driven by live NIWP week
-      // data, so the selected "tournament" (often a static placeholder) is
-      // irrelevant and we skip straight to the API call.
       if (tournament.static && !niwpWeeks) {
-        // Static tournaments aren't on AES — no data to fetch. Reset state so
-        // switching from a live tournament doesn't leak its games/standings.
         prevDataRef.current = null;
         prevLiveRef.current = null;
         firstLoadRef.current = true;
@@ -2742,17 +2751,44 @@ export default function Home() {
         setLoading(false);
         return;
       }
+
+      // Build fetch URL (without force flag — we key the cache on the clean URL).
+      const weekParam = niwpWeeks && niwpWeekKey
+        ? `&weekKey=${encodeURIComponent(niwpWeekKey)}`
+        : "";
+      const url = `/api/tournament?eventId=${encodeURIComponent(tournament.eventId)}&divId=${encodeURIComponent(tournament.divId)}&teamId=${encodeURIComponent(teamId)}&teamName=${encodeURIComponent(teamName)}${weekParam}`;
+
+      // ── Client-side cache check ─────────────────────────────────────────────
+      if (!force) {
+        const entry = CLIENT_DATA_CACHE.get(url);
+        if (entry) {
+          const age = Date.now() - entry.fetchedAt;
+          if (age < CLIENT_CACHE_TTL_MS) {
+            // Fresh cache hit — render instantly, skip network entirely.
+            setData(entry.payload);
+            setLoading(false);
+            return;
+          }
+          // Stale — show cached data immediately so switching feels instant,
+          // then re-fetch silently in the background (no spinner).
+          setData(entry.payload);
+          setLoading(false);
+          // fall through to fetch below (no setLoading(true))
+        }
+      }
+
+      // Only show the loading spinner when there is nothing yet to display.
+      const hasStaleFallback = !force && CLIENT_DATA_CACHE.has(url);
+      if (!hasStaleFallback) setLoading(true);
+
       try {
-        setLoading(true);
-        // In NIWP mode: pass weekKey (or nothing = latest). eventId/divId are
-        // ignored by niwp.js but still forwarded for future flexibility.
-        const weekParam = niwpWeeks && niwpWeekKey
-          ? `&weekKey=${encodeURIComponent(niwpWeekKey)}`
-          : "";
-        const url = `/api/tournament?eventId=${encodeURIComponent(tournament.eventId)}&divId=${encodeURIComponent(tournament.divId)}&teamId=${encodeURIComponent(teamId)}&teamName=${encodeURIComponent(teamName)}${weekParam}${force ? "&force=1" : ""}`;
-        const res = await fetch(url);
+        const fetchUrl = force ? `${url}&force=1` : url;
+        const res = await fetch(fetchUrl);
         if (!res.ok) throw new Error(`API ${res.status}`);
         const next = await res.json();
+
+        // Populate / overwrite client cache.
+        CLIENT_DATA_CACHE.set(url, { payload: next, fetchedAt: Date.now() });
 
         const changed = detectChangedIds(prevDataRef.current, next);
         if (changed.size) setChangedIds(changed);
@@ -2802,7 +2838,8 @@ export default function Home() {
           navigator.vibrate(40);
         }
       } catch (e) {
-        setError(String(e.message || e));
+        // Don't clobber visible stale data with an error message.
+        if (!hasStaleFallback) setError(String(e.message || e));
       } finally {
         setLoading(false);
         if (force) { setUserRefreshing(false); setRefreshDone(true); setTimeout(() => setRefreshDone(false), 2000); }
@@ -2835,6 +2872,37 @@ export default function Home() {
       .catch(() => {});
     return () => { cancelled = true; };
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Prefetch all NIWP weeks in the background once the week list loads.
+  // Runs once (1.5 s after niwpWeeks first arrives) so the current week
+  // renders first. Skips any URL already in the client cache. Rate-limited
+  // at 300 ms between requests to avoid hammering the server.
+  useEffect(() => {
+    if (!niwpWeeks || niwpWeeks.length < 2) return;
+    let cancelled = false;
+    const currentKey = niwpWeekKey ?? niwpWeeks[niwpWeeks.length - 1]?.weekKey;
+    const others = niwpWeeks.filter((w) => w.weekKey !== currentKey);
+
+    const prefetch = async () => {
+      for (const week of others) {
+        if (cancelled) break;
+        const wParam = `&weekKey=${encodeURIComponent(week.weekKey)}`;
+        const wUrl = `/api/tournament?eventId=${encodeURIComponent(tournament.eventId)}&divId=${encodeURIComponent(tournament.divId)}&teamId=${encodeURIComponent(teamId)}&teamName=${encodeURIComponent(teamName)}${wParam}`;
+        if (CLIENT_DATA_CACHE.has(wUrl)) continue; // already warm
+        try {
+          const res = await fetch(wUrl);
+          if (!cancelled && res.ok) {
+            const payload = await res.json();
+            CLIENT_DATA_CACHE.set(wUrl, { payload, fetchedAt: Date.now() });
+          }
+        } catch {} // silently skip failed prefetches
+        if (!cancelled) await new Promise((r) => setTimeout(r, 300));
+      }
+    };
+
+    const timer = setTimeout(prefetch, 1500);
+    return () => { cancelled = true; clearTimeout(timer); };
+  }, [niwpWeeks]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Adaptive poll interval — driven by _pollSchedule from the NIWP API.
   // Falls back to DEFAULT_REFRESH_MS until first data arrives or for non-NIWP sources.
