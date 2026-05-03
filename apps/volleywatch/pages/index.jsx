@@ -1062,7 +1062,7 @@ function setsCountForRow(sets) {
 }
 
 function UpcomingGameCard({ game, expanded, onToggle, venue, tz, teamWatchNowLink, opponentInfo, onAddCal, onOpenOpponent, onCourtTap }) {
-  const watchUrl = game.videoLink || (game.live ? teamWatchNowLink : null);
+  const watchUrl = game.videoLink || (game.live ? teamWatchNowLink : null) || game.watchUrl || null;
   const tzLabel = tzShortLabel(tz);
   const localized = game.timeISO
     ? `${formatInTz(game.timeISO, tz)}${tzLabel ? ` ${tzLabel}` : ""}`

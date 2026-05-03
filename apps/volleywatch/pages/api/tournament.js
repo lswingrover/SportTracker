@@ -1,5 +1,6 @@
 import { diffAndPush } from "@sport-tracker/core/stateDiff.js";
 import { maybeSnapshot } from "@sport-tracker/core/snapshots.js";
+import { findBroadcast, isInTournamentWindow, HUDL_TEAM_URL } from "../../lib/hudl-broadcasts.js";
 
 // Deferred for v3 (intentionally not implemented yet):
 //   - Pool standings tab: render `/division/{div}/pools` so we can show
@@ -14,6 +15,13 @@ const DEFAULT_EVENT_ID = process.env.EVENT_ID || "PTAwMDAwNDI2MDU90";
 const DEFAULT_DIVISION_ID = process.env.DIVISION_ID || "203854";
 const DEFAULT_TEAM_ID = process.env.TEAM_ID || "201772";
 const DEFAULT_TEAM_NAME = process.env.TEAM_NAME || "208 U14 Red";
+
+// Maps AES eventId → VolleyWatch tournament slug (for Hudl watchUrl + live-window detection).
+// Add new entries here when EVENT_ID env var is updated for a new tournament.
+const AES_SLUG_MAP = {
+  "PTAwMDAwNDI5NjU90": "big-sky-volleyfest-2026",
+  "PTAwMDAwNDI2MDU90": "erva-regional-2026",
+};
 
 const CACHE_TTL_MS = 2 * 60 * 1000;
 
@@ -705,6 +713,15 @@ function buildResponse({ eventMeta, team, current, future, work, standings, next
     delete g.timeMs;
   }
 
+  // Hudl Option 1: inject watchUrl per game (matches broadcast by opponent name fuzzy match)
+  const tournamentSlug = AES_SLUG_MAP[ctx.eventId] || null;
+  for (const g of games) {
+    if (g.opponent) {
+      const hudl = findBroadcast(g.opponent, tournamentSlug);
+      if (hudl) g.watchUrl = hudl.watchUrl;
+    }
+  }
+
   const liveGame = games.find((g) => !g.done && g.live);
 
   const standingsRows = normalizeStandings(standings?.value, ctx.teamId);
@@ -805,7 +822,12 @@ function buildResponse({ eventMeta, team, current, future, work, standings, next
       }
     : null;
 
-  const teamWatchNowLink = team?.WatchNowLink || null;
+  // Hudl Option 2: live banner — show team Hudl page during known tournament game windows.
+  // Hudl Fan is fully client-rendered; server-side live detection is not possible.
+  // Heuristic: today is a game day AND current hour is 7am–7pm in the venue timezone.
+  const _slug = AES_SLUG_MAP[ctx.eventId] || null;
+  const teamWatchNowLink =
+    (_slug && isInTournamentWindow(_slug)) ? HUDL_TEAM_URL : (team?.WatchNowLink || null);
 
   const bracketStructures = extractBracketsForTeam(brackets, ctx.teamId);
   const pool = extractPoolForTeam(pools, ctx.teamId);
