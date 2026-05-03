@@ -2352,7 +2352,8 @@ export default function Home() {
       }
       try {
         setLoading(true);
-        const url = `/api/tournament?eventId=${encodeURIComponent(tournament.eventId)}&divId=${encodeURIComponent(tournament.divId)}&teamId=${encodeURIComponent(teamId)}&teamName=${encodeURIComponent(teamName)}${force ? "&force=1" : ""}`;
+        const tz = tournament.venue?.tz || "";
+        const url = `/api/tournament?eventId=${encodeURIComponent(tournament.eventId)}&divId=${encodeURIComponent(tournament.divId)}&teamId=${encodeURIComponent(teamId)}&teamName=${encodeURIComponent(teamName)}${tz ? `&tz=${encodeURIComponent(tz)}` : ""}${force ? "&force=1" : ""}`;
         const res = await fetch(url);
         if (!res.ok) throw new Error(`API ${res.status}`);
         const next = await res.json();
