@@ -2077,7 +2077,6 @@ function LeaderboardTab({ players, loading, onPlayerTap }) {
           </thead>
           <tbody>
             {filtered.map((p, i) => {
-              const isSoren = p.player_name?.includes("Soren");
               return (
                 <tr
                   key={p.player_id}
@@ -2085,7 +2084,6 @@ function LeaderboardTab({ players, loading, onPlayerTap }) {
                   style={{
                     borderBottom: "1px solid var(--line)",
                     cursor: "pointer",
-                    background: isSoren ? "var(--accent-soft)" : "transparent",
                   }}
                 >
                   <td style={{ padding: "10px 16px", color: "var(--muted)", fontSize: 12 }}>{i + 1}</td>
