@@ -212,7 +212,10 @@ function normalizeMatch(m, { done, idx = 0, kind = "match", teamId = null }) {
     if (teamId && m?.FirstTeamId != null) {
       const isFirst = String(m.FirstTeamId) === String(teamId);
       const myWon = isFirst ? m.FirstTeamWon : m.SecondTeamWon;
-      if (m.HasScores) won = myWon === true ? true : false;
+      // Read W/L from explicit flags regardless of HasScores — pool play
+      // matches have HasScores:false but FirstTeamWon/SecondTeamWon are set.
+      if (myWon === true || myWon === false) won = myWon;
+      else if (m.HasScores) won = false; // HasScores but no explicit flag → loss
     }
     if (won === null) won = teamWonMatch(m);
     if (won === true) result = "W";

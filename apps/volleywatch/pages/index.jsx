@@ -906,16 +906,9 @@ function WorkUrgencyBanner({ workAssignments }) {
 
 function PastGamesSummary({ standings, record }) {
   const us = standings.find((s) => s.isUs);
-  const setsWon = us?.setsWon ?? null;
-  const setsLost = us?.setsLost ?? null;
   return (
     <div className="record-summary">
       <span className="record-final">Final: {record.wins}–{record.losses}</span>
-      {setsWon != null && setsLost != null && (
-        <span className="record-sub">
-          · {setsWon} set{setsWon === 1 ? "" : "s"} won, {setsLost} lost
-        </span>
-      )}
       {us?.rankText && <span className="record-sub"> · {us.rankText} in pool</span>}
     </div>
   );
