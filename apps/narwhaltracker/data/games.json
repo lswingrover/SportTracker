@@ -14,7 +14,12 @@
     "team_short": "18U Boys",
     "team_type": "competitive",
     "team_ambiguous": false,
-    "team_unmapped": false
+    "team_unmapped": false,
+    "opponent_id": "wvwp",
+    "opponent_display_name": "WVWP",
+    "opponent_region": "unknown",
+    "opponent_ambiguous": false,
+    "opponent_unmapped": false
   },
   {
     "game_id": "43",
@@ -31,7 +36,12 @@
     "team_short": "14U Co-Ed",
     "team_type": "competitive",
     "team_ambiguous": false,
-    "team_unmapped": false
+    "team_unmapped": false,
+    "opponent_id": "lopow",
+    "opponent_display_name": "LOPOW",
+    "opponent_region": "OR",
+    "opponent_ambiguous": false,
+    "opponent_unmapped": false
   },
   {
     "game_id": "44",
@@ -48,7 +58,12 @@
     "team_short": "18U Girls",
     "team_type": "competitive",
     "team_ambiguous": false,
-    "team_unmapped": false
+    "team_unmapped": false,
+    "opponent_id": "lopow",
+    "opponent_display_name": "LOPOW",
+    "opponent_region": "OR",
+    "opponent_ambiguous": false,
+    "opponent_unmapped": false
   },
   {
     "game_id": "45",
@@ -65,7 +80,12 @@
     "team_short": "14U Co-Ed",
     "team_type": "competitive",
     "team_ambiguous": false,
-    "team_unmapped": false
+    "team_unmapped": false,
+    "opponent_id": "psp-wp",
+    "opponent_display_name": "PSP WP",
+    "opponent_region": "unknown",
+    "opponent_ambiguous": false,
+    "opponent_unmapped": false
   },
   {
     "game_id": "47",
@@ -82,7 +102,12 @@
     "team_short": "14U Co-Ed",
     "team_type": "competitive",
     "team_ambiguous": false,
-    "team_unmapped": false
+    "team_unmapped": false,
+    "opponent_id": "psp-wp",
+    "opponent_display_name": "PSP WP",
+    "opponent_region": "unknown",
+    "opponent_ambiguous": false,
+    "opponent_unmapped": false
   },
   {
     "game_id": "48",
@@ -99,7 +124,12 @@
     "team_short": "18U Boys",
     "team_type": "competitive",
     "team_ambiguous": false,
-    "team_unmapped": false
+    "team_unmapped": false,
+    "opponent_id": "newberg-wp",
+    "opponent_display_name": "Newberg WP",
+    "opponent_region": "OR",
+    "opponent_ambiguous": false,
+    "opponent_unmapped": false
   },
   {
     "game_id": "49",
@@ -116,7 +146,12 @@
     "team_short": "14U Co-Ed",
     "team_type": "competitive",
     "team_ambiguous": false,
-    "team_unmapped": false
+    "team_unmapped": false,
+    "opponent_id": "bend-wp",
+    "opponent_display_name": "Bend WP",
+    "opponent_region": "OR",
+    "opponent_ambiguous": false,
+    "opponent_unmapped": false
   },
   {
     "game_id": "50",
@@ -133,7 +168,12 @@
     "team_short": "18U Boys",
     "team_type": "competitive",
     "team_ambiguous": false,
-    "team_unmapped": false
+    "team_unmapped": false,
+    "opponent_id": "lopow",
+    "opponent_display_name": "LOPOW",
+    "opponent_region": "OR",
+    "opponent_ambiguous": false,
+    "opponent_unmapped": false
   },
   {
     "game_id": "51",
@@ -150,7 +190,12 @@
     "team_short": "18U Girls",
     "team_type": "competitive",
     "team_ambiguous": false,
-    "team_unmapped": false
+    "team_unmapped": false,
+    "opponent_id": "boise-club-wp",
+    "opponent_display_name": "Boise Club WP",
+    "opponent_region": "ID",
+    "opponent_ambiguous": false,
+    "opponent_unmapped": false
   },
   {
     "game_id": "52",
@@ -167,7 +212,12 @@
     "team_short": "18U Girls",
     "team_type": "competitive",
     "team_ambiguous": false,
-    "team_unmapped": false
+    "team_unmapped": false,
+    "opponent_id": "bend-wp",
+    "opponent_display_name": "Bend WP",
+    "opponent_region": "OR",
+    "opponent_ambiguous": false,
+    "opponent_unmapped": false
   },
   {
     "game_id": "53",
@@ -184,7 +234,12 @@
     "team_short": "18U Boys",
     "team_type": "competitive",
     "team_ambiguous": false,
-    "team_unmapped": false
+    "team_unmapped": false,
+    "opponent_id": "boise-club-wp",
+    "opponent_display_name": "Boise Club WP",
+    "opponent_region": "ID",
+    "opponent_ambiguous": false,
+    "opponent_unmapped": false
   },
   {
     "game_id": "54",
@@ -201,7 +256,12 @@
     "team_short": "18U Boys",
     "team_type": "competitive",
     "team_ambiguous": false,
-    "team_unmapped": false
+    "team_unmapped": false,
+    "opponent_id": "bend-wp",
+    "opponent_display_name": "Bend WP",
+    "opponent_region": "OR",
+    "opponent_ambiguous": false,
+    "opponent_unmapped": false
   },
   {
     "game_id": "55",
@@ -218,7 +278,12 @@
     "team_short": "18U Girls",
     "team_type": "competitive",
     "team_ambiguous": false,
-    "team_unmapped": false
+    "team_unmapped": false,
+    "opponent_id": "boise-club-wp",
+    "opponent_display_name": "Boise Club WP",
+    "opponent_region": "ID",
+    "opponent_ambiguous": false,
+    "opponent_unmapped": false
   },
   {
     "game_id": "56",
@@ -235,7 +300,12 @@
     "team_short": "14U Co-Ed",
     "team_type": "competitive",
     "team_ambiguous": false,
-    "team_unmapped": false
+    "team_unmapped": false,
+    "opponent_id": "boise-club-wp",
+    "opponent_display_name": "Boise Club WP",
+    "opponent_region": "ID",
+    "opponent_ambiguous": false,
+    "opponent_unmapped": false
   },
   {
     "game_id": "57",
@@ -252,7 +322,12 @@
     "team_short": "14U Co-Ed",
     "team_type": "competitive",
     "team_ambiguous": false,
-    "team_unmapped": false
+    "team_unmapped": false,
+    "opponent_id": "northwest-wp",
+    "opponent_display_name": "Northwest WP",
+    "opponent_region": "unknown",
+    "opponent_ambiguous": false,
+    "opponent_unmapped": false
   },
   {
     "game_id": "58",
@@ -269,7 +344,12 @@
     "team_short": "18U Girls",
     "team_type": "competitive",
     "team_ambiguous": false,
-    "team_unmapped": false
+    "team_unmapped": false,
+    "opponent_id": "boise-club-wp",
+    "opponent_display_name": "Boise Club WP",
+    "opponent_region": "ID",
+    "opponent_ambiguous": false,
+    "opponent_unmapped": false
   },
   {
     "game_id": "60",
@@ -286,7 +366,12 @@
     "team_short": "18U Boys",
     "team_type": "competitive",
     "team_ambiguous": false,
-    "team_unmapped": false
+    "team_unmapped": false,
+    "opponent_id": "hillsboro-wp",
+    "opponent_display_name": "Hillsboro WP",
+    "opponent_region": "OR",
+    "opponent_ambiguous": false,
+    "opponent_unmapped": false
   },
   {
     "game_id": "61",
@@ -303,7 +388,12 @@
     "team_short": "18U Girls",
     "team_type": "competitive",
     "team_ambiguous": false,
-    "team_unmapped": false
+    "team_unmapped": false,
+    "opponent_id": "hillsboro-wp",
+    "opponent_display_name": "Hillsboro WP",
+    "opponent_region": "OR",
+    "opponent_ambiguous": false,
+    "opponent_unmapped": false
   },
   {
     "game_id": "62",
@@ -320,7 +410,12 @@
     "team_short": "14U Boys",
     "team_type": "competitive",
     "team_ambiguous": false,
-    "team_unmapped": false
+    "team_unmapped": false,
+    "opponent_id": "hillsboro-wp",
+    "opponent_display_name": "Hillsboro WP",
+    "opponent_region": "OR",
+    "opponent_ambiguous": false,
+    "opponent_unmapped": false
   },
   {
     "game_id": "63",
@@ -337,7 +432,12 @@
     "team_short": "Exhibition",
     "team_type": "exhibition",
     "team_ambiguous": false,
-    "team_unmapped": false
+    "team_unmapped": false,
+    "opponent_id": "cda-masters",
+    "opponent_display_name": "CDA Masters",
+    "opponent_region": "ID",
+    "opponent_ambiguous": false,
+    "opponent_unmapped": false
   },
   {
     "game_id": "64",
@@ -354,7 +454,12 @@
     "team_short": "18U Boys",
     "team_type": "competitive",
     "team_ambiguous": false,
-    "team_unmapped": false
+    "team_unmapped": false,
+    "opponent_id": "hillsboro-wp",
+    "opponent_display_name": "Hillsboro WP",
+    "opponent_region": "OR",
+    "opponent_ambiguous": false,
+    "opponent_unmapped": false
   },
   {
     "game_id": "65",
@@ -371,7 +476,12 @@
     "team_short": "18U Girls",
     "team_type": "competitive",
     "team_ambiguous": false,
-    "team_unmapped": false
+    "team_unmapped": false,
+    "opponent_id": "hillsboro-wp",
+    "opponent_display_name": "Hillsboro WP",
+    "opponent_region": "OR",
+    "opponent_ambiguous": false,
+    "opponent_unmapped": false
   },
   {
     "game_id": "66",
@@ -388,7 +498,12 @@
     "team_short": "Exhibition",
     "team_type": "exhibition",
     "team_ambiguous": false,
-    "team_unmapped": false
+    "team_unmapped": false,
+    "opponent_id": "exhibition-mixed",
+    "opponent_display_name": "Exhibition / Mixed",
+    "opponent_region": "—",
+    "opponent_ambiguous": false,
+    "opponent_unmapped": false
   },
   {
     "game_id": "67",
@@ -405,7 +520,12 @@
     "team_short": "18U Boys",
     "team_type": "competitive",
     "team_ambiguous": false,
-    "team_unmapped": false
+    "team_unmapped": false,
+    "opponent_id": "unknown-opponent",
+    "opponent_display_name": "Unknown Opponent",
+    "opponent_region": "—",
+    "opponent_ambiguous": false,
+    "opponent_unmapped": false
   },
   {
     "game_id": "68",
@@ -422,7 +542,12 @@
     "team_short": "18U Girls",
     "team_type": "competitive",
     "team_ambiguous": false,
-    "team_unmapped": false
+    "team_unmapped": false,
+    "opponent_id": "hillsboro-wp",
+    "opponent_display_name": "Hillsboro WP",
+    "opponent_region": "OR",
+    "opponent_ambiguous": false,
+    "opponent_unmapped": false
   },
   {
     "game_id": "69",
@@ -439,7 +564,12 @@
     "team_short": "Exhibition",
     "team_type": "exhibition",
     "team_ambiguous": false,
-    "team_unmapped": false
+    "team_unmapped": false,
+    "opponent_id": "hillsboro-wp",
+    "opponent_display_name": "Hillsboro WP",
+    "opponent_region": "OR",
+    "opponent_ambiguous": false,
+    "opponent_unmapped": false
   },
   {
     "game_id": "70",
@@ -456,7 +586,12 @@
     "team_short": "Exhibition",
     "team_type": "exhibition",
     "team_ambiguous": false,
-    "team_unmapped": false
+    "team_unmapped": false,
+    "opponent_id": "exhibition-mixed",
+    "opponent_display_name": "Exhibition / Mixed",
+    "opponent_region": "—",
+    "opponent_ambiguous": false,
+    "opponent_unmapped": false
   },
   {
     "game_id": "71",
@@ -473,7 +608,12 @@
     "team_short": "18U Boys",
     "team_type": "competitive",
     "team_ambiguous": false,
-    "team_unmapped": false
+    "team_unmapped": false,
+    "opponent_id": "slap-blue-wp",
+    "opponent_display_name": "Slap Blue WP",
+    "opponent_region": "unknown",
+    "opponent_ambiguous": false,
+    "opponent_unmapped": false
   },
   {
     "game_id": "72",
@@ -490,7 +630,12 @@
     "team_short": "18U Boys",
     "team_type": "competitive",
     "team_ambiguous": false,
-    "team_unmapped": false
+    "team_unmapped": false,
+    "opponent_id": "viper-pigeon-wp",
+    "opponent_display_name": "Viper Pigeon WP",
+    "opponent_region": "unknown",
+    "opponent_ambiguous": false,
+    "opponent_unmapped": false
   },
   {
     "game_id": "73",
@@ -507,7 +652,12 @@
     "team_short": "18U Girls",
     "team_type": "competitive",
     "team_ambiguous": false,
-    "team_unmapped": false
+    "team_unmapped": false,
+    "opponent_id": "fleet-wp",
+    "opponent_display_name": "Fleet WP",
+    "opponent_region": "unknown",
+    "opponent_ambiguous": false,
+    "opponent_unmapped": false
   },
   {
     "game_id": "74",
@@ -524,7 +674,12 @@
     "team_short": "12U Co-Ed",
     "team_type": "competitive",
     "team_ambiguous": false,
-    "team_unmapped": false
+    "team_unmapped": false,
+    "opponent_id": "mavericks-wp",
+    "opponent_display_name": "Mavericks WP",
+    "opponent_region": "unknown",
+    "opponent_ambiguous": true,
+    "opponent_unmapped": false
   },
   {
     "game_id": "75",
@@ -541,7 +696,12 @@
     "team_short": "18U Girls",
     "team_type": "competitive",
     "team_ambiguous": false,
-    "team_unmapped": false
+    "team_unmapped": false,
+    "opponent_id": "kracken-wp",
+    "opponent_display_name": "Kracken WP",
+    "opponent_region": "unknown",
+    "opponent_ambiguous": false,
+    "opponent_unmapped": false
   },
   {
     "game_id": "76",
@@ -558,7 +718,12 @@
     "team_short": "18U Boys",
     "team_type": "competitive",
     "team_ambiguous": true,
-    "team_unmapped": false
+    "team_unmapped": false,
+    "opponent_id": "fleet-wp",
+    "opponent_display_name": "Fleet WP",
+    "opponent_region": "unknown",
+    "opponent_ambiguous": false,
+    "opponent_unmapped": false
   },
   {
     "game_id": "78",
@@ -575,7 +740,12 @@
     "team_short": "12U Co-Ed",
     "team_type": "competitive",
     "team_ambiguous": false,
-    "team_unmapped": false
+    "team_unmapped": false,
+    "opponent_id": "peak-polo-wp",
+    "opponent_display_name": "Peak Polo WP",
+    "opponent_region": "unknown",
+    "opponent_ambiguous": false,
+    "opponent_unmapped": false
   },
   {
     "game_id": "79",
@@ -592,7 +762,12 @@
     "team_short": "12U Co-Ed",
     "team_type": "competitive",
     "team_ambiguous": false,
-    "team_unmapped": false
+    "team_unmapped": false,
+    "opponent_id": "warrior-aquatics",
+    "opponent_display_name": "Warrior Aquatics",
+    "opponent_region": "unknown",
+    "opponent_ambiguous": false,
+    "opponent_unmapped": false
   },
   {
     "game_id": "81",
@@ -609,7 +784,12 @@
     "team_short": "18U Boys",
     "team_type": "competitive",
     "team_ambiguous": false,
-    "team_unmapped": false
+    "team_unmapped": false,
+    "opponent_id": "prwpc",
+    "opponent_display_name": "PRWPC",
+    "opponent_region": "unknown",
+    "opponent_ambiguous": false,
+    "opponent_unmapped": false
   },
   {
     "game_id": "83",
@@ -626,7 +806,12 @@
     "team_short": "18U Boys",
     "team_type": "competitive",
     "team_ambiguous": false,
-    "team_unmapped": false
+    "team_unmapped": false,
+    "opponent_id": "boise-club-wp",
+    "opponent_display_name": "Boise Club WP",
+    "opponent_region": "ID",
+    "opponent_ambiguous": false,
+    "opponent_unmapped": false
   },
   {
     "game_id": "85",
@@ -643,7 +828,12 @@
     "team_short": "12U Co-Ed",
     "team_type": "competitive",
     "team_ambiguous": false,
-    "team_unmapped": false
+    "team_unmapped": false,
+    "opponent_id": "hydralamo-wp",
+    "opponent_display_name": "Hydralamo WP",
+    "opponent_region": "unknown",
+    "opponent_ambiguous": false,
+    "opponent_unmapped": false
   },
   {
     "game_id": "86",
@@ -660,7 +850,12 @@
     "team_short": "12U Co-Ed",
     "team_type": "competitive",
     "team_ambiguous": false,
-    "team_unmapped": false
+    "team_unmapped": false,
+    "opponent_id": "warrior-aquatics",
+    "opponent_display_name": "Warrior Aquatics",
+    "opponent_region": "unknown",
+    "opponent_ambiguous": false,
+    "opponent_unmapped": false
   },
   {
     "game_id": "88",
@@ -677,7 +872,12 @@
     "team_ambiguous": false,
     "team_unmapped": false,
     "team_short": "18U Boys",
-    "team_type": "competitive"
+    "team_type": "competitive",
+    "opponent_id": "storm-wp",
+    "opponent_display_name": "Storm WP",
+    "opponent_region": "unknown",
+    "opponent_ambiguous": false,
+    "opponent_unmapped": false
   },
   {
     "game_id": "89",
@@ -694,7 +894,12 @@
     "team_short": "12U Co-Ed",
     "team_type": "competitive",
     "team_ambiguous": false,
-    "team_unmapped": false
+    "team_unmapped": false,
+    "opponent_id": "viper-pigeon-wp",
+    "opponent_display_name": "Viper Pigeon WP",
+    "opponent_region": "unknown",
+    "opponent_ambiguous": false,
+    "opponent_unmapped": false
   },
   {
     "game_id": "90",
@@ -711,7 +916,12 @@
     "team_short": "18U Boys",
     "team_type": "competitive",
     "team_ambiguous": false,
-    "team_unmapped": false
+    "team_unmapped": false,
+    "opponent_id": "heiland-wp",
+    "opponent_display_name": "Heiland WP",
+    "opponent_region": "unknown",
+    "opponent_ambiguous": false,
+    "opponent_unmapped": false
   },
   {
     "game_id": "92",
@@ -728,7 +938,12 @@
     "team_short": "12U Co-Ed",
     "team_type": "competitive",
     "team_ambiguous": false,
-    "team_unmapped": false
+    "team_unmapped": false,
+    "opponent_id": "navy-ac",
+    "opponent_display_name": "Navy AC",
+    "opponent_region": "unknown",
+    "opponent_ambiguous": false,
+    "opponent_unmapped": false
   },
   {
     "game_id": "93",
@@ -745,7 +960,12 @@
     "team_short": "18U Boys",
     "team_type": "competitive",
     "team_ambiguous": false,
-    "team_unmapped": false
+    "team_unmapped": false,
+    "opponent_id": "jungle-wp",
+    "opponent_display_name": "Jungle WP",
+    "opponent_region": "unknown",
+    "opponent_ambiguous": false,
+    "opponent_unmapped": false
   },
   {
     "game_id": "94",
@@ -762,7 +982,12 @@
     "team_short": "12U Co-Ed",
     "team_type": "competitive",
     "team_ambiguous": false,
-    "team_unmapped": false
+    "team_unmapped": false,
+    "opponent_id": "zilla-wp",
+    "opponent_display_name": "Zilla WP",
+    "opponent_region": "unknown",
+    "opponent_ambiguous": false,
+    "opponent_unmapped": false
   },
   {
     "game_id": "97",
@@ -779,7 +1004,12 @@
     "team_short": "18U Boys",
     "team_type": "competitive",
     "team_ambiguous": false,
-    "team_unmapped": false
+    "team_unmapped": false,
+    "opponent_id": "boise-club-wp",
+    "opponent_display_name": "Boise Club WP",
+    "opponent_region": "ID",
+    "opponent_ambiguous": true,
+    "opponent_unmapped": false
   },
   {
     "game_id": "98",
@@ -796,7 +1026,12 @@
     "team_short": "18U Boys",
     "team_type": "competitive",
     "team_ambiguous": false,
-    "team_unmapped": false
+    "team_unmapped": false,
+    "opponent_id": "boise-state-wp",
+    "opponent_display_name": "Boise State WP",
+    "opponent_region": "ID",
+    "opponent_ambiguous": false,
+    "opponent_unmapped": false
   },
   {
     "game_id": "99",
@@ -813,7 +1048,12 @@
     "team_short": "JV Boys",
     "team_type": "competitive",
     "team_ambiguous": false,
-    "team_unmapped": false
+    "team_unmapped": false,
+    "opponent_id": "east-idaho-wp",
+    "opponent_display_name": "East Idaho WP",
+    "opponent_region": "ID",
+    "opponent_ambiguous": false,
+    "opponent_unmapped": false
   },
   {
     "game_id": "100",
@@ -830,7 +1070,12 @@
     "team_short": "18U Girls",
     "team_type": "competitive",
     "team_ambiguous": false,
-    "team_unmapped": false
+    "team_unmapped": false,
+    "opponent_id": "exhibition-mixed",
+    "opponent_display_name": "Exhibition / Mixed",
+    "opponent_region": "—",
+    "opponent_ambiguous": false,
+    "opponent_unmapped": false
   },
   {
     "game_id": "101",
@@ -847,7 +1092,12 @@
     "team_short": "18U Girls",
     "team_type": "competitive",
     "team_ambiguous": false,
-    "team_unmapped": false
+    "team_unmapped": false,
+    "opponent_id": "east-idaho-wp",
+    "opponent_display_name": "East Idaho WP",
+    "opponent_region": "ID",
+    "opponent_ambiguous": false,
+    "opponent_unmapped": false
   },
   {
     "game_id": "102",
@@ -864,7 +1114,12 @@
     "team_short": "18U Girls",
     "team_type": "competitive",
     "team_ambiguous": false,
-    "team_unmapped": false
+    "team_unmapped": false,
+    "opponent_id": "exhibition-mixed",
+    "opponent_display_name": "Exhibition / Mixed",
+    "opponent_region": "—",
+    "opponent_ambiguous": false,
+    "opponent_unmapped": false
   },
   {
     "game_id": "103",
@@ -881,7 +1136,12 @@
     "team_short": "JV Girls",
     "team_type": "competitive",
     "team_ambiguous": false,
-    "team_unmapped": false
+    "team_unmapped": false,
+    "opponent_id": "exhibition-mixed",
+    "opponent_display_name": "Exhibition / Mixed",
+    "opponent_region": "—",
+    "opponent_ambiguous": false,
+    "opponent_unmapped": false
   },
   {
     "game_id": "104",
@@ -898,7 +1158,12 @@
     "team_short": "JV Girls",
     "team_type": "competitive",
     "team_ambiguous": false,
-    "team_unmapped": false
+    "team_unmapped": false,
+    "opponent_id": "magic-valley-wp",
+    "opponent_display_name": "Magic Valley WP",
+    "opponent_region": "ID",
+    "opponent_ambiguous": false,
+    "opponent_unmapped": false
   },
   {
     "game_id": "105",
@@ -915,7 +1180,12 @@
     "team_short": "JV Girls",
     "team_type": "competitive",
     "team_ambiguous": false,
-    "team_unmapped": false
+    "team_unmapped": false,
+    "opponent_id": "exhibition-mixed",
+    "opponent_display_name": "Exhibition / Mixed",
+    "opponent_region": "—",
+    "opponent_ambiguous": false,
+    "opponent_unmapped": false
   },
   {
     "game_id": "106",
@@ -932,7 +1202,12 @@
     "team_short": "18U Boys",
     "team_type": "competitive",
     "team_ambiguous": false,
-    "team_unmapped": false
+    "team_unmapped": false,
+    "opponent_id": "magic-valley-wp",
+    "opponent_display_name": "Magic Valley WP",
+    "opponent_region": "ID",
+    "opponent_ambiguous": false,
+    "opponent_unmapped": false
   },
   {
     "game_id": "107",
@@ -949,7 +1224,12 @@
     "team_short": "18U Boys",
     "team_type": "competitive",
     "team_ambiguous": false,
-    "team_unmapped": false
+    "team_unmapped": false,
+    "opponent_id": "east-idaho-wp",
+    "opponent_display_name": "East Idaho WP",
+    "opponent_region": "ID",
+    "opponent_ambiguous": false,
+    "opponent_unmapped": false
   },
   {
     "game_id": "108",
@@ -966,7 +1246,12 @@
     "team_short": "JV Boys",
     "team_type": "competitive",
     "team_ambiguous": false,
-    "team_unmapped": false
+    "team_unmapped": false,
+    "opponent_id": "boise-club-wp",
+    "opponent_display_name": "Boise Club WP",
+    "opponent_region": "ID",
+    "opponent_ambiguous": true,
+    "opponent_unmapped": false
   },
   {
     "game_id": "109",
@@ -983,7 +1268,12 @@
     "team_short": "JV Boys",
     "team_type": "competitive",
     "team_ambiguous": false,
-    "team_unmapped": false
+    "team_unmapped": false,
+    "opponent_id": "boise-club-wp",
+    "opponent_display_name": "Boise Club WP",
+    "opponent_region": "ID",
+    "opponent_ambiguous": true,
+    "opponent_unmapped": false
   },
   {
     "game_id": "110",
@@ -1000,7 +1290,12 @@
     "team_short": "18U Girls",
     "team_type": "competitive",
     "team_ambiguous": false,
-    "team_unmapped": false
+    "team_unmapped": false,
+    "opponent_id": "magic-valley-wp",
+    "opponent_display_name": "Magic Valley WP",
+    "opponent_region": "ID",
+    "opponent_ambiguous": false,
+    "opponent_unmapped": false
   },
   {
     "game_id": "111",
@@ -1017,7 +1312,12 @@
     "team_short": "JV Girls",
     "team_type": "competitive",
     "team_ambiguous": false,
-    "team_unmapped": false
+    "team_unmapped": false,
+    "opponent_id": "east-idaho-wp",
+    "opponent_display_name": "East Idaho WP",
+    "opponent_region": "ID",
+    "opponent_ambiguous": false,
+    "opponent_unmapped": false
   },
   {
     "game_id": "112",
@@ -1034,7 +1334,12 @@
     "team_short": "18U Boys",
     "team_type": "competitive",
     "team_ambiguous": false,
-    "team_unmapped": false
+    "team_unmapped": false,
+    "opponent_id": "boise-club-wp",
+    "opponent_display_name": "Boise Club WP",
+    "opponent_region": "ID",
+    "opponent_ambiguous": true,
+    "opponent_unmapped": false
   },
   {
     "game_id": "113",
@@ -1051,7 +1356,12 @@
     "team_short": "18U Girls",
     "team_type": "competitive",
     "team_ambiguous": false,
-    "team_unmapped": false
+    "team_unmapped": false,
+    "opponent_id": "twin-falls-wp",
+    "opponent_display_name": "Twin Falls WP",
+    "opponent_region": "ID",
+    "opponent_ambiguous": false,
+    "opponent_unmapped": false
   },
   {
     "game_id": "114",
@@ -1068,7 +1378,12 @@
     "team_short": "JV Girls",
     "team_type": "competitive",
     "team_ambiguous": false,
-    "team_unmapped": false
+    "team_unmapped": false,
+    "opponent_id": "s-idaho-wp",
+    "opponent_display_name": "S. Idaho WP",
+    "opponent_region": "ID",
+    "opponent_ambiguous": false,
+    "opponent_unmapped": false
   },
   {
     "game_id": "115",
@@ -1085,7 +1400,12 @@
     "team_short": "JV Boys",
     "team_type": "competitive",
     "team_ambiguous": false,
-    "team_unmapped": false
+    "team_unmapped": false,
+    "opponent_id": "twin-falls-wp",
+    "opponent_display_name": "Twin Falls WP",
+    "opponent_region": "ID",
+    "opponent_ambiguous": false,
+    "opponent_unmapped": false
   },
   {
     "game_id": "116",
@@ -1102,7 +1422,12 @@
     "team_short": "18U Boys",
     "team_type": "competitive",
     "team_ambiguous": false,
-    "team_unmapped": false
+    "team_unmapped": false,
+    "opponent_id": "magic-valley-wp",
+    "opponent_display_name": "Magic Valley WP",
+    "opponent_region": "ID",
+    "opponent_ambiguous": false,
+    "opponent_unmapped": false
   },
   {
     "game_id": "117",
@@ -1119,7 +1444,12 @@
     "team_short": "Dev",
     "team_type": "competitive",
     "team_ambiguous": false,
-    "team_unmapped": false
+    "team_unmapped": false,
+    "opponent_id": "magic-valley-wp",
+    "opponent_display_name": "Magic Valley WP",
+    "opponent_region": "ID",
+    "opponent_ambiguous": false,
+    "opponent_unmapped": false
   },
   {
     "game_id": "118",
@@ -1136,7 +1466,12 @@
     "team_short": "18U Girls",
     "team_type": "competitive",
     "team_ambiguous": false,
-    "team_unmapped": false
+    "team_unmapped": false,
+    "opponent_id": "boise-club-wp",
+    "opponent_display_name": "Boise Club WP",
+    "opponent_region": "ID",
+    "opponent_ambiguous": true,
+    "opponent_unmapped": false
   },
   {
     "game_id": "120",
@@ -1153,7 +1488,12 @@
     "team_short": "JV Boys",
     "team_type": "competitive",
     "team_ambiguous": false,
-    "team_unmapped": false
+    "team_unmapped": false,
+    "opponent_id": "boise-club-wp",
+    "opponent_display_name": "Boise Club WP",
+    "opponent_region": "ID",
+    "opponent_ambiguous": true,
+    "opponent_unmapped": false
   },
   {
     "game_id": "121",
@@ -1170,7 +1510,12 @@
     "team_short": "JV Girls",
     "team_type": "competitive",
     "team_ambiguous": false,
-    "team_unmapped": false
+    "team_unmapped": false,
+    "opponent_id": "magic-valley-wp",
+    "opponent_display_name": "Magic Valley WP",
+    "opponent_region": "ID",
+    "opponent_ambiguous": false,
+    "opponent_unmapped": false
   },
   {
     "game_id": "122",
@@ -1187,7 +1532,12 @@
     "team_short": "18U Boys",
     "team_type": "competitive",
     "team_ambiguous": false,
-    "team_unmapped": false
+    "team_unmapped": false,
+    "opponent_id": "magic-valley-wp",
+    "opponent_display_name": "Magic Valley WP",
+    "opponent_region": "ID",
+    "opponent_ambiguous": true,
+    "opponent_unmapped": false
   },
   {
     "game_id": "123",
@@ -1204,7 +1554,12 @@
     "team_short": "18U Boys",
     "team_type": "competitive",
     "team_ambiguous": true,
-    "team_unmapped": false
+    "team_unmapped": false,
+    "opponent_id": "tualatin-hills-wp",
+    "opponent_display_name": "Tualatin Hills WP",
+    "opponent_region": "OR",
+    "opponent_ambiguous": false,
+    "opponent_unmapped": false
   },
   {
     "game_id": "124",
@@ -1221,7 +1576,12 @@
     "team_short": "18U Boys",
     "team_type": "competitive",
     "team_ambiguous": true,
-    "team_unmapped": false
+    "team_unmapped": false,
+    "opponent_id": "puget-sound-wp",
+    "opponent_display_name": "Puget Sound WP",
+    "opponent_region": "WA",
+    "opponent_ambiguous": false,
+    "opponent_unmapped": false
   },
   {
     "game_id": "125",
@@ -1238,7 +1598,12 @@
     "team_short": "18U Boys",
     "team_type": "competitive",
     "team_ambiguous": true,
-    "team_unmapped": false
+    "team_unmapped": false,
+    "opponent_id": "rain-city-wp",
+    "opponent_display_name": "Rain City WP",
+    "opponent_region": "WA",
+    "opponent_ambiguous": false,
+    "opponent_unmapped": false
   },
   {
     "game_id": "126",
@@ -1255,7 +1620,12 @@
     "team_short": "18U Boys",
     "team_type": "competitive",
     "team_ambiguous": true,
-    "team_unmapped": false
+    "team_unmapped": false,
+    "opponent_id": "lopow",
+    "opponent_display_name": "LOPOW",
+    "opponent_region": "OR",
+    "opponent_ambiguous": false,
+    "opponent_unmapped": false
   },
   {
     "game_id": "127",
@@ -1272,7 +1642,12 @@
     "team_short": "18U Girls Y",
     "team_type": "competitive",
     "team_ambiguous": false,
-    "team_unmapped": false
+    "team_unmapped": false,
+    "opponent_id": "treasure-valley-wp",
+    "opponent_display_name": "Treasure Valley WP",
+    "opponent_region": "ID",
+    "opponent_ambiguous": false,
+    "opponent_unmapped": false
   },
   {
     "game_id": "128",
@@ -1289,7 +1664,12 @@
     "team_short": "18U Boys",
     "team_type": "competitive",
     "team_ambiguous": false,
-    "team_unmapped": false
+    "team_unmapped": false,
+    "opponent_id": "east-idaho-wp",
+    "opponent_display_name": "East Idaho WP",
+    "opponent_region": "ID",
+    "opponent_ambiguous": false,
+    "opponent_unmapped": false
   },
   {
     "game_id": "130",
@@ -1306,7 +1686,12 @@
     "team_short": "18U Boys",
     "team_type": "competitive",
     "team_ambiguous": false,
-    "team_unmapped": false
+    "team_unmapped": false,
+    "opponent_id": "magic-valley-wp",
+    "opponent_display_name": "Magic Valley WP",
+    "opponent_region": "ID",
+    "opponent_ambiguous": false,
+    "opponent_unmapped": false
   },
   {
     "game_id": "131",
@@ -1323,7 +1708,12 @@
     "team_short": "18U Boys",
     "team_type": "competitive",
     "team_ambiguous": false,
-    "team_unmapped": false
+    "team_unmapped": false,
+    "opponent_id": "boise-club-wp",
+    "opponent_display_name": "Boise Club WP",
+    "opponent_region": "ID",
+    "opponent_ambiguous": true,
+    "opponent_unmapped": false
   },
   {
     "game_id": "132",
@@ -1340,7 +1730,12 @@
     "team_short": "18U Boys",
     "team_type": "competitive",
     "team_ambiguous": false,
-    "team_unmapped": false
+    "team_unmapped": false,
+    "opponent_id": "bend-wp",
+    "opponent_display_name": "Bend WP",
+    "opponent_region": "OR",
+    "opponent_ambiguous": false,
+    "opponent_unmapped": false
   },
   {
     "game_id": "133",
@@ -1357,7 +1752,12 @@
     "team_short": "18U Boys",
     "team_type": "competitive",
     "team_ambiguous": false,
-    "team_unmapped": false
+    "team_unmapped": false,
+    "opponent_id": "bend-wp",
+    "opponent_display_name": "Bend WP",
+    "opponent_region": "OR",
+    "opponent_ambiguous": false,
+    "opponent_unmapped": false
   },
   {
     "game_id": "134",
@@ -1374,7 +1774,12 @@
     "team_short": "18U Boys",
     "team_type": "competitive",
     "team_ambiguous": false,
-    "team_unmapped": false
+    "team_unmapped": false,
+    "opponent_id": "blue-crush-wp",
+    "opponent_display_name": "Blue Crush WP",
+    "opponent_region": "unknown",
+    "opponent_ambiguous": false,
+    "opponent_unmapped": false
   },
   {
     "game_id": "135",
@@ -1391,6 +1796,11 @@
     "team_short": "18U Boys",
     "team_type": "competitive",
     "team_ambiguous": false,
-    "team_unmapped": false
+    "team_unmapped": false,
+    "opponent_id": "eugene-wp",
+    "opponent_display_name": "Eugene WP",
+    "opponent_region": "OR",
+    "opponent_ambiguous": false,
+    "opponent_unmapped": false
   }
 ]

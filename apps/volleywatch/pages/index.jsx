@@ -1199,7 +1199,7 @@ function PastGameCard({ game, expanded, onToggle, venue, tz, opponentInfo, onSha
         aria-expanded={expanded}
       >
         <div className="past-summary-left">
-          <div className="score-hero">{setsCount || game.score || (game.result === "W" ? "Won" : game.result === "L" ? "Lost" : "—")}</div>
+          <div className="score-hero">{setsCount || game.score || (game.result === "W" ? "Won" : game.result === "L" ? "Lost" : game.done ? "Pending" : "—")}</div>
           <div className="score-meta">
             vs{" "}
             <span
