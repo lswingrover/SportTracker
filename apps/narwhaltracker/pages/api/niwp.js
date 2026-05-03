@@ -26,10 +26,89 @@ const CACHE_TTL_MS = 60 * 1000;
 // CDA team name fragments we look for in home_team / away_team
 const CDA_PATTERNS = ["cda", "coeur d'alene", "north idaho", "narwhal", "niwp"];
 
+// Subteam key → human label (matches NIWP_TEAM_FILTERS on the frontend)
+const SUBTEAM_LABELS = { B: "18U Boys", G: "18U Girls", BJV: "JV Boys", GJV: "JV Girls", D: "Dev" };
+
+// Location string patterns → IANA timezone. Order matters (first match wins).
+const VENUE_TZ_MAP = [
+  [/gresham|hillsboro|portland|newberg|eugene|bend|oregon|\bor\b/i, "America/Los_Angeles"],
+  [/cda|coeur|idaho|boise|lewiston|\bid\b/i,                       "America/Los_Angeles"],
+  [/cascade|dare to dream|kroc|spokane|seattle|washington|\bwa\b/i,"America/Los_Angeles"],
+  [/dallas|lewisville|houston|austin|texas|\btx\b/i,               "America/Chicago"],
+  [/denver|colorado|utah/i,                                         "America/Denver"],
+  [/phoenix|arizona/i,                                              "America/Phoenix"],
+  [/florida|georgia|carolina|virginia/i,                            "America/New_York"],
+];
+
 // Module-level cache keyed by team prefix ("B", "G", etc.)
 const cacheMap = new Map();
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
+
+// Parse a NIWP date string as Pacific local time.
+//
+// The NIWP WordPress API stores game_date as a bare datetime in Pacific
+// wall-clock time ("2026-04-17 18:30:00") with NO timezone offset. Passing
+// such a string to new Date() on a UTC server (Vercel) treats it as UTC,
+// shifting displayed times by 7–8 hours.
+//
+// Fix: detect bare strings (no Z / ±hh:mm), normalise to ISO, then try
+// PDT (-07:00). Verify with Intl that the date really falls in PDT; if not
+// (winter → PST), re-parse with -08:00 instead.
+function parseDateAsPT(dateStr) {
+  if (!dateStr) return null;
+  const s = dateStr.trim();
+  // Already has TZ info — trust it.
+  if (/[Zz]$/.test(s) || /[+-]\d{1,2}:?\d{2}$/.test(s)) {
+    const d = new Date(s);
+    return isNaN(d.getTime()) ? null : d;
+  }
+  // Bare date-only (YYYY-MM-DD) — use noon PT to avoid midnight UTC roll-back.
+  if (/^\d{4}-\d{2}-\d{2}$/.test(s)) {
+    const d = new Date(s + "T12:00:00-07:00");
+    return isNaN(d.getTime()) ? null : d;
+  }
+  // Bare datetime — interpret as PT wall clock.
+  const iso = s.replace(" ", "T");
+  const attempt = new Date(iso + "-07:00"); // assume PDT first
+  if (isNaN(attempt.getTime())) return null;
+  // Verify DST: if this date is actually in PST (winter), -07:00 is wrong.
+  const tzLabel = new Intl.DateTimeFormat("en-US", {
+    timeZone: "America/Los_Angeles",
+    timeZoneName: "short",
+  }).formatToParts(attempt).find((p) => p.type === "timeZoneName")?.value || "";
+  return tzLabel.includes("PDT") ? attempt : new Date(iso + "-08:00");
+}
+
+// Derive which NIWP subteam a game belongs to from the CDA team's name.
+// Returns one of: "B" | "G" | "BJV" | "GJV" | "D" | null
+function deriveSubteam(cdaTeamName) {
+  if (!cdaTeamName) return null;
+  const n = cdaTeamName.toLowerCase();
+  const isJV    = /\bjv\b/.test(n);
+  const hasGirl = /girl/.test(n);
+  const hasBoy  = /boy/.test(n);
+  const isDev   = /\bdev\b/.test(n) || /master/.test(n);
+  const isCoEd  = /co.?ed/.test(n);
+  if (isDev || isCoEd)          return "D";
+  if (isJV && hasGirl)          return "GJV";
+  if (isJV)                     return "BJV"; // JV without "girl" = boys JV
+  if (hasGirl)                  return "G";
+  if (hasBoy)                   return "B";
+  // "V" at end of name = Varsity → default to boys
+  if (/ v$/.test(n) || /\bvarsity\b/.test(n)) return "B";
+  return null;
+}
+
+// Infer IANA timezone from a NIWP location string.
+// Defaults to America/Los_Angeles (PT) since nearly all NIWP venues are Pacific.
+function inferVenueTz(location) {
+  if (!location) return "America/Los_Angeles";
+  for (const [pattern, tz] of VENUE_TZ_MAP) {
+    if (pattern.test(location)) return tz;
+  }
+  return "America/Los_Angeles";
+}
 
 function isCDATeam(name) {
   if (!name) return false;
@@ -53,8 +132,8 @@ function playerPrefix(playerName) {
 function groupIntoTournaments(games) {
   const byWeek = new Map();
   for (const g of games) {
-    const d = new Date(g.game_date);
-    if (isNaN(d.getTime())) continue;
+    const d = parseDateAsPT(g.game_date);
+    if (!d) continue;
     // ISO week key: YYYY-Www
     const jan4 = new Date(d.getFullYear(), 0, 4);
     const weekNum = Math.ceil(((d - jan4) / 86400000 + jan4.getDay() + 1) / 7);
@@ -132,14 +211,8 @@ async function fetchFromNIWP(teamPrefix, requestedWeekKey) {
   // Compute adaptive poll schedule from ALL CDA games (not just current week).
   // Needs timeISO — same normalization used in normalized game objects below.
   const pollScheduleInput = cdaGames.map((g) => {
-    let timeISO = null;
-    if (g.game_date) {
-      try {
-        const d = new Date(g.game_date);
-        if (!isNaN(d.getTime())) timeISO = d.toISOString();
-      } catch {}
-    }
-    return { timeISO };
+    const d = parseDateAsPT(g.game_date);
+    return { timeISO: d ? d.toISOString() : null };
   });
   const pollSchedule = computePollSchedule(pollScheduleInput);
 
@@ -168,10 +241,14 @@ async function fetchFromNIWP(teamPrefix, requestedWeekKey) {
   // Normalize each game into the standard shape
   const now = new Date();
   const normalizedGames = weekGames.map((g) => {
-    const home = g.home_team;
-    const away = g.away_team;
+    const home = g.home_team || "";
+    const away = g.away_team || "";
     const isHome = isCDATeam(home);
-    const opponent = isHome ? away : home;
+    // Raw opponent name — the side that is NOT the CDA/NIWP team.
+    const rawOpponent = (isHome ? away : home).trim();
+    // Derive which NIWP subteam this game belongs to (B/G/BJV/GJV/D).
+    const cdaTeamName = isHome ? home : away;
+    const subteam = deriveSubteam(cdaTeamName);
 
     const usScore   = isHome ? g.home_score : g.away_score;
     const themScore = isHome ? g.away_score : g.home_score;
@@ -184,13 +261,9 @@ async function fetchFromNIWP(teamPrefix, requestedWeekKey) {
     const us   = hasScores ? Number(usScore)   : null;
     const them = hasScores ? Number(themScore) : null;
 
-    let gameTime = null;
-    if (g.game_date) {
-      try {
-        const d = new Date(g.game_date);
-        if (!isNaN(d.getTime())) gameTime = d.toISOString();
-      } catch {}
-    }
+    // Parse game_date as Pacific local time (see parseDateAsPT).
+    const d = parseDateAsPT(g.game_date);
+    const gameTime = d ? d.toISOString() : null;
 
     const done = hasScores || (gameTime ? new Date(gameTime) < now : false);
 
@@ -202,7 +275,8 @@ async function fetchFromNIWP(teamPrefix, requestedWeekKey) {
 
     return {
       id:       String(g.game_id),
-      opponent: opponent || "Unknown",
+      opponent: rawOpponent || "Unknown",
+      subteam,
       timeISO:  gameTime,
       court:    g.location || null,
       done,
@@ -239,6 +313,9 @@ async function fetchFromNIWP(teamPrefix, requestedWeekKey) {
     ? `${location} · ${shortDate(firstDate)}`
     : `NIWP Tournament · ${shortDate(firstDate)}`;
 
+  // Infer the venue timezone from the dominant location string.
+  const venueTz = inferVenueTz(location);
+
   return {
     teamName:     "North Idaho Narwhals",
     teamId:       "narwhals",
@@ -268,6 +345,7 @@ async function fetchFromNIWP(teamPrefix, requestedWeekKey) {
     projectedDone:        null,
     projectedDoneSource:  null,
     nextAssignmentsCount: 0,
+    venueTz,
     scrapedAt:            new Date().toISOString(),
     remoteTimestamp:      new Date().toISOString(),
     cached:               false,

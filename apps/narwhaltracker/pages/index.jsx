@@ -10,6 +10,19 @@ const THEMES = [
 // Default fallback — used before first data load and for non-NIWP sources.
 // Once the NIWP API responds, _pollSchedule overrides this dynamically.
 const DEFAULT_REFRESH_MS = 2 * 60 * 1000;
+
+// NIWP schedule team filter options (mirrors LB_TEAM_FILTERS in the Leaderboard).
+const NIWP_TEAM_FILTERS = [
+  { key: "all",  label: "All teams" },
+  { key: "B",    label: "18U Boys" },
+  { key: "G",    label: "18U Girls" },
+  { key: "BJV",  label: "JV Boys" },
+  { key: "GJV",  label: "JV Girls" },
+  { key: "D",    label: "Dev" },
+];
+
+// Subteam key → badge label
+const SUBTEAM_LABELS = { B: "18U Boys", G: "18U Girls", BJV: "JV Boys", GJV: "JV Girls", D: "Dev" };
 const CONFETTI_SRC = "https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js";
 
 function pad(n) {
@@ -962,6 +975,9 @@ function UpcomingGameCard({ game, expanded, onToggle, venue, tz, teamWatchNowLin
             >
               {game.opponent}
             </span>
+            {game.subteam && SUBTEAM_LABELS[game.subteam] && (
+              <span className="subteam-badge">{SUBTEAM_LABELS[game.subteam]}</span>
+            )}
           </div>
           <div className="matchup-meta">{localized}</div>
           {isLate && <div className="late-badge">⏱ Running late</div>}
@@ -1128,6 +1144,9 @@ function PastGameCard({ game, expanded, onToggle, venue, tz, opponentInfo, onSha
             >
               {game.opponent}
             </span>
+            {game.subteam && SUBTEAM_LABELS[game.subteam] && (
+              <span className="subteam-badge">{SUBTEAM_LABELS[game.subteam]}</span>
+            )}
           </div>
           <div className="score-meta">
             Court {game.court || "?"}
@@ -2212,6 +2231,13 @@ export default function Home() {
   const [niwpWeeks, setNiwpWeeks] = useState(null);
   const [niwpWeekKey, setNiwpWeekKey] = useState(null);
 
+  // Schedule team filter: "all" | "B" | "G" | "BJV" | "GJV" | "D"
+  const [scheduleTeamFilter, setScheduleTeamFilter] = useState("all");
+
+  // Timezone override: "venue" = show times in the venue's timezone (default),
+  //                   "local" = show in user's device timezone.
+  const [tzOverride, setTzOverride] = usePersistentState("tzOverride", "venue");
+
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -2627,9 +2653,21 @@ export default function Home() {
   const pollIntervalMs = data?._pollSchedule?.intervalMs ?? DEFAULT_REFRESH_MS;
   useInterval(() => load(), pollIntervalMs);
 
+  // Timezone: the NIWP API returns venueTz (inferred from location). Fall back
+  // to the static tournament config's tz if that's not present.
+  const venueTz = data?.venueTz || tournament.venue?.tz || "America/Los_Angeles";
+  // activeTz: undefined means "device local time" (no timeZone in Intl options).
+  const activeTz = tzOverride === "local" ? undefined : venueTz;
+  // Short label to show next to times, e.g. "PT". Omit in local mode.
+  const activeTzLabel = tzOverride === "local" ? null : tzShortLabel(venueTz);
+
   const games = data?.games || [];
-  const pastGames = games.filter((g) => g.done);
-  const upcomingGames = games.filter((g) => !g.done);
+  // Apply schedule team filter (only meaningful in NIWP mode where subteam is set).
+  const visibleGames = scheduleTeamFilter === "all"
+    ? games
+    : games.filter((g) => g.subteam === scheduleTeamFilter);
+  const pastGames = visibleGames.filter((g) => g.done);
+  const upcomingGames = visibleGames.filter((g) => !g.done);
   const standings = data?.standings || [];
   const standingsById = useMemo(() => {
     const m = new Map();
@@ -2708,7 +2746,7 @@ export default function Home() {
             tournaments={TOURNAMENTS}
             dataByTournament={historyData}
             loading={historyLoading}
-            tz={tournament.venue?.tz}
+            tz={activeTz}
             onBack={() => setOpponentHistory(null)}
           />
         ) : (
@@ -2897,7 +2935,7 @@ export default function Home() {
         <StatsAccordion
           mode={statsAccordion}
           games={data?.games || []}
-          tz={tournament.venue?.tz}
+          tz={activeTz}
           record={record}
           onClose={() => setStatsAccordion(null)}
         />
@@ -2922,7 +2960,7 @@ export default function Home() {
               minutesUntil={minutesUntil}
               projectedDone={data?.projectedDone}
               eventOver={eventOver}
-              tz={tournament.venue?.tz}
+              tz={activeTz}
             />
           );
         })()}
@@ -2957,6 +2995,24 @@ export default function Home() {
 
         {tab === "schedule" && (
           <>
+            {/* Team filter dropdown — shown in NIWP mode (niwpWeeks loaded) */}
+            {niwpWeeks && (
+              <div className="schedule-filter-row">
+                <label htmlFor="schedule-team-select" className="schedule-filter-label">
+                  Team
+                </label>
+                <select
+                  id="schedule-team-select"
+                  className="team-select"
+                  value={scheduleTeamFilter}
+                  onChange={(e) => setScheduleTeamFilter(e.target.value)}
+                >
+                  {NIWP_TEAM_FILTERS.map(({ key, label }) => (
+                    <option key={key} value={key}>{label}</option>
+                  ))}
+                </select>
+              </div>
+            )}
             {upcomingGames.length > 0 && (
               <>
                 <div className="section-title">Upcoming ({upcomingGames.length})</div>
@@ -2968,7 +3024,7 @@ export default function Home() {
                       expanded={expandedIds.has(g.id)}
                       onToggle={() => toggleExpanded(g.id)}
                       venue={tournament.venue}
-                      tz={tournament.venue?.tz}
+                      tz={activeTz}
                       teamWatchNowLink={data?.teamWatchNowLink}
                       opponentInfo={standingsById.get(g.opponent)}
                       onAddCal={addCalSingle}
@@ -3005,7 +3061,7 @@ export default function Home() {
                       expanded={expandedIds.has(g.id)}
                       onToggle={() => toggleExpanded(g.id)}
                       venue={tournament.venue}
-                      tz={tournament.venue?.tz}
+                      tz={activeTz}
                       teamName={teamName}
                       opponentInfo={standingsById.get(g.opponent)}
                       onShare={shareGame}
@@ -3099,7 +3155,7 @@ export default function Home() {
         )}
 
         <footer className="footer-bar">
-          <div>
+          <div style={{ display: "flex", alignItems: "center", gap: 6, flexWrap: "wrap" }}>
             {data?.scrapedAt
               ? `Updated ${new Date(data.scrapedAt).toLocaleTimeString()}`
               : "Loading…"}
@@ -3114,6 +3170,16 @@ export default function Home() {
                 {error}
               </span>
             )}
+            {/* Timezone toggle — shows venue TZ abbreviation when in venue mode */}
+            <button
+              className="tz-pill press-feedback"
+              onClick={() => setTzOverride((v) => v === "venue" ? "local" : "venue")}
+              title={tzOverride === "venue"
+                ? `Times in venue timezone (${activeTzLabel || venueTz}) — tap to switch to device time`
+                : "Times in your device timezone — tap to switch to venue time"}
+            >
+              {tzOverride === "venue" ? `${activeTzLabel || "PT"} ⇄` : "Local ⇄"}
+            </button>
           </div>
           {data?.projectedDone && upcomingGames.length > 0 && (
             <button
@@ -3122,8 +3188,8 @@ export default function Home() {
               onClick={showProjectedDoneToast}
               style={{ background: "transparent", border: 0, cursor: "pointer", color: "inherit", font: "inherit", padding: 0 }}
             >
-              Done ~{formatTimeOfDayInTz(data.projectedDone, tournament.venue?.tz)}
-              {tzShortLabel(tournament.venue?.tz) ? ` ${tzShortLabel(tournament.venue?.tz)}` : ""}
+              Done ~{formatTimeOfDayInTz(data.projectedDone, activeTz)}
+              {activeTzLabel ? ` ${activeTzLabel}` : ""}
               {data?.projectedDoneSource === "scheduled" ? " (scheduled)" : " (est.)"}
             </button>
           )}

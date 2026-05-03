@@ -26,6 +26,46 @@ const CDA_PATTERNS = ["cda", "coeur d'alene", "north idaho", "narwhal", "niwp"];
 let _cache = null;
 let _cachedAt = 0;
 
+// Parse a NIWP game_date string (Pacific local time, no TZ offset) correctly.
+// Mirrors parseDateAsPT in niwp.js — kept in sync manually.
+function parseDateAsPT(dateStr) {
+  if (!dateStr) return null;
+  const s = dateStr.trim();
+  if (/[Zz]$/.test(s) || /[+-]\d{1,2}:?\d{2}$/.test(s)) {
+    const d = new Date(s);
+    return isNaN(d.getTime()) ? null : d;
+  }
+  if (/^\d{4}-\d{2}-\d{2}$/.test(s)) {
+    const d = new Date(s + "T12:00:00-07:00");
+    return isNaN(d.getTime()) ? null : d;
+  }
+  const iso = s.replace(" ", "T");
+  const attempt = new Date(iso + "-07:00");
+  if (isNaN(attempt.getTime())) return null;
+  const tzLabel = new Intl.DateTimeFormat("en-US", {
+    timeZone: "America/Los_Angeles",
+    timeZoneName: "short",
+  }).formatToParts(attempt).find((p) => p.type === "timeZoneName")?.value || "";
+  return tzLabel.includes("PDT") ? attempt : new Date(iso + "-08:00");
+}
+
+// Convert an all-caps or abbreviated location string to a readable name.
+// Used for chip labels.
+function nicifyLocation(loc) {
+  if (!loc) return null;
+  // Specific mappings for known NIWP location strings
+  const MAP = {
+    "GRESHAM":            "Gresham",
+    "KROC W/ HILLSBORO":  "Hillsboro",
+    "KROC w/ HILLSBORO":  "Hillsboro",
+  };
+  const trimmed = loc.trim();
+  if (MAP[trimmed]) return MAP[trimmed];
+  if (MAP[trimmed.toUpperCase()]) return MAP[trimmed.toUpperCase()];
+  // Title-case everything else (handles "CDA Classic", "Cascade Classic", etc.)
+  return trimmed.replace(/\b\w/g, (c) => c.toUpperCase());
+}
+
 function isCDATeam(name) {
   if (!name) return false;
   const lower = name.toLowerCase();
@@ -34,7 +74,7 @@ function isCDATeam(name) {
 
 function isoWeekKey(date) {
   // Returns "YYYY-Www" for the ISO week containing `date`.
-  const d = new Date(date);
+  const d = date; // already a Date object
   const jan4 = new Date(d.getFullYear(), 0, 4);
   const weekNum = Math.ceil(((d - jan4) / 86400000 + jan4.getDay() + 1) / 7);
   return `${d.getFullYear()}-W${String(weekNum).padStart(2, "0")}`;
@@ -76,8 +116,8 @@ async function buildWeekList() {
   const byWeek = new Map();
   for (const g of cdaGames) {
     if (!g.game_date) continue;
-    const d = new Date(g.game_date);
-    if (isNaN(d.getTime())) continue;
+    const d = parseDateAsPT(g.game_date);
+    if (!d) continue;
     const key = isoWeekKey(d);
     if (!byWeek.has(key)) byWeek.set(key, []);
     byWeek.get(key).push(g);
@@ -104,10 +144,15 @@ async function buildWeekList() {
         ? startShort
         : `${startShort}–${endShort}`;
 
-    const chipLabel = startShort || weekKey;
-    const label = locName ? `${locName} · ${dateRange}` : dateRange || weekKey;
+    // Chip label: "<Location> · <date>" so the chip carries the tournament name.
+    // Use the nicified location if available, otherwise fall back to just the date.
+    const niceLocName = locName ? nicifyLocation(locName) : null;
+    const chipLabel = niceLocName
+      ? `${niceLocName} · ${startShort || weekKey}`
+      : startShort || weekKey;
+    const label = niceLocName ? `${niceLocName} · ${dateRange}` : dateRange || weekKey;
 
-    return { weekKey, chipLabel, label, startDate, endDate, location: locName };
+    return { weekKey, chipLabel, label, startDate, endDate, location: locName, niceName: niceLocName };
   });
 }
 
