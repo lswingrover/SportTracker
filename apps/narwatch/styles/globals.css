@@ -2060,6 +2060,24 @@ button.stat:hover { border-color: var(--accent); }
 }
 .opp-tap:hover { border-bottom-color: var(--muted); }
 
+/* Visual cue that the opponent name opens the H2H sheet — subtle underline
+   plus a muted chevron. Pair with .opp-tap for the tap target sizing. */
+.h2h-link {
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  text-decoration-thickness: 1px;
+  text-decoration-color: var(--muted);
+  cursor: pointer;
+}
+.h2h-link::after {
+  content: " ›";
+  color: var(--accent);
+  font-weight: 600;
+  margin-left: 2px;
+  text-decoration: none;
+  display: inline-block;
+}
+
 .modal-backdrop {
   position: fixed;
   inset: 0;
