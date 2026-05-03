@@ -599,6 +599,27 @@ function flattenPlayGroups(raw) {
   });
 }
 
+// Work endpoint returns { Play, Match (singular), PlayType } per entry —
+// a different shape from schedule/current's { Play, Matches: [] }.
+// Flatten each entry to a plain object that normalizeWork can handle.
+function flattenWorkGroups(raw) {
+  if (!Array.isArray(raw)) return [];
+  if (!raw.length || !raw[0]?.Match || raw[0]?.Matches) return raw;
+  return raw.map((entry) => {
+    const m = entry.Match || {};
+    const courtObj = m.Court && typeof m.Court === "object" ? m.Court : null;
+    return {
+      MatchId: m.MatchId ?? null,
+      ScheduledStartDateTime: m.ScheduledStartDateTime ?? null,
+      ScheduledEndDateTime: m.ScheduledEndDateTime ?? null,
+      Court: courtObj ? courtObj.Name : (m.Court || null),
+      CourtInfo: courtObj,
+      WorkRole: "Work duty",
+      PlayName: entry?.Play?.FullName || null,
+    };
+  });
+}
+
 function buildResponse({ eventMeta, team, current, future, work, standings, nextAssignments, brackets, pools, remoteTimestamp, ctx }) {
   const playedRaw = flattenPlayGroups(current);
   const upcomingRaw = flattenPlayGroups(future);
@@ -644,7 +665,8 @@ function buildResponse({ eventMeta, team, current, future, work, standings, next
   const us = standingsRows.find((s) => s.isUs);
   const poolPosition = us ? us.rankText || (us.rank ? String(us.rank) : null) : null;
 
-  const workAssignments = (Array.isArray(work) ? work : []).map((w, i) => normalizeWork(w, i));
+  const workRaw = flattenWorkGroups(Array.isArray(work) ? work : []);
+  const workAssignments = workRaw.map((w, i) => normalizeWork(w, i));
 
   const nextGameObj = games.find((g) => !g.done && g.timeISO);
   const nextWorkObj = workAssignments
