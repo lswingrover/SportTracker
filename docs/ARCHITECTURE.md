@@ -26,7 +26,7 @@ sport-tracker/
 │   │   ├── next.config.js
 │   │   └── .env.example
 │   │
-│   └── narwhaltracker/           # Multi-source water polo tracker (North Idaho Narwhals)
+│   └── narwatch/           # Multi-source water polo tracker (North Idaho Narwhals)
 │       ├── pages/
 │       │   ├── index.jsx
 │       │   └── api/
@@ -152,7 +152,7 @@ All six sources normalize to an **identical JSON payload shape**. The frontend i
 | App directory | Vercel project | Project ID | rootDirectory |
 |---------------|---------------|------------|---------------|
 | `apps/volleywatch` | `volleywatch` | `prj_MvCekYapFB1Dog5r8qCyGPwAGLun` | `apps/volleywatch` |
-| `apps/narwhaltracker` | `narwatch` | `prj_RTZprqmEXqD9DhmyrPOgR2e1P1ym` | `apps/narwhaltracker` |
+| `apps/narwatch` | `narwatch` | `prj_RTZprqmEXqD9DhmyrPOgR2e1P1ym` | `apps/narwatch` |
 | *(repo root)* | `sport-tracker` | `prj_rdepbE14qRVfGvZoxaogBVt4RUdR` | *(root)* |
 
 **Critical:** `rootDirectory` is evaluated relative to the repo root. Never run `vercel --prod` from inside an app subdirectory — the path doubles and the build fails. Always deploy from the repo root, or rely on git-triggered builds.
@@ -170,7 +170,7 @@ git push origin main
         |       deploys to: volleywatch-app.vercel.app
         |
         +-> Vercel: narwatch project
-                rootDirectory: apps/narwhaltracker
+                rootDirectory: apps/narwatch
                 runs: npm install && next build
                 deploys to: narwhaltracker.vercel.app
 ```
@@ -194,7 +194,7 @@ Both builds are independent — a failure in one does not block the other. Both 
 | `VAPID_SUBJECT` | `mailto:` URI for VAPID |
 | `BLOB_READ_WRITE_TOKEN` | Vercel Blob token (auto-injected when Blob store linked) |
 
-### NarWatch (`apps/narwhaltracker`)
+### NarWatch (`apps/narwatch`)
 
 | Variable | Description |
 |----------|-------------|

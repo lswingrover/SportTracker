@@ -235,7 +235,7 @@ Pre-computed aggregate data committed to git. The `/api/historical` endpoint rea
 ### Refreshing the Data
 
 ```bash
-# From apps/narwhaltracker/
+# From apps/narwatch/
 node scripts/harvest-niwp.js        # Fetch all games + stats from NIWP API
 node scripts/normalize-teams.js     # Apply team normalization map
 node scripts/compute-aggregates.js  # Rebuild all aggregates

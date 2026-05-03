@@ -12,7 +12,7 @@
 
 | App | Vercel Project | URL | Git-connected? |
 |-----|---------------|-----|---------------|
-| narwhaltracker | `narwatch` (`prj_RTZprqmEXqD9DhmyrPOgR2e1P1ym`) | narwhaltracker.vercel.app | **Yes** ✓ (wired 2026-05-02) |
+| narwatch | `narwatch` (`prj_RTZprqmEXqD9DhmyrPOgR2e1P1ym`) | narwatch.vercel.app | **Yes** ✓ (wired 2026-05-02) |
 | 208tracker | `volleywatch-app` (git-connected, rootDirectory fixed) | check Vercel dashboard | **Yes** ✓ (rootDir fixed 2026-05-02) |
 | monorepo root | `sport-tracker` (`prj_rdepbE14qRVfGvZoxaogBVt4RUdR`) | sport-tracker-rust.vercel.app | unknown |
 
@@ -20,7 +20,7 @@
 
 | App | Active source | Toggle |
 |-----|--------------|--------|
-| narwhaltracker | NIWP WordPress API | `NIWP_API_ENABLED=true` in narwatch Vercel project |
+| narwatch | NIWP WordPress API | `NIWP_API_ENABLED=true` in narwatch Vercel project |
 | 208tracker | AES scraper | n/a |
 
 ### NarWatch data source priority chain (as of commit e8f1614)
@@ -49,13 +49,13 @@ parsing still lives in each adapter — niwp.js, sheets.js, tournament.js).
 
 ## Deployment Protocol
 
-**The correct way to deploy narwhaltracker** (`git push origin main` now triggers it automatically):
+**The correct way to deploy narwatch** (`git push origin main` now triggers it automatically):
 
 ```bash
 cd ~/Developer/sport-tracker
 git add -A && git commit -m "your message"
 git push origin main
-# Vercel auto-deploys narwatch from apps/narwhaltracker
+# Vercel auto-deploys narwatch from apps/narwatch
 # Vercel auto-deploys volleywatch-app from apps/volleywatch
 ```
 
@@ -66,7 +66,7 @@ cd ~/Developer/sport-tracker
 
 # 1. Swap root project.json to narwatch
 cp .vercel/project.json .vercel/project.json.bak
-cp apps/narwhaltracker/.vercel/project.json .vercel/project.json
+cp apps/narwatch/.vercel/project.json .vercel/project.json
 
 # 2. Deploy
 vercel --prod
@@ -75,8 +75,8 @@ vercel --prod
 mv .vercel/project.json.bak .vercel/project.json
 ```
 
-**Never** run `vercel --prod` from inside `apps/narwhaltracker/` — Vercel's
-rootDirectory setting (`apps/narwhaltracker`) is relative to the repo root,
+**Never** run `vercel --prod` from inside `apps/narwatch/` — Vercel's
+rootDirectory setting (`apps/narwatch`) is relative to the repo root,
 so running from inside that dir doubles the path and errors out.
 
 **Git commits** cannot be written from the sandbox (permission error on
@@ -160,7 +160,7 @@ self.addEventListener("fetch", (event) => {
 ```
 
 `skipWaiting` + `clients.claim` alone are NOT enough on iOS — the fetch
-interception is required. Applied to narwhaltracker (b91eb26 predecessor)
+interception is required. Applied to narwatch (b91eb26 predecessor)
 and 208tracker (67c9aca).
 
 ### 6-8 Sports API (2026-05-02, session 2)
@@ -206,7 +206,7 @@ and 208tracker (67c9aca).
   → click the result → extract `IDTournament=` param from URL.
 - **Toggle**: `SPORTSENGINE_TOURNAMENT_ID=<hash>` in narwatch Vercel project.
 - **Team filter**: `SPORTSENGINE_TEAM_NAME=Narwhal` (default).
-- **Cheerio dep**: added to `apps/narwhaltracker` package.json in commit e8f1614.
+- **Cheerio dep**: added to `apps/narwatch` package.json in commit e8f1614.
 
 ### Orphan repo cleanup (2026-05-02, session 2)
 

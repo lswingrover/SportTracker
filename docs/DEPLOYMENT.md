@@ -9,11 +9,11 @@ There are two Vercel projects, one per app. Both are connected to the same GitHu
 | App | Vercel project | rootDirectory | URL |
 |-----|---------------|---------------|-----|
 | VolleyWatch | `volleywatch` | `apps/volleywatch` | volleywatch-app.vercel.app |
-| NarWatch | `narwatch` | `apps/narwhaltracker` | narwhaltracker.vercel.app |
+| NarWatch | `narwatch` | `apps/narwatch` | narwhaltracker.vercel.app |
 
 ### Critical: rootDirectory
 
-Vercel evaluates `rootDirectory` relative to the repo root. **Never run `vercel --prod` from inside `apps/narwhaltracker/` or `apps/volleywatch/`** — the path doubles and the build fails. Always deploy from the repo root, or rely on git-triggered builds.
+Vercel evaluates `rootDirectory` relative to the repo root. **Never run `vercel --prod` from inside `apps/narwatch/` or `apps/volleywatch/`** — the path doubles and the build fails. Always deploy from the repo root, or rely on git-triggered builds.
 
 ---
 
@@ -40,7 +40,7 @@ cd ~/Developer/sport-tracker
 
 # Deploy narwatch
 cp .vercel/project.json .vercel/project.json.bak
-cp apps/narwhaltracker/.vercel/project.json .vercel/project.json
+cp apps/narwatch/.vercel/project.json .vercel/project.json
 vercel --prod
 mv .vercel/project.json.bak .vercel/project.json
 
@@ -163,7 +163,7 @@ The workspace package isn't being resolved. Check that `next.config.js` has `tra
 
 ### Vercel rootDirectory error ("Could not find Next.js config")
 
-You're likely running `vercel --prod` from inside the wrong directory, or the `rootDirectory` is set incorrectly in the Vercel project settings. The value should be `apps/volleywatch` or `apps/narwhaltracker` — relative to the repo root, without a leading slash.
+You're likely running `vercel --prod` from inside the wrong directory, or the `rootDirectory` is set incorrectly in the Vercel project settings. The value should be `apps/volleywatch` or `apps/narwatch` — relative to the repo root, without a leading slash.
 
 ### AES data not updating
 

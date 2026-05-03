@@ -1,4 +1,4 @@
-// Shared game normalization utilities used by both narwhaltracker and
+// Shared game normalization utilities used by both narwatch and
 // volleywatch. Extract-don't-duplicate: if you find yourself copying one
 // of these functions into a new data source adapter, import from here instead.
 
