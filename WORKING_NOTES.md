@@ -143,6 +143,22 @@ chips rendered fine, but the content area stayed frozen on the placeholder.
 Pattern: whenever a `load()` guard changes, grep the JSX for the same
 condition and update it too.
 
+### SW auto-reload + no-cache HTML (2026-05-02, commit 34a3abf)
+
+Two-layer permanent fix so stale HTML is never possible again:
+
+1. **`next.config.js` headers** — `Cache-Control: no-cache, no-store, must-revalidate`
+   on `/` for both apps. Vercel CDN and browsers never cache the HTML shell.
+   Static assets (JS/CSS chunks) keep normal long-lived caching via content hashes.
+
+2. **SW auto-reload** — `activate` event posts `{ type: "SW_UPDATED" }` to all open
+   clients after `clients.claim()`. `index.jsx` listens and calls
+   `window.location.reload()` immediately. Bridges the gap between "new SW deployed"
+   and "user sees new content" for existing open tabs / PWA sessions.
+
+Pattern for any new app: add both. The headers stop future caching; the SW message
+handles the transition for users who already have a stale version open.
+
 ### iOS PWA service worker (2026-05-02)
 
 Both apps need the network-first fetch handler in their SW. Without it, iOS
