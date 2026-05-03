@@ -1062,7 +1062,9 @@ function setsCountForRow(sets) {
 }
 
 function UpcomingGameCard({ game, expanded, onToggle, venue, tz, teamWatchNowLink, opponentInfo, onAddCal, onOpenOpponent, onCourtTap }) {
-  const watchUrl = game.videoLink || (game.live ? teamWatchNowLink : null);
+  // Watch precedence: AES-provided videoLink > Hudl broadcast for this opponent
+  // > generic teamWatchNowLink while LIVE.
+  const watchUrl = game.videoLink || game.watchUrl || (game.live ? teamWatchNowLink : null);
   const tzLabel = tzShortLabel(tz);
   const localized = game.timeISO
     ? `${formatInTz(game.timeISO, tz)}${tzLabel ? ` ${tzLabel}` : ""}`
@@ -1245,6 +1247,19 @@ function PastGameCard({ game, expanded, onToggle, venue, tz, opponentInfo, onSha
             >
               Lost
             </button>
+          )}
+          {game.watchUrl && (
+            <a
+              className="watch-chip"
+              href={game.watchUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              onClick={(e) => e.stopPropagation()}
+              aria-label={`Watch ${game.opponent} on Hudl Fan`}
+              title="Watch on Hudl Fan"
+            >
+              ▶ Watch
+            </a>
           )}
           <div className="card-chevron">▸</div>
         </div>
@@ -2153,6 +2168,9 @@ export default function Home() {
   const [tourStep, setTourStep] = useState(0);
   const [tourSeen, setTourSeen] = usePersistentState("tourSeen", false);
   const [tourNudgeDismissed, setTourNudgeDismissed] = usePersistentState("tourNudgeDismissed", false);
+  // Hudl live banner: dismissed per tournament-id so it returns when the
+  // user switches chips or comes back tomorrow. Stored as { [tournamentId]: ms }.
+  const [hudlBannerDismissed, setHudlBannerDismissed] = usePersistentState("hudlBannerDismissed", {});
   const [opponentHistory, setOpponentHistory] = useState(null); // opponent name | null
   const [historyData, setHistoryData] = useState({}); // tournamentId -> payload
   const [historyLoading, setHistoryLoading] = useState(false);
@@ -2559,6 +2577,32 @@ export default function Home() {
             <span>New here? Take a quick demo tour →</span>
             <button onClick={startTour}>Start</button>
             <button className="dismiss" onClick={() => setTourNudgeDismissed(true)} aria-label="Dismiss nudge">
+              ×
+            </button>
+          </div>
+        )}
+
+        {data?.teamWatchNowLink && !hudlBannerDismissed[tournamentId] && (
+          <div className="hudl-live-banner" role="status">
+            <a
+              className="hudl-live-link"
+              href={data.teamWatchNowLink}
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label="Watch live on Hudl"
+            >
+              <span className="hudl-live-dot" aria-hidden="true">●</span>
+              <span className="hudl-live-text">LIVE on Hudl</span>
+              <span className="hudl-live-arrow" aria-hidden="true">→</span>
+            </a>
+            <button
+              type="button"
+              className="hudl-live-dismiss"
+              aria-label="Dismiss Hudl live banner"
+              onClick={() =>
+                setHudlBannerDismissed({ ...hudlBannerDismissed, [tournamentId]: Date.now() })
+              }
+            >
               ×
             </button>
           </div>
