@@ -18,7 +18,7 @@ const TOURNAMENTS = [
     venue: {
       name: "Billings Metra Park",
       address: "Billings, MT",
-      tz: "America/Denver",
+      tz: "America/Los_Angeles",
     },
     date: "May 2, 2026",
   },

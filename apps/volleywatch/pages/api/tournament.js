@@ -214,8 +214,23 @@ function normalizeMatch(m, { done, idx = 0, kind = "match", teamId = null }) {
       const myWon = isFirst ? m.FirstTeamWon : m.SecondTeamWon;
       // Read W/L from explicit flags regardless of HasScores — pool play
       // matches have HasScores:false but FirstTeamWon/SecondTeamWon are set.
-      if (myWon === true || myWon === false) won = myWon;
-      else if (m.HasScores) won = false; // HasScores but no explicit flag → loss
+      if (myWon === true || myWon === false) {
+        won = myWon;
+      } else {
+        // Explicit W/L flag absent — common for bracket/playoff games served
+        // by the schedule endpoint. Derive from per-set scores using isFirst
+        // to determine which side is ours (First vs Second in bracket format).
+        const rawSets = setsFromMatch(m);
+        let usWins = 0, themWins = 0;
+        for (const s of rawSets) {
+          const fs = pickFirst(s, ["FirstTeamScore", "Team1Score"]);
+          const ss = pickFirst(s, ["SecondTeamScore", "Team2Score"]);
+          if (typeof fs === "number" && typeof ss === "number" && fs !== ss) {
+            if (isFirst ? fs > ss : ss > fs) usWins++; else themWins++;
+          }
+        }
+        if (usWins > 0 || themWins > 0) won = usWins > themWins;
+      }
     }
     if (won === null) won = teamWonMatch(m);
     if (won === true) result = "W";
