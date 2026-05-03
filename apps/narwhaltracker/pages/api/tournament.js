@@ -83,7 +83,15 @@ export default async function handler(req, res) {
     return niwpHandler(req, res);
   }
 
-  // ── Live Sheets branch ──────────────────────────────────────────────────
+  // -- TorMatch live branch -----------------------------------------------
+  // When TORMATCH_TOURNAMENT_ID is set, delegate to tormatch.js.
+  // Pass ?id= or use TORMATCH_TOURNAMENT_ID env var to select tournament.
+  if (process.env.TORMATCH_TOURNAMENT_ID) {
+    const { default: tormatchHandler } = await import('./tormatch.js');
+    return tormatchHandler(req, res);
+  }
+
+  // -- Live Sheets branch ──────────────────────────────────────────────────
   // When GOOGLE_SHEETS_ID is set, hand off entirely to sheets.js.
   // The returned JSON shape is identical, so the frontend is unaffected.
   if (process.env.GOOGLE_SHEETS_ID) {
