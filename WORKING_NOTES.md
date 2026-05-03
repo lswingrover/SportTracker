@@ -6,7 +6,7 @@
 
 ---
 
-## Current State (2026-05-02, updated 19:37)
+## Current State (2026-05-02, updated session 2)
 
 ### What's deployed and where
 
@@ -22,6 +22,21 @@
 |-----|--------------|--------|
 | narwhaltracker | NIWP WordPress API | `NIWP_API_ENABLED=true` in narwatch Vercel project |
 | 208tracker | AES scraper | n/a |
+
+### NarWatch data source priority chain (as of commit e8f1614)
+
+```
+1. NIWP WordPress API     — NIWP_API_ENABLED=true       (active default)
+2. 6-8 Sports             — SIXEIGHT_ENABLED=true        (JOs only)
+3. TorMatch               — TORMATCH_TOURNAMENT_ID=<id>  (platform tournaments)
+4. SportsEngine Tourney   — SPORTSENGINE_TOURNAMENT_ID=<hash>
+5. Google Sheets          — GOOGLE_SHEETS_ID=<id>        (manual fallback)
+6. Static                 — tournamentData.js             (last resort)
+```
+
+Each branch is mutually exclusive (first match wins). To switch sources for
+a tournament, set the appropriate env var in the narwatch Vercel project and
+redeploy.
 
 ### Shared package (`packages/core`)
 
@@ -109,6 +124,109 @@ real terminal. The sandbox `git add` works fine; only `git commit` fails.
 - **Git lock files**: sandbox Claude Code sessions can leave `.git/*.lock`
   files that block commits. Fix: `find .git -name '*.lock' -exec rm {} \;`
 
+### Render-guard symmetry (2026-05-02)
+
+Any conditional logic in `load()` that bypasses the static bail also needs
+a matching guard in the JSX render. These two sites must always stay in sync:
+
+```js
+// load() — don't bail when in NIWP mode
+if (tournament.static && !niwpWeeks) { ... return; }
+
+// JSX render — same condition
+{tournament.static && !niwpWeeks ? <StaticTournamentCard /> : <live content>}
+```
+
+The original bug: we fixed `load()` but left the render unconditionally
+checking `tournament.static`. Data loaded fine (network tab confirmed),
+chips rendered fine, but the content area stayed frozen on the placeholder.
+Pattern: whenever a `load()` guard changes, grep the JSX for the same
+condition and update it too.
+
+### iOS PWA service worker (2026-05-02)
+
+Both apps need the network-first fetch handler in their SW. Without it, iOS
+caches the app shell at the OS level and never picks up new bundles after
+Vercel deploys. Standard template for any new app:
+
+```js
+self.addEventListener("fetch", (event) => {
+  if (event.request.mode === "navigate") {
+    event.respondWith(
+      fetch(event.request).catch(() => caches.match(event.request))
+    );
+  }
+});
+```
+
+`skipWaiting` + `clients.claim` alone are NOT enough on iOS — the fetch
+interception is required. Applied to narwhaltracker (b91eb26 predecessor)
+and 208tracker (67c9aca).
+
+### 6-8 Sports API (2026-05-02, session 2)
+
+- Base URL: `https://api.6-8sports.com/api` — undocumented, reverse-engineered
+  from the Angular bundle on 6-8sports.com. No auth required. CORS `*`.
+- **Official USAWP JO stats provider** — this is the authoritative live source
+  for Junior Olympics. Updated by Ryan Curry (stat crew) in real time during
+  play.
+- Key endpoints:
+  - `GET /v2/leagues/links/` → array of `{pk, name}` league records. Used for
+    JO league auto-discovery (look for "Junior Olympics" substring in name).
+  - `GET /v2/leagues/{id}/games/?page=1&pageSize=50` → paginated game list.
+    Each game has `in_progress: bool` for live detection.
+  - `GET /v2/games/{id}/` → full detail including `live_score_data`, periods,
+    play-by-play events.
+- **League ID auto-discovery**: if `SIXEIGHT_LEAGUE_ID` is blank, `sixeight.js`
+  calls `/v2/leagues/links/` and finds the first entry matching "junior ol".
+  Caches result for the session. You can pin a league ID in the env var to skip
+  discovery.
+- Known JO league IDs: 2024 JOs = `cd6b2b16-...` (verify at runtime — IDs
+  rotate each season; use auto-discovery).
+- **Toggle**: `SIXEIGHT_ENABLED=true` in narwatch Vercel project.
+- **Team filter**: `SIXEIGHT_TEAM_NAME=Narwhal` (default) — matched as
+  case-insensitive substring against home/away team names.
+
+### SportsEngine TourneyMachine scraper (2026-05-02, session 2)
+
+- URL pattern: `https://tourneymachine.com/Public/Results/Tournament.aspx?IDTournament=<hash>`
+- Server-rendered HTML, no auth, no API. Scrapable with cheerio.
+- **Division pages**: the main tournament page lists divisions with hrefs like
+  `Schedule.aspx?IDTournament=<hash>&IDDivision=<id>`. Scraper fetches each.
+- **Date parsing**: schedule tables have date-header rows (class `tableAlternate`)
+  that set the running date for subsequent game rows. Game rows have 7 cells:
+  time | game# | home | away | homeScore | awayScore | location.
+- **Status detection**: both scores present + non-null → `done`. No in-progress
+  flag available (SportsEngine doesn't expose live state via HTML).
+- **Tournament ID discovery**: Google `site:tourneymachine.com "Tournament Name"`
+  → click the result → extract `IDTournament=` param from URL.
+- **Toggle**: `SPORTSENGINE_TOURNAMENT_ID=<hash>` in narwatch Vercel project.
+- **Team filter**: `SPORTSENGINE_TEAM_NAME=Narwhal` (default).
+- **Cheerio dep**: added to `apps/narwhaltracker` package.json in commit e8f1614.
+
+### Orphan repo cleanup (2026-05-02, session 2)
+
+A standalone `narwatch-api` TypeScript backend was created during exploration
+(full poller, registry, SSE server) before we discovered sport-tracker existed.
+All useful work (sixeight.js, sportsengine.js adapters) was migrated into
+sport-tracker and the orphan was deleted from GitHub (DELETE /repos/lswingrover/narwatch-api → 204).
+
+The TypeScript types and polling architecture from narwatch-api are documented
+in `~/Documents/Claude/NarWatch/data-sources.md` for reference if we ever
+want to build a standalone poller service.
+
+### Exposure Events API (2026-05-02, session 2)
+
+- API requires a **director account** — parent-level accounts don't get API keys.
+- Registration URL: `https://waterpolo.exposureevents.com/register` (free, self-serve)
+- **Email sent to apps@exposureevents.com** on 2026-05-02 requesting API access.
+- Awaiting response. If API access comes through, adapter goes in as a new
+  branch in `tournament.js` (add between TorMatch and SportsEngine, or after
+  NIWP depending on which tournament it's needed for).
+- The WAF at exposureevents.com blocks unauthenticated server-side requests —
+  a browser fetch works but curl/Node fails with connection reset. Once we have
+  a valid API key this shouldn't matter.
+
 ### Next.js + monorepo
 
 - Both apps have `transpilePackages: ['@sport-tracker/core']` in
@@ -120,6 +238,35 @@ real terminal. The sandbox `git add` works fine; only `git commit` fails.
 ---
 
 ## Next Steps (priority order)
+
+### 1. Trident Cup — confirm platform and get SportsEngine ID
+
+The Trident Cup (Team Orlando) registration is on Squarespace, but the bracket/
+schedule may be on TorMatch OR tourneymachine.com — unclear which.
+
+**Action**: When Team Orlando publishes the bracket (usually 1–2 weeks before
+the tournament), check whether the URL is:
+- `tormatch.com/tournament/...` → set `TORMATCH_TOURNAMENT_ID` in narwatch Vercel
+- `tourneymachine.com/...` → extract `IDTournament=` hash, set `SPORTSENGINE_TOURNAMENT_ID`
+
+If TorMatch, the existing `tormatch.js` adapter handles it — just set the env var.
+(Note: existing tormatch.js has tournament ID 258 hardcoded as a fallback — 
+verify whether 258 is a current Trident Cup ID or stale.)
+
+### 2. Exposure Events API access
+
+Email sent 2026-05-02 to apps@exposureevents.com. Also: Louis should manually
+register a free director account at `https://waterpolo.exposureevents.com/register`
+to test whether a self-registered key can read other directors' event data
+(i.e., Altitude Classic). If access confirmed: build exposureevents.js adapter
+and wire into tournament.js priority chain.
+
+### 3. JO prep — confirm 6-8 Sports league ID for 2026
+
+Before JOs (typically July), test `SIXEIGHT_ENABLED=true` in a preview deployment.
+The auto-discovery should find the 2026 JO league ID from `/v2/leagues/links/`.
+If auto-discovery works → no action. If the heuristic misses → pin the correct
+UUID in `SIXEIGHT_LEAGUE_ID`.
 
 ### ~~1. Wire Vercel git integration~~ ✓ DONE (2026-05-02)
 narwatch and volleywatch-app both now auto-deploy on `git push origin main`.
@@ -213,3 +360,9 @@ Commit `15da052`. Three changes:
 | `BLOB_READ_WRITE_TOKEN` | auto-injected | both | — | Vercel Blob, linked store |
 | `NEXT_PUBLIC_VAPID_PUBLIC_KEY` | set | both | prior | Web push |
 | `VAPID_PRIVATE_KEY` | set | both | prior | Web push |
+| `SIXEIGHT_ENABLED` | (not set) | narwatch | — | Set to `true` during JOs to use 6-8 Sports API |
+| `SIXEIGHT_LEAGUE_ID` | (not set) | narwatch | — | Optional: pin JO league UUID; blank = auto-discover |
+| `SIXEIGHT_TEAM_NAME` | (not set, defaults to "Narwhal") | narwatch | — | Team name fragment for filtering |
+| `TORMATCH_TOURNAMENT_ID` | (not set) | narwatch | — | Set to numeric tournament ID when on TorMatch |
+| `SPORTSENGINE_TOURNAMENT_ID` | (not set) | narwatch | — | Set to tourneymachine.com hash ID for SE tournaments |
+| `SPORTSENGINE_TEAM_NAME` | (not set, defaults to "Narwhal") | narwatch | — | Team name fragment for SE filtering |
