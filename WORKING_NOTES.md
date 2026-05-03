@@ -41,7 +41,7 @@ cd ~/Developer/sport-tracker
 git add -A && git commit -m "your message"
 git push origin main
 # Vercel auto-deploys narwatch from apps/narwhaltracker
-# Vercel auto-deploys volleywatch-app from apps/208tracker
+# Vercel auto-deploys volleywatch-app from apps/volleywatch
 ```
 
 **Manual deploy fallback** (if git integration breaks or you need to force):
@@ -92,7 +92,7 @@ real terminal. The sandbox `git add` works fine; only `git commit` fails.
   gitCredentialId=`cred_c569f8a164f20bea332b9c139a1196e8f080bde9`.
   Verified: push d910e8a triggered dpl_8MBqP3UsxHoe1MR4a6oJVXr8Bemb (READY).
 - **volleywatch-app rootDirectory** was `null`, causing every push to fail
-  in ~3s. Fixed to `apps/208tracker` via `PATCH /v9/projects/volleywatch-app`.
+  in ~3s. Fixed to `apps/volleywatch` via `PATCH /v9/projects/volleywatch-app`.
   Verified: next push built READY (dpl_fBDWiL3KNLipd1RCzNh88wjSZqcQ).
 - **208tracker project** (old dead project) is separate from volleywatch-app
   — ignore it. The live 208tracker app is `volleywatch-app`.
@@ -125,7 +125,7 @@ real terminal. The sandbox `git add` works fine; only `git commit` fails.
 narwatch and volleywatch-app both now auto-deploy on `git push origin main`.
 
 ### ~~2. Audit 208tracker deployment~~ ✓ DONE (2026-05-02)
-208tracker live app = volleywatch-app (rootDirectory now fixed to apps/208tracker).
+208tracker live app = volleywatch-app (rootDirectory now fixed to apps/volleywatch).
 
 ---
 

@@ -1,5 +1,5 @@
 // Shared game normalization utilities used by both narwhaltracker and
-// 208tracker. Extract-don't-duplicate: if you find yourself copying one
+// volleywatch. Extract-don't-duplicate: if you find yourself copying one
 // of these functions into a new data source adapter, import from here instead.
 
 // ─── deriveStandings ─────────────────────────────────────────────────────────
