@@ -129,9 +129,11 @@ async function fetchFromTorMatch(tournamentId, ourTeamName) {
   const rankingsRaw = rankingsResult.status === "fulfilled" ? rankingsResult.value : null;
 
   // Build team lookup map
-  const teamsList = Array.isArray(teamsRaw)
-    ? teamsRaw
-    : (teamsRaw?.teams || teamsRaw?.items || []);
+  // API returns {data: {count, teams:[...]}} wrapper
+  const teamsUnwrapped = teamsRaw?.data?.teams ?? teamsRaw;
+  const teamsList = Array.isArray(teamsUnwrapped)
+    ? teamsUnwrapped
+    : (teamsUnwrapped?.teams || teamsUnwrapped?.items || []);
   const teamsById = {};
   for (const tm of teamsList) {
     const id = tm.id || tm.team_id;
