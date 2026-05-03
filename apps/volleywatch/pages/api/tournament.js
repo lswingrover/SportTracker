@@ -1,5 +1,11 @@
 import { diffAndPush } from "@sport-tracker/core/stateDiff.js";
 import { maybeSnapshot } from "@sport-tracker/core/snapshots.js";
+import {
+  findBroadcast,
+  isInTournamentWindow,
+  slugFromEventId,
+  HUDL_TEAM_URL,
+} from "../../lib/hudl-broadcasts.js";
 
 // Deferred for v3 (intentionally not implemented yet):
 //   - Pool standings tab: render `/division/{div}/pools` so we can show
@@ -664,6 +670,16 @@ function buildResponse({ eventMeta, team, current, future, work, standings, next
     }
   }
 
+  // Hudl Fan watch buttons: fuzzy-match each game's opponent against the
+  // static broadcast map for this tournament. Adds `watchUrl` only when a
+  // match is found — absent on TBD/upcoming games and on tournaments with
+  // no broadcasts mapped yet.
+  const tournamentSlug = slugFromEventId(ctx.eventId);
+  for (const g of games) {
+    const hudl = findBroadcast(g.opponent, tournamentSlug);
+    if (hudl) g.watchUrl = hudl.watchUrl;
+  }
+
   let firstUpcomingFlagged = false;
   for (const g of games) {
     g.next = !g.done && !firstUpcomingFlagged ? (firstUpcomingFlagged = true) : false;
@@ -769,7 +785,12 @@ function buildResponse({ eventMeta, team, current, future, work, standings, next
       }
     : null;
 
-  const teamWatchNowLink = team?.WatchNowLink || null;
+  // Prefer AES's own WatchNowLink when present (rare — most events don't set it).
+  // Otherwise fall back to the Hudl Fan team page during known game-day windows
+  // (today's date matches a tournament date AND the local hour is 7am–7pm).
+  const teamWatchNowLink =
+    team?.WatchNowLink ||
+    (isInTournamentWindow(tournamentSlug) ? HUDL_TEAM_URL : null);
 
   const bracketStructures = extractBracketsForTeam(brackets, ctx.teamId);
   const pool = extractPoolForTeam(pools, ctx.teamId);
