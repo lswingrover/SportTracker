@@ -2054,7 +2054,6 @@ function LeaderboardTab({ players, loading, onPlayerTap }) {
           </thead>
           <tbody>
             {filtered.map((p, i) => {
-              const isSoren = p.player_name?.includes("Soren");
               return (
                 <tr
                   key={p.player_id}
@@ -2062,7 +2061,6 @@ function LeaderboardTab({ players, loading, onPlayerTap }) {
                   style={{
                     borderBottom: "1px solid var(--line)",
                     cursor: "pointer",
-                    background: isSoren ? "var(--accent-soft)" : "transparent",
                   }}
                 >
                   <td style={{ padding: "10px 16px", color: "var(--muted)", fontSize: 12 }}>{i + 1}</td>
@@ -2749,6 +2747,11 @@ export default function Home() {
         setData(null);
         setError(null);
         setLoading(false);
+        if (force) {
+          setUserRefreshing(false);
+          setRefreshDone(true);
+          setTimeout(() => setRefreshDone(false), 2000);
+        }
         return;
       }
 
@@ -3024,7 +3027,7 @@ export default function Home() {
               onClick={() => { if (!userRefreshing) load(true); }}
               aria-label="Refresh"
               title="Refresh data"
-              disabled={userRefreshing || !tournament.eventId}
+              disabled={userRefreshing}
             >
               {refreshDone ? "✓" : "↺"}
             </button>
@@ -3068,8 +3071,10 @@ export default function Home() {
 
         <div className="chip-row" role="tablist" aria-label="Tournaments">
           {niwpWeeks
-            ? /* NIWP mode: one chip per calendar week, newest rightmost */
-              niwpWeeks.map((w) => {
+            ? /* NIWP mode: one chip per calendar week, newest leftmost.
+                 Underlying array stays oldest→newest (default-selection
+                 logic relies on [length-1]); only render order is flipped. */
+              niwpWeeks.slice().reverse().map((w) => {
                 const isActive = w.weekKey === (niwpWeekKey ?? niwpWeeks[niwpWeeks.length - 1]?.weekKey);
                 return (
                   <button
