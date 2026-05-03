@@ -1,26 +1,24 @@
 // NarWatch tournament API.
 //
 // DATA SOURCE PRIORITY:
-//   1. NIWP WordPress API (live) — if NIWP_API_ENABLED=true env var is set,
-//      traffic is delegated to /api/niwp.js. Primary live source for
-//      North Idaho Water Polo tournament data. No auth required.
-//      Optional: NIWP_TEAM_PREFIX=B|G|BJV|GJV (default: B = Boys Varsity)
-//   2. 6-8 Sports (live JOs)    — if SIXEIGHT_LEAGUE_ID is set (or auto-
-//      discovered), delegates to /api/sixeight.js. Used for USAWP Junior
-//      Olympics. No auth, CORS *, live in_progress flag. Auto-discovers the
-//      current JO league ID at runtime if SIXEIGHT_LEAGUE_ID is blank.
-//      Toggle: SIXEIGHT_ENABLED=true
-//   3. TorMatch (live)          — if TORMATCH_TOURNAMENT_ID is set, delegates
-//      to /api/tormatch.js. Used for tournaments on the TorMatch platform.
-//   4. SportsEngine Tourney     — if SPORTSENGINE_TOURNAMENT_ID is set,
-//      delegates to /api/sportsengine.js. HTML-scrapes tourneymachine.com.
-//      Used for general tournaments not on other platforms.
-//   5. Google Sheets (live)     — if GOOGLE_SHEETS_ID is set, delegates to
-//      /api/sheets.js. Manual data entry fallback.
-//   6. Static data              — falls back to lib/tournamentData.js.
+//   1. 6-8 Sports (auto or explicit) — USAWP Junior Olympics live scores.
+//      Auto-activates when live or today-scheduled Narwhal JO games are
+//      detected (no env var required). Probe is cached (2 min positive /
+//      10 min negative) — zero overhead outside JO season.
+//      Override on:  SIXEIGHT_ENABLED=true  (skip probe, always use 6-8)
+//      Override off: SIXEIGHT_DISABLED=true (skip probe, never use 6-8)
+//   2. NIWP WordPress API (live)  — if NIWP_API_ENABLED=true.
+//      Primary live source for North Idaho Water Polo club tournaments.
+//      No auth required. NIWP_TEAM_PREFIX=B|G|BJV|GJV (default: B).
+//   3. TorMatch (live)            — if TORMATCH_TOURNAMENT_ID is set.
+//   4. SportsEngine Tourney       — if SPORTSENGINE_TOURNAMENT_ID is set.
+//      HTML-scrapes tourneymachine.com. Discovery: Google
+//      `site:tourneymachine.com "Tournament Name"` → IDTournament= param.
+//   5. Google Sheets (live)       — if GOOGLE_SHEETS_ID is set.
+//   6. Static data                — falls back to lib/tournamentData.js.
 //
-// This design lets a team parent enable live data for a specific tournament
-// by simply setting env vars — no frontend changes required.
+// Only the 6-8 Sports probe runs automatically. All other sources require
+// an explicit env var set in the narwatch Vercel project.
 
 import { findTournament, computeGoalDiff, TOURNAMENTS } from "../../lib/tournamentData.js";
 
@@ -78,6 +76,26 @@ export default async function handler(req, res) {
     return;
   }
 
+  // ── 6-8 Sports branch (USAWP Junior Olympics) ───────────────────────────
+  // Explicit enable: always use 6-8 (useful for testing / forcing).
+  // Explicit disable: skip probe entirely (SIXEIGHT_DISABLED=true).
+  // Auto (neither set): probe for live or today-scheduled Narwhal JO games.
+  //   Positive probe → route here. Negative probe → fall through to NIWP.
+  //   Probe TTL: 2 min when active, 10 min when inactive.
+  if (process.env.SIXEIGHT_ENABLED === "true") {
+    const { default: sixeightHandler } = await import('./sixeight.js');
+    return sixeightHandler(req, res);
+  }
+  if (process.env.SIXEIGHT_DISABLED !== "true") {
+    const { probeNarwhalsGames } = await import('./sixeight.js');
+    const teamName = process.env.SIXEIGHT_TEAM_NAME || "Narwhal";
+    const probe = await probeNarwhalsGames(teamName);
+    if (probe?.hasActiveGames) {
+      const { default: sixeightHandler } = await import('./sixeight.js');
+      return sixeightHandler(req, res);
+    }
+  }
+
   // ── NIWP WordPress API branch ───────────────────────────────────────────
   // When NIWP_API_ENABLED=true, delegate to niwp.js. This is the primary
   // live source for North Idaho Water Polo data.
@@ -89,15 +107,6 @@ export default async function handler(req, res) {
     }
     const { default: niwpHandler } = await import("./niwp.js");
     return niwpHandler(req, res);
-  }
-
-  // ── 6-8 Sports branch (USAWP Junior Olympics) ───────────────────────────
-  // Set SIXEIGHT_ENABLED=true to activate. SIXEIGHT_LEAGUE_ID is optional —
-  // if blank the adapter auto-discovers the current JO league at runtime.
-  // SIXEIGHT_TEAM_NAME defaults to "Narwhal".
-  if (process.env.SIXEIGHT_ENABLED === "true") {
-    const { default: sixeightHandler } = await import('./sixeight.js');
-    return sixeightHandler(req, res);
   }
 
   // -- TorMatch live branch -----------------------------------------------

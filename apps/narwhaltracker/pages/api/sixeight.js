@@ -14,10 +14,16 @@ const SIXEIGHT_BASE = "https://api.6-8sports.com/api";
 const LIVE_TTL_MS  = 30 * 1000;        // 30 s when a live game is detected
 const IDLE_TTL_MS  = 5 * 60 * 1000;   // 5 min otherwise
 
-// Module-level cache
+// Module-level cache (main handler)
 let _cache     = null;
 let _fetchedAt = 0;
 let _cacheKey  = "";
+
+// Probe cache (auto-detection — separate TTLs from main handler)
+const PROBE_ACTIVE_TTL_MS   = 2  * 60 * 1000;  // 2 min when JO games active today
+const PROBE_INACTIVE_TTL_MS = 10 * 60 * 1000;  // 10 min when no JO games today
+let _probeCache     = null;   // { hasActiveGames: bool, leagueId: string } | null
+let _probeFetchedAt = 0;
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -155,6 +161,62 @@ function normalizeStanding(raw, narwhalsFragment) {
     matchesLost:  raw.losses ?? 0,
     goalDiff:     (raw.goals_for ?? 0) - (raw.goals_against ?? 0),
   };
+}
+
+// ─── Auto-detection probe ─────────────────────────────────────────────────────
+
+/**
+ * Probe the 6-8 Sports API for active Narwhal JO games without committing to a
+ * full response. "Active" means: any Narwhal game is in_progress, OR any Narwhal
+ * game is scheduled for today (UTC). Returns null on any error so the caller can
+ * fall through to the next data source.
+ *
+ * Negative result (no active JO): cached 10 min — nearly zero overhead outside
+ * JO season. Positive result (JO day): cached 2 min for fast live updates.
+ *
+ * Called by tournament.js before the NIWP branch. When this returns
+ * { hasActiveGames: true }, tournament.js delegates to the full sixeight handler
+ * instead of NIWP.
+ *
+ * @param {string} [teamName] - Fragment to identify Narwhal team entries.
+ * @returns {Promise<{ hasActiveGames: boolean, leagueId: string } | null>}
+ */
+export async function probeNarwhalsGames(teamName = "Narwhal") {
+  const now = Date.now();
+  const ttl = _probeCache?.hasActiveGames
+    ? PROBE_ACTIVE_TTL_MS
+    : PROBE_INACTIVE_TTL_MS;
+
+  if (_probeCache !== null && now - _probeFetchedAt < ttl) {
+    return _probeCache;
+  }
+
+  try {
+    const leagueId  = await discoverLeague(process.env.SIXEIGHT_LEAGUE_ID || "");
+    const rawGames  = await fetchAllGames(leagueId);
+    const frag      = (teamName || "narwhal").toLowerCase();
+    const todayUTC  = new Date().toISOString().slice(0, 10); // "YYYY-MM-DD"
+
+    const narwhalsGames = rawGames.filter((g) =>
+      (g.dark_team_name  || "").toLowerCase().includes(frag) ||
+      (g.light_team_name || "").toLowerCase().includes(frag)
+    );
+
+    const hasActiveGames = narwhalsGames.some((g) =>
+      g.in_progress ||
+      (g.schedule_date && String(g.schedule_date).startsWith(todayUTC))
+    );
+
+    _probeCache     = { hasActiveGames, leagueId };
+    _probeFetchedAt = now;
+    console.log(
+      `[sixeight probe] leagueId=${leagueId} narwhalsGames=${narwhalsGames.length} hasActiveGames=${hasActiveGames}`
+    );
+    return _probeCache;
+  } catch (err) {
+    console.warn("[sixeight probe] skipped:", err.message);
+    return null; // don't cache errors — let next request retry
+  }
 }
 
 // ─── Handler ──────────────────────────────────────────────────────────────────
