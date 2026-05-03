@@ -20,7 +20,7 @@ export const HUDL_BROADCASTS = [
   { broadcastId: "QnJvYWRjYXN0NDAwNDY2Mw==", opponent: "Big Sky 14-3",       date: "2026-05-02", tournament: "big-sky-volleyfest-2026" },
   { broadcastId: "QnJvYWRjYXN0NDAwNDY3Mg==", opponent: "Avalanche 14 White", date: "2026-05-02", tournament: "big-sky-volleyfest-2026" },
   { broadcastId: "QnJvYWRjYXN0NDAwNDY3Nw==", opponent: "Aces 14U",           date: "2026-05-02", tournament: "big-sky-volleyfest-2026" },
-  // Gold bracket vs BHJ 14 Green (May 3) — broadcast TBD; add when available.
+  { broadcastId: "QnJvYWRjYXN0NDAwNjAxMA==", opponent: "BHJ 14 Green", date: "2026-05-03", tournament: "big-sky-volleyfest-2026" },
 
   // ERVA Regional 2026 — April 25-26
   { broadcastId: "QnJvYWRjYXN0Mzk4NjEyOA==", opponent: "ERVA-Club Selah 14",     date: "2026-04-26", tournament: "erva-regional-2026" },
