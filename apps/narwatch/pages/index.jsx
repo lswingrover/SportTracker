@@ -24,6 +24,29 @@ const DEFAULT_REFRESH_MS = 2 * 60 * 1000;
 const CLIENT_DATA_CACHE = new Map(); // url → { payload, fetchedAt }
 const CLIENT_CACHE_TTL_MS = 60 * 1000; // 1 minute — matches server-side TTL
 
+function slugifyHashValue(s) {
+  return String(s || "")
+    .toLowerCase()
+    .replace(/\s*\([^)]*\)\s*$/, "")
+    .trim()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+}
+
+function readHashParams() {
+  if (typeof window === "undefined") return {};
+  const raw = window.location.hash.replace(/^#/, "");
+  const out = {};
+  for (const pair of raw.split("&")) {
+    if (!pair) continue;
+    const eq = pair.indexOf("=");
+    const k = decodeURIComponent(eq === -1 ? pair : pair.slice(0, eq));
+    const v = eq === -1 ? "" : decodeURIComponent(pair.slice(eq + 1));
+    if (k) out[k] = v;
+  }
+  return out;
+}
+
 // NIWP schedule team filter options (mirrors LB_TEAM_FILTERS in the Leaderboard).
 const NIWP_TEAM_FILTERS = [
   { key: "all",  label: "All teams" },
@@ -2376,6 +2399,8 @@ export default function Home() {
   //   niwpWeekKey – null = show most recent week; string = specific week key selected
   const [niwpWeeks, setNiwpWeeks] = useState(null);
   const [niwpWeekKey, setNiwpWeekKey] = useState(null);
+  const [niwpFetchSettled, setNiwpFetchSettled] = useState(false);
+  const [hashHydrated, setHashHydrated] = useState(false);
 
   // Schedule team filter: "all" | "B" | "G" | "BJV" | "GJV" | "D"
   const [scheduleTeamFilter, setScheduleTeamFilter] = useState("all");
@@ -2681,6 +2706,72 @@ export default function Home() {
     }
   }
 
+  // ── hash routing ───────────────────────────────────────────────────────────
+  // On mount, restore #tournament=<id|weekKey> for the static-fallback chip
+  // row, and #h2h=<slug> by resolving the slug against the historical cache.
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const hash = readHashParams();
+    let cancelled = false;
+    if (hash.tournament) {
+      const t = TOURNAMENTS.find((x) => x.id === hash.tournament);
+      if (t) {
+        setTournamentId(t.id);
+        if (!t.static) setTeamId(t.teamId);
+      }
+      // If hash.tournament doesn't match a static TOURNAMENTS id, the
+      // niwp-weeks fetch effect resolves it as a weekKey instead.
+    }
+    if (hash.h2h) {
+      (async () => {
+        let cache = allGamesCache;
+        if (!cache) {
+          setH2hGamesLoading(true);
+          try {
+            const r = await fetch("/api/historical?view=games");
+            if (r.ok) {
+              const json = await r.json();
+              cache = json.games || [];
+              if (!cancelled) setAllGamesCache(cache);
+            }
+          } catch {}
+          if (!cancelled) setH2hGamesLoading(false);
+        }
+        if (cancelled || !cache) return;
+        const match = cache.find(
+          (g) =>
+            slugifyHashValue(g.opponent_display_name) === hash.h2h ||
+            slugifyHashValue(g.away_team) === hash.h2h
+        );
+        if (match) setH2hSheet(match.opponent_display_name || match.away_team);
+      })();
+    }
+    setHashHydrated(true);
+    return () => { cancelled = true; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Sync state → hash. Runs whenever tournament selection or H2H sheet changes,
+  // but only after the initial hash has been read AND the niwp-weeks fetch has
+  // settled (so we know whether NIWP mode is active and which value to write).
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    if (!hashHydrated || !niwpFetchSettled) return;
+    const parts = [];
+    const tournamentValue = niwpWeeks && niwpWeekKey
+      ? niwpWeekKey
+      : !niwpWeeks
+        ? tournamentId
+        : null;
+    if (tournamentValue) parts.push(`tournament=${encodeURIComponent(tournamentValue)}`);
+    if (h2hSheet) parts.push(`h2h=${encodeURIComponent(slugifyHashValue(h2hSheet))}`);
+    const newHash = parts.length ? `#${parts.join("&")}` : "";
+    if (newHash !== window.location.hash) {
+      const url = window.location.pathname + window.location.search + newHash;
+      window.history.replaceState(null, "", url || window.location.pathname);
+    }
+  }, [hashHydrated, niwpFetchSettled, niwpWeeks, niwpWeekKey, tournamentId, h2hSheet]);
+
   // Filtered + annotated games for the current H2H opponent.
   // home_team is always CDA (convention from compute-aggregates.js).
   const h2hGames = useMemo(() => {
@@ -2868,11 +2959,15 @@ export default function Home() {
       .then((weeks) => {
         if (!cancelled && Array.isArray(weeks) && weeks.length > 0) {
           setNiwpWeeks(weeks);
-          // Default to the most recent week (last in sorted list)
-          setNiwpWeekKey(weeks[weeks.length - 1].weekKey);
+          // Honor #tournament=<weekKey> if present and valid; otherwise
+          // default to the most recent week (last in sorted list).
+          const hashTour = readHashParams().tournament;
+          const matched = hashTour && weeks.find((w) => w.weekKey === hashTour);
+          setNiwpWeekKey(matched ? matched.weekKey : weeks[weeks.length - 1].weekKey);
         }
       })
-      .catch(() => {});
+      .catch(() => {})
+      .finally(() => { if (!cancelled) setNiwpFetchSettled(true); });
     return () => { cancelled = true; };
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
