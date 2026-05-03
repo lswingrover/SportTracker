@@ -1,0 +1,566 @@
+[
+  {
+    "player_id": "9",
+    "player_name": "B - Mason Curry",
+    "default_cap": "7",
+    "created_at": "2025-05-16 14:41:49"
+  },
+  {
+    "player_id": "10",
+    "player_name": "X - Jackson Curry",
+    "default_cap": "11",
+    "created_at": "2025-05-16 14:42:38"
+  },
+  {
+    "player_id": "11",
+    "player_name": "X - Owen Call",
+    "default_cap": "12",
+    "created_at": "2025-05-16 14:42:46"
+  },
+  {
+    "player_id": "12",
+    "player_name": "B - Taylor Holding",
+    "default_cap": "2",
+    "created_at": "2025-05-16 14:43:00"
+  },
+  {
+    "player_id": "13",
+    "player_name": "B - David Schoeny",
+    "default_cap": "1",
+    "created_at": "2025-05-16 14:44:14"
+  },
+  {
+    "player_id": "14",
+    "player_name": "B - Garrett Snyder",
+    "default_cap": "12",
+    "created_at": "2025-05-16 14:44:26"
+  },
+  {
+    "player_id": "15",
+    "player_name": "B - Joshua Dimitri",
+    "default_cap": "5",
+    "created_at": "2025-05-16 14:44:43"
+  },
+  {
+    "player_id": "16",
+    "player_name": "B - Tucker Rigg",
+    "default_cap": "6",
+    "created_at": "2025-05-16 14:44:52"
+  },
+  {
+    "player_id": "17",
+    "player_name": "B - Brennan McCrea",
+    "default_cap": "8",
+    "created_at": "2025-05-16 14:45:11"
+  },
+  {
+    "player_id": "18",
+    "player_name": "B - Jet Yang",
+    "default_cap": "9",
+    "created_at": "2025-05-16 14:45:21"
+  },
+  {
+    "player_id": "19",
+    "player_name": "X - Luke Griffiths",
+    "default_cap": "10",
+    "created_at": "2025-05-16 14:45:41"
+  },
+  {
+    "player_id": "20",
+    "player_name": "B - Miles Rigg",
+    "default_cap": "11",
+    "created_at": "2025-05-16 14:45:56"
+  },
+  {
+    "player_id": "21",
+    "player_name": "B - Brock Raebel",
+    "default_cap": "3",
+    "created_at": "2025-05-16 14:47:06"
+  },
+  {
+    "player_id": "22",
+    "player_name": "G - Addie Wallace",
+    "default_cap": "10",
+    "created_at": "2025-05-16 14:47:22"
+  },
+  {
+    "player_id": "23",
+    "player_name": "G - Addy Karoblis",
+    "default_cap": "9",
+    "created_at": "2025-05-16 14:47:37"
+  },
+  {
+    "player_id": "24",
+    "player_name": "X - Alena Gonzalez",
+    "default_cap": "3",
+    "created_at": "2025-05-16 14:47:56"
+  },
+  {
+    "player_id": "25",
+    "player_name": "G - Callie Christianson",
+    "default_cap": "1",
+    "created_at": "2025-05-16 14:48:09"
+  },
+  {
+    "player_id": "26",
+    "player_name": "G - Charlie Lindsay",
+    "default_cap": "2",
+    "created_at": "2025-05-16 14:48:28"
+  },
+  {
+    "player_id": "27",
+    "player_name": "G - Claire Thorpe",
+    "default_cap": "12",
+    "created_at": "2025-05-16 14:48:40"
+  },
+  {
+    "player_id": "28",
+    "player_name": "G - Gianna Gonzalez",
+    "default_cap": "11",
+    "created_at": "2025-05-16 14:48:52"
+  },
+  {
+    "player_id": "29",
+    "player_name": "G - Gracelyn Kenney",
+    "default_cap": "6",
+    "created_at": "2025-05-16 14:49:08"
+  },
+  {
+    "player_id": "30",
+    "player_name": "G - Haven Owens",
+    "default_cap": "7",
+    "created_at": "2025-05-16 14:49:20"
+  },
+  {
+    "player_id": "31",
+    "player_name": "X - Jillian Provost",
+    "default_cap": "7",
+    "created_at": "2025-05-16 14:49:38"
+  },
+  {
+    "player_id": "32",
+    "player_name": "X - Laura Mohr",
+    "default_cap": "10",
+    "created_at": "2025-05-16 14:49:55"
+  },
+  {
+    "player_id": "33",
+    "player_name": "G - Lana Kittisares",
+    "default_cap": "8",
+    "created_at": "2025-05-16 14:50:16"
+  },
+  {
+    "player_id": "34",
+    "player_name": "X - Reese Taylor",
+    "default_cap": "1",
+    "created_at": "2025-05-16 14:50:29"
+  },
+  {
+    "player_id": "35",
+    "player_name": "X - Rachel Tobler",
+    "default_cap": "5",
+    "created_at": "2025-05-16 14:50:41"
+  },
+  {
+    "player_id": "36",
+    "player_name": "B - Liam Clark",
+    "default_cap": "1",
+    "created_at": "2025-05-16 14:52:04"
+  },
+  {
+    "player_id": "37",
+    "player_name": "BJV - Colin Bradley",
+    "default_cap": "6",
+    "created_at": "2025-05-16 14:52:30"
+  },
+  {
+    "player_id": "38",
+    "player_name": "X - Hailee Athman",
+    "default_cap": "4",
+    "created_at": "2025-05-16 14:52:44"
+  },
+  {
+    "player_id": "39",
+    "player_name": "D - Lydia Nead",
+    "default_cap": "5",
+    "created_at": "2025-05-16 14:52:53"
+  },
+  {
+    "player_id": "40",
+    "player_name": "BJV - Mason Olberding",
+    "default_cap": "3",
+    "created_at": "2025-05-16 14:53:07"
+  },
+  {
+    "player_id": "41",
+    "player_name": "BJV - Max Vogan",
+    "default_cap": "7",
+    "created_at": "2025-05-16 14:53:15"
+  },
+  {
+    "player_id": "42",
+    "player_name": "BJV - Jay Yang",
+    "default_cap": "12",
+    "created_at": "2025-05-16 14:53:28"
+  },
+  {
+    "player_id": "43",
+    "player_name": "BJV - Gus Rigg",
+    "default_cap": "9",
+    "created_at": "2025-05-16 14:53:37"
+  },
+  {
+    "player_id": "44",
+    "player_name": "GJV - Abigail Clark",
+    "default_cap": "10",
+    "created_at": "2025-05-16 14:53:49"
+  },
+  {
+    "player_id": "45",
+    "player_name": "D - Griffin Curry",
+    "default_cap": "9",
+    "created_at": "2025-05-16 14:54:00"
+  },
+  {
+    "player_id": "46",
+    "player_name": "Y - Lana Kittisares",
+    "default_cap": "13",
+    "created_at": "2025-05-16 14:54:29"
+  },
+  {
+    "player_id": "47",
+    "player_name": "GJV - Stella Christiensen",
+    "default_cap": "13",
+    "created_at": "2025-05-16 14:55:40"
+  },
+  {
+    "player_id": "48",
+    "player_name": "GJV - Emily Snyder",
+    "default_cap": "8",
+    "created_at": "2025-05-16 14:55:40"
+  },
+  {
+    "player_id": "49",
+    "player_name": "B - Nolan Vogan",
+    "default_cap": "5",
+    "created_at": "2025-05-16 18:22:46"
+  },
+  {
+    "player_id": "50",
+    "player_name": "X - Canada Girl",
+    "default_cap": "14",
+    "created_at": "2025-05-18 09:13:35"
+  },
+  {
+    "player_id": "51",
+    "player_name": "X - Sam Harrel",
+    "default_cap": "16",
+    "created_at": "2025-05-29 17:51:37"
+  },
+  {
+    "player_id": "52",
+    "player_name": "B - Soren Swingrover",
+    "default_cap": "10",
+    "created_at": "2025-05-29 18:25:17"
+  },
+  {
+    "player_id": "53",
+    "player_name": "BJV - Karson Eachon",
+    "default_cap": "18",
+    "created_at": "2025-05-29 18:41:25"
+  },
+  {
+    "player_id": "54",
+    "player_name": "BJV - Sammy Schoeny",
+    "default_cap": "17",
+    "created_at": "2025-05-29 18:42:30"
+  },
+  {
+    "player_id": "55",
+    "player_name": "X - Sam G",
+    "default_cap": "0",
+    "created_at": "2025-05-29 18:43:01"
+  },
+  {
+    "player_id": "56",
+    "player_name": "GJV - Lydia Nead",
+    "default_cap": "5",
+    "created_at": "2025-05-29 18:46:29"
+  },
+  {
+    "player_id": "57",
+    "player_name": "GJV - Abby Clark",
+    "default_cap": "1",
+    "created_at": "2025-05-29 18:46:52"
+  },
+  {
+    "player_id": "58",
+    "player_name": "X - Daisy Whitney",
+    "default_cap": "2",
+    "created_at": "2025-05-30 18:28:01"
+  },
+  {
+    "player_id": "59",
+    "player_name": "G - Kyra Ellsworth",
+    "default_cap": "3",
+    "created_at": "2025-05-30 18:28:14"
+  },
+  {
+    "player_id": "60",
+    "player_name": "Coach 1",
+    "default_cap": "12",
+    "created_at": "2025-05-31 11:59:00"
+  },
+  {
+    "player_id": "61",
+    "player_name": "Masters Mason",
+    "default_cap": "11",
+    "created_at": "2025-05-31 11:59:45"
+  },
+  {
+    "player_id": "62",
+    "player_name": "Coach Mark",
+    "default_cap": "8",
+    "created_at": "2025-05-31 12:01:52"
+  },
+  {
+    "player_id": "63",
+    "player_name": "X - Chaz Attebury",
+    "default_cap": "5",
+    "created_at": "2025-07-30 18:55:03"
+  },
+  {
+    "player_id": "64",
+    "player_name": "X - Priya Bevacqua",
+    "default_cap": "4",
+    "created_at": "2025-07-30 19:00:31"
+  },
+  {
+    "player_id": "65",
+    "player_name": "X - Amanda Bittleston",
+    "default_cap": "8",
+    "created_at": "2025-07-30 19:01:17"
+  },
+  {
+    "player_id": "66",
+    "player_name": "D - Ezra Kenney",
+    "default_cap": "1",
+    "created_at": "2025-07-30 19:03:37"
+  },
+  {
+    "player_id": "67",
+    "player_name": "D - Sadie Brigham",
+    "default_cap": "4",
+    "created_at": "2025-07-30 19:04:18"
+  },
+  {
+    "player_id": "68",
+    "player_name": "D - Kaylynn Morrow",
+    "default_cap": "6",
+    "created_at": "2025-07-30 19:05:41"
+  },
+  {
+    "player_id": "69",
+    "player_name": "BJV - Ethan Roberts",
+    "default_cap": "11",
+    "created_at": "2025-07-30 19:05:58"
+  },
+  {
+    "player_id": "70",
+    "player_name": "D - Josie Marvil",
+    "default_cap": "11",
+    "created_at": "2025-07-30 19:06:44"
+  },
+  {
+    "player_id": "71",
+    "player_name": "D - Sophie Smee",
+    "default_cap": "12",
+    "created_at": "2025-07-30 19:07:01"
+  },
+  {
+    "player_id": "72",
+    "player_name": "D - Everly Nelson",
+    "default_cap": "14",
+    "created_at": "2025-07-30 19:07:21"
+  },
+  {
+    "player_id": "73",
+    "player_name": "BJV - Chris Sheftic",
+    "default_cap": "5",
+    "created_at": "2025-12-11 23:10:08"
+  },
+  {
+    "player_id": "74",
+    "player_name": "BJV - Joshua Atwood",
+    "default_cap": "8",
+    "created_at": "2025-12-11 23:10:38"
+  },
+  {
+    "player_id": "75",
+    "player_name": "BJV - Derek Parsons",
+    "default_cap": "10",
+    "created_at": "2025-12-11 23:12:40"
+  },
+  {
+    "player_id": "76",
+    "player_name": "BJV - Calvin Peterson",
+    "default_cap": "14",
+    "created_at": "2025-12-11 23:13:20"
+  },
+  {
+    "player_id": "77",
+    "player_name": "BJV - Everett Small",
+    "default_cap": "15",
+    "created_at": "2025-12-11 23:13:38"
+  },
+  {
+    "player_id": "78",
+    "player_name": "BJV - Owen Doty",
+    "default_cap": "16",
+    "created_at": "2025-12-11 23:13:54"
+  },
+  {
+    "player_id": "79",
+    "player_name": "G - Autumn Cysewski",
+    "default_cap": "4",
+    "created_at": "2025-12-11 23:37:54"
+  },
+  {
+    "player_id": "80",
+    "player_name": "G - Ava Parsons",
+    "default_cap": "5",
+    "created_at": "2025-12-11 23:38:31"
+  },
+  {
+    "player_id": "81",
+    "player_name": "GJV - Gwen Peterson",
+    "default_cap": "2",
+    "created_at": "2025-12-11 23:45:22"
+  },
+  {
+    "player_id": "82",
+    "player_name": "GJV - Shelby Alderson",
+    "default_cap": "7",
+    "created_at": "2025-12-11 23:46:06"
+  },
+  {
+    "player_id": "83",
+    "player_name": "GJV - Bonnie Walton",
+    "default_cap": "11",
+    "created_at": "2025-12-11 23:46:27"
+  },
+  {
+    "player_id": "84",
+    "player_name": "GJV - Jane Gardunia",
+    "default_cap": "6",
+    "created_at": "2025-12-11 23:46:45"
+  },
+  {
+    "player_id": "85",
+    "player_name": "autumn",
+    "default_cap": "0",
+    "created_at": "2025-12-13 08:09:05"
+  },
+  {
+    "player_id": "86",
+    "player_name": "Sam",
+    "default_cap": "14",
+    "created_at": "2026-01-09 16:47:11"
+  },
+  {
+    "player_id": "87",
+    "player_name": "B - Sam Harrel",
+    "default_cap": "14",
+    "created_at": "2026-01-09 18:24:42"
+  },
+  {
+    "player_id": "88",
+    "player_name": "Harris",
+    "default_cap": "4",
+    "created_at": "2026-01-09 19:08:28"
+  },
+  {
+    "player_id": "90",
+    "player_name": "D - Desmond",
+    "default_cap": "17",
+    "created_at": "2026-01-10 08:19:09"
+  },
+  {
+    "player_id": "91",
+    "player_name": "D - Abby",
+    "default_cap": "4",
+    "created_at": "2026-01-10 08:19:42"
+  },
+  {
+    "player_id": "92",
+    "player_name": "D - Lyla",
+    "default_cap": "9",
+    "created_at": "2026-01-10 08:20:24"
+  },
+  {
+    "player_id": "93",
+    "player_name": "D - Liam D",
+    "default_cap": "1",
+    "created_at": "2026-01-10 08:21:07"
+  },
+  {
+    "player_id": "94",
+    "player_name": "D - Wyatt",
+    "default_cap": "2",
+    "created_at": "2026-01-10 08:21:35"
+  },
+  {
+    "player_id": "95",
+    "player_name": "D - Hannah",
+    "default_cap": "18",
+    "created_at": "2026-01-10 08:21:45"
+  },
+  {
+    "player_id": "96",
+    "player_name": "D - Kaylen",
+    "default_cap": "14",
+    "created_at": "2026-01-10 08:22:09"
+  },
+  {
+    "player_id": "97",
+    "player_name": "D - Hailiee",
+    "default_cap": "5",
+    "created_at": "2026-01-10 08:22:32"
+  },
+  {
+    "player_id": "98",
+    "player_name": "D - Hank",
+    "default_cap": "8",
+    "created_at": "2026-01-10 08:23:02"
+  },
+  {
+    "player_id": "99",
+    "player_name": "D - Parker",
+    "default_cap": "17",
+    "created_at": "2026-01-10 08:23:16"
+  },
+  {
+    "player_id": "100",
+    "player_name": "D - Derek",
+    "default_cap": "13",
+    "created_at": "2026-01-10 08:48:08"
+  },
+  {
+    "player_id": "102",
+    "player_name": "D - Noah",
+    "default_cap": "2",
+    "created_at": "2026-01-10 08:56:22"
+  },
+  {
+    "player_id": "103",
+    "player_name": "D - Esmae Clark",
+    "default_cap": "6",
+    "created_at": "2026-01-31 14:35:51"
+  },
+  {
+    "player_id": "104",
+    "player_name": "D - Hogan",
+    "default_cap": "7",
+    "created_at": "2026-01-31 14:37:15"
+  }
+]

@@ -1,0 +1,1618 @@
+{
+  "computed_at": "2026-05-03T00:15:10.658Z",
+  "teams": [
+    {
+      "team": "CDA 18U Boys",
+      "games": 8,
+      "wins": 6,
+      "losses": 2,
+      "ties": 0,
+      "win_pct": 0.75,
+      "goals_for": 74,
+      "goals_against": 51,
+      "goal_differential": 23,
+      "avg_goals_for": 9.25,
+      "avg_goals_against": 6.38,
+      "record_str": "6-2",
+      "by_opponent": [
+        {
+          "opponent": "WVWP",
+          "wins": 1,
+          "losses": 0,
+          "ties": 0,
+          "games": 1,
+          "goals_for": 15,
+          "goals_against": 4
+        },
+        {
+          "opponent": "Newberg",
+          "wins": 1,
+          "losses": 0,
+          "ties": 0,
+          "games": 1,
+          "goals_for": 7,
+          "goals_against": 5
+        },
+        {
+          "opponent": "LOWPO",
+          "wins": 0,
+          "losses": 1,
+          "ties": 0,
+          "games": 1,
+          "goals_for": 0,
+          "goals_against": 14
+        },
+        {
+          "opponent": "BC",
+          "wins": 0,
+          "losses": 1,
+          "ties": 0,
+          "games": 1,
+          "goals_for": 6,
+          "goals_against": 12
+        },
+        {
+          "opponent": "Bend",
+          "wins": 1,
+          "losses": 0,
+          "ties": 0,
+          "games": 1,
+          "goals_for": 5,
+          "goals_against": 3
+        },
+        {
+          "opponent": "Hillsboro",
+          "wins": 1,
+          "losses": 0,
+          "ties": 0,
+          "games": 1,
+          "goals_for": 22,
+          "goals_against": 3
+        },
+        {
+          "opponent": "Bend Black",
+          "wins": 1,
+          "losses": 0,
+          "ties": 0,
+          "games": 1,
+          "goals_for": 8,
+          "goals_against": 7
+        },
+        {
+          "opponent": "Blue Crush",
+          "wins": 1,
+          "losses": 0,
+          "ties": 0,
+          "games": 1,
+          "goals_for": 11,
+          "goals_against": 3
+        }
+      ],
+      "by_tournament": [
+        {
+          "tournament": "GRESHAM",
+          "wins": 3,
+          "losses": 2,
+          "ties": 0,
+          "games": 5,
+          "goals_for": 33,
+          "goals_against": 38
+        },
+        {
+          "tournament": "Cascade Classic",
+          "wins": 2,
+          "losses": 0,
+          "ties": 0,
+          "games": 2,
+          "goals_for": 19,
+          "goals_against": 10
+        },
+        {
+          "tournament": "KROC w/ HILLSBORO",
+          "wins": 1,
+          "losses": 0,
+          "ties": 0,
+          "games": 1,
+          "goals_for": 22,
+          "goals_against": 3
+        }
+      ]
+    },
+    {
+      "team": "CDA Boys V",
+      "games": 7,
+      "wins": 6,
+      "losses": 1,
+      "ties": 0,
+      "win_pct": 0.857,
+      "goals_for": 91,
+      "goals_against": 40,
+      "goal_differential": 51,
+      "avg_goals_for": 13,
+      "avg_goals_against": 5.71,
+      "record_str": "6-1",
+      "by_opponent": [
+        {
+          "opponent": "Boise Boys V",
+          "wins": 2,
+          "losses": 0,
+          "ties": 0,
+          "games": 2,
+          "goals_for": 24,
+          "goals_against": 12
+        },
+        {
+          "opponent": "Boise State",
+          "wins": 0,
+          "losses": 1,
+          "ties": 0,
+          "games": 1,
+          "goals_for": 14,
+          "goals_against": 18
+        },
+        {
+          "opponent": "MV Boys",
+          "wins": 1,
+          "losses": 0,
+          "ties": 0,
+          "games": 1,
+          "goals_for": 13,
+          "goals_against": 4
+        },
+        {
+          "opponent": "East ID Boys",
+          "wins": 1,
+          "losses": 0,
+          "ties": 0,
+          "games": 1,
+          "goals_for": 15,
+          "goals_against": 4
+        },
+        {
+          "opponent": "Magic Valley V",
+          "wins": 1,
+          "losses": 0,
+          "ties": 0,
+          "games": 1,
+          "goals_for": 10,
+          "goals_against": 1
+        },
+        {
+          "opponent": "MV + Boise Boys",
+          "wins": 1,
+          "losses": 0,
+          "ties": 0,
+          "games": 1,
+          "goals_for": 15,
+          "goals_against": 1
+        }
+      ],
+      "by_tournament": [
+        {
+          "tournament": "Boise",
+          "wins": 3,
+          "losses": 1,
+          "ties": 0,
+          "games": 4,
+          "goals_for": 57,
+          "goals_against": 34
+        },
+        {
+          "tournament": "CDA Classic",
+          "wins": 3,
+          "losses": 0,
+          "ties": 0,
+          "games": 3,
+          "goals_for": 34,
+          "goals_against": 6
+        }
+      ]
+    },
+    {
+      "team": "CDA 14U Co-Ed",
+      "games": 6,
+      "wins": 0,
+      "losses": 6,
+      "ties": 0,
+      "win_pct": 0,
+      "goals_for": 30,
+      "goals_against": 80,
+      "goal_differential": -50,
+      "avg_goals_for": 5,
+      "avg_goals_against": 13.33,
+      "record_str": "0-6",
+      "by_opponent": [
+        {
+          "opponent": "LOWPO",
+          "wins": 0,
+          "losses": 1,
+          "ties": 0,
+          "games": 1,
+          "goals_for": 2,
+          "goals_against": 10
+        },
+        {
+          "opponent": "PSP Boys",
+          "wins": 0,
+          "losses": 1,
+          "ties": 0,
+          "games": 1,
+          "goals_for": 2,
+          "goals_against": 18
+        },
+        {
+          "opponent": "PSP Girls",
+          "wins": 0,
+          "losses": 1,
+          "ties": 0,
+          "games": 1,
+          "goals_for": 6,
+          "goals_against": 15
+        },
+        {
+          "opponent": "Bend",
+          "wins": 0,
+          "losses": 1,
+          "ties": 0,
+          "games": 1,
+          "goals_for": 12,
+          "goals_against": 15
+        },
+        {
+          "opponent": "BC",
+          "wins": 0,
+          "losses": 1,
+          "ties": 0,
+          "games": 1,
+          "goals_for": 8,
+          "goals_against": 13
+        },
+        {
+          "opponent": "Northwest",
+          "wins": 0,
+          "losses": 1,
+          "ties": 0,
+          "games": 1,
+          "goals_for": 0,
+          "goals_against": 9
+        }
+      ],
+      "by_tournament": [
+        {
+          "tournament": "GRESHAM",
+          "wins": 0,
+          "losses": 6,
+          "ties": 0,
+          "games": 6,
+          "goals_for": 30,
+          "goals_against": 80
+        }
+      ]
+    },
+    {
+      "team": "CDA 18U Girls",
+      "games": 6,
+      "wins": 6,
+      "losses": 0,
+      "ties": 0,
+      "win_pct": 1,
+      "goals_for": 83,
+      "goals_against": 33,
+      "goal_differential": 50,
+      "avg_goals_for": 13.83,
+      "avg_goals_against": 5.5,
+      "record_str": "6-0",
+      "by_opponent": [
+        {
+          "opponent": "BC",
+          "wins": 2,
+          "losses": 0,
+          "ties": 0,
+          "games": 2,
+          "goals_for": 22,
+          "goals_against": 15
+        },
+        {
+          "opponent": "LOWPO",
+          "wins": 1,
+          "losses": 0,
+          "ties": 0,
+          "games": 1,
+          "goals_for": 11,
+          "goals_against": 10
+        },
+        {
+          "opponent": "Bend",
+          "wins": 1,
+          "losses": 0,
+          "ties": 0,
+          "games": 1,
+          "goals_for": 13,
+          "goals_against": 2
+        },
+        {
+          "opponent": "BC 16U",
+          "wins": 1,
+          "losses": 0,
+          "ties": 0,
+          "games": 1,
+          "goals_for": 17,
+          "goals_against": 2
+        },
+        {
+          "opponent": "Hillsboro 18U Girls",
+          "wins": 1,
+          "losses": 0,
+          "ties": 0,
+          "games": 1,
+          "goals_for": 20,
+          "goals_against": 4
+        }
+      ],
+      "by_tournament": [
+        {
+          "tournament": "GRESHAM",
+          "wins": 5,
+          "losses": 0,
+          "ties": 0,
+          "games": 5,
+          "goals_for": 63,
+          "goals_against": 29
+        },
+        {
+          "tournament": "KROC w/ HILLSBORO",
+          "wins": 1,
+          "losses": 0,
+          "ties": 0,
+          "games": 1,
+          "goals_for": 20,
+          "goals_against": 4
+        }
+      ]
+    },
+    {
+      "team": "12U Co Ed",
+      "games": 6,
+      "wins": 2,
+      "losses": 4,
+      "ties": 0,
+      "win_pct": 0.333,
+      "goals_for": 46,
+      "goals_against": 103,
+      "goal_differential": -57,
+      "avg_goals_for": 7.67,
+      "avg_goals_against": 17.17,
+      "record_str": "2-4",
+      "by_opponent": [
+        {
+          "opponent": "Mavericks",
+          "wins": 1,
+          "losses": 0,
+          "ties": 0,
+          "games": 1,
+          "goals_for": 14,
+          "goals_against": 11
+        },
+        {
+          "opponent": "Peak Polo White",
+          "wins": 0,
+          "losses": 1,
+          "ties": 0,
+          "games": 1,
+          "goals_for": 7,
+          "goals_against": 22
+        },
+        {
+          "opponent": "Warrior A",
+          "wins": 1,
+          "losses": 0,
+          "ties": 0,
+          "games": 1,
+          "goals_for": 10,
+          "goals_against": 9
+        },
+        {
+          "opponent": "Hydralamo Black",
+          "wins": 0,
+          "losses": 1,
+          "ties": 0,
+          "games": 1,
+          "goals_for": 1,
+          "goals_against": 25
+        },
+        {
+          "opponent": "Viper Pigeon Green",
+          "wins": 0,
+          "losses": 1,
+          "ties": 0,
+          "games": 1,
+          "goals_for": 7,
+          "goals_against": 19
+        },
+        {
+          "opponent": "Navy AC",
+          "wins": 0,
+          "losses": 1,
+          "ties": 0,
+          "games": 1,
+          "goals_for": 7,
+          "goals_against": 17
+        }
+      ],
+      "by_tournament": [
+        {
+          "tournament": "Junior Olympics 2025 - Dallas Texas",
+          "wins": 2,
+          "losses": 2,
+          "ties": 0,
+          "games": 4,
+          "goals_for": 32,
+          "goals_against": 67
+        },
+        {
+          "tournament": "Jr Olympics Jesuit Dallas",
+          "wins": 0,
+          "losses": 2,
+          "ties": 0,
+          "games": 2,
+          "goals_for": 14,
+          "goals_against": 36
+        }
+      ]
+    },
+    {
+      "team": "CDA Girls V",
+      "games": 6,
+      "wins": 2,
+      "losses": 1,
+      "ties": 3,
+      "win_pct": 0.333,
+      "goals_for": 37,
+      "goals_against": 13,
+      "goal_differential": 24,
+      "avg_goals_for": 6.17,
+      "avg_goals_against": 2.17,
+      "record_str": "2-1-3",
+      "by_opponent": [
+        {
+          "opponent": "OPEN",
+          "wins": 0,
+          "losses": 0,
+          "ties": 2,
+          "games": 2,
+          "goals_for": 0,
+          "goals_against": 0
+        },
+        {
+          "opponent": "East ID Girls",
+          "wins": 1,
+          "losses": 0,
+          "ties": 0,
+          "games": 1,
+          "goals_for": 18,
+          "goals_against": 0
+        },
+        {
+          "opponent": "MV Girls",
+          "wins": 0,
+          "losses": 0,
+          "ties": 1,
+          "games": 1,
+          "goals_for": 0,
+          "goals_against": 0
+        },
+        {
+          "opponent": "Twin Falls Girls V",
+          "wins": 1,
+          "losses": 0,
+          "ties": 0,
+          "games": 1,
+          "goals_for": 15,
+          "goals_against": 1
+        },
+        {
+          "opponent": "Boise Bo",
+          "wins": 0,
+          "losses": 1,
+          "ties": 0,
+          "games": 1,
+          "goals_for": 4,
+          "goals_against": 12
+        }
+      ],
+      "by_tournament": [
+        {
+          "tournament": "Boise",
+          "wins": 1,
+          "losses": 0,
+          "ties": 3,
+          "games": 4,
+          "goals_for": 18,
+          "goals_against": 0
+        },
+        {
+          "tournament": "CDA Classic",
+          "wins": 1,
+          "losses": 1,
+          "ties": 0,
+          "games": 2,
+          "goals_for": 19,
+          "goals_against": 13
+        }
+      ]
+    },
+    {
+      "team": "CDA Girls JV",
+      "games": 6,
+      "wins": 3,
+      "losses": 1,
+      "ties": 2,
+      "win_pct": 0.5,
+      "goals_for": 39,
+      "goals_against": 39,
+      "goal_differential": 0,
+      "avg_goals_for": 6.5,
+      "avg_goals_against": 6.5,
+      "record_str": "3-1-2",
+      "by_opponent": [
+        {
+          "opponent": "OPEN",
+          "wins": 0,
+          "losses": 0,
+          "ties": 2,
+          "games": 2,
+          "goals_for": 0,
+          "goals_against": 0
+        },
+        {
+          "opponent": "MV Girls",
+          "wins": 1,
+          "losses": 0,
+          "ties": 0,
+          "games": 1,
+          "goals_for": 9,
+          "goals_against": 5
+        },
+        {
+          "opponent": "East ID Girls",
+          "wins": 1,
+          "losses": 0,
+          "ties": 0,
+          "games": 1,
+          "goals_for": 15,
+          "goals_against": 6
+        },
+        {
+          "opponent": "S Idaho JV Girls",
+          "wins": 0,
+          "losses": 1,
+          "ties": 0,
+          "games": 1,
+          "goals_for": 4,
+          "goals_against": 19
+        },
+        {
+          "opponent": "Magic Valley Girls",
+          "wins": 1,
+          "losses": 0,
+          "ties": 0,
+          "games": 1,
+          "goals_for": 11,
+          "goals_against": 9
+        }
+      ],
+      "by_tournament": [
+        {
+          "tournament": "Boise",
+          "wins": 2,
+          "losses": 0,
+          "ties": 2,
+          "games": 4,
+          "goals_for": 24,
+          "goals_against": 11
+        },
+        {
+          "tournament": "CDA Classic",
+          "wins": 1,
+          "losses": 1,
+          "ties": 0,
+          "games": 2,
+          "goals_for": 15,
+          "goals_against": 28
+        }
+      ]
+    },
+    {
+      "team": "CDA Boys JV",
+      "games": 5,
+      "wins": 1,
+      "losses": 3,
+      "ties": 1,
+      "win_pct": 0.2,
+      "goals_for": 25,
+      "goals_against": 48,
+      "goal_differential": -23,
+      "avg_goals_for": 5,
+      "avg_goals_against": 9.6,
+      "record_str": "1-3-1",
+      "by_opponent": [
+        {
+          "opponent": "Boise Boys V",
+          "wins": 0,
+          "losses": 2,
+          "ties": 0,
+          "games": 2,
+          "goals_for": 6,
+          "goals_against": 23
+        },
+        {
+          "opponent": "East ID Boys",
+          "wins": 1,
+          "losses": 0,
+          "ties": 0,
+          "games": 1,
+          "goals_for": 12,
+          "goals_against": 11
+        },
+        {
+          "opponent": "Boise Boys JV",
+          "wins": 0,
+          "losses": 1,
+          "ties": 0,
+          "games": 1,
+          "goals_for": 7,
+          "goals_against": 14
+        },
+        {
+          "opponent": "Twin Falls Boys",
+          "wins": 0,
+          "losses": 0,
+          "ties": 1,
+          "games": 1,
+          "goals_for": 0,
+          "goals_against": 0
+        }
+      ],
+      "by_tournament": [
+        {
+          "tournament": "Boise",
+          "wins": 1,
+          "losses": 2,
+          "ties": 0,
+          "games": 3,
+          "goals_for": 25,
+          "goals_against": 46
+        },
+        {
+          "tournament": "CDA Classic",
+          "wins": 0,
+          "losses": 1,
+          "ties": 1,
+          "games": 2,
+          "goals_for": 0,
+          "goals_against": 2
+        }
+      ]
+    },
+    {
+      "team": "18U Boys",
+      "games": 4,
+      "wins": 2,
+      "losses": 2,
+      "ties": 0,
+      "win_pct": 0.5,
+      "goals_for": 39,
+      "goals_against": 45,
+      "goal_differential": -6,
+      "avg_goals_for": 9.75,
+      "avg_goals_against": 11.25,
+      "record_str": "2-2",
+      "by_opponent": [
+        {
+          "opponent": "Slap Blue",
+          "wins": 0,
+          "losses": 1,
+          "ties": 0,
+          "games": 1,
+          "goals_for": 4,
+          "goals_against": 15
+        },
+        {
+          "opponent": "VP Blue",
+          "wins": 1,
+          "losses": 0,
+          "ties": 0,
+          "games": 1,
+          "goals_for": 18,
+          "goals_against": 10
+        },
+        {
+          "opponent": "PRWPC",
+          "wins": 0,
+          "losses": 1,
+          "ties": 0,
+          "games": 1,
+          "goals_for": 7,
+          "goals_against": 16
+        },
+        {
+          "opponent": "BCWP",
+          "wins": 1,
+          "losses": 0,
+          "ties": 0,
+          "games": 1,
+          "goals_for": 10,
+          "goals_against": 4
+        }
+      ],
+      "by_tournament": [
+        {
+          "tournament": "Junior Olympics 2025 - Dallas Texas",
+          "wins": 2,
+          "losses": 2,
+          "ties": 0,
+          "games": 4,
+          "goals_for": 39,
+          "goals_against": 45
+        }
+      ]
+    },
+    {
+      "team": "North Idaho",
+      "games": 4,
+      "wins": 1,
+      "losses": 3,
+      "ties": 0,
+      "win_pct": 0.25,
+      "goals_for": 63,
+      "goals_against": 54,
+      "goal_differential": 9,
+      "avg_goals_for": 15.75,
+      "avg_goals_against": 13.5,
+      "record_str": "1-3",
+      "by_opponent": [
+        {
+          "opponent": "Tualatin Hills",
+          "wins": 1,
+          "losses": 0,
+          "ties": 0,
+          "games": 1,
+          "goals_for": 18,
+          "goals_against": 4
+        },
+        {
+          "opponent": "Puget Soun",
+          "wins": 0,
+          "losses": 1,
+          "ties": 0,
+          "games": 1,
+          "goals_for": 17,
+          "goals_against": 18
+        },
+        {
+          "opponent": "Rain City",
+          "wins": 0,
+          "losses": 1,
+          "ties": 0,
+          "games": 1,
+          "goals_for": 11,
+          "goals_against": 12
+        },
+        {
+          "opponent": "LOPOW",
+          "wins": 0,
+          "losses": 1,
+          "ties": 0,
+          "games": 1,
+          "goals_for": 17,
+          "goals_against": 20
+        }
+      ],
+      "by_tournament": [
+        {
+          "tournament": "Dare to Dream",
+          "wins": 1,
+          "losses": 3,
+          "ties": 0,
+          "games": 4,
+          "goals_for": 63,
+          "goals_against": 54
+        }
+      ]
+    },
+    {
+      "team": "NIWP V Boys",
+      "games": 3,
+      "wins": 3,
+      "losses": 0,
+      "ties": 0,
+      "win_pct": 1,
+      "goals_for": 44,
+      "goals_against": 7,
+      "goal_differential": 37,
+      "avg_goals_for": 14.67,
+      "avg_goals_against": 2.33,
+      "record_str": "3-0",
+      "by_opponent": [
+        {
+          "opponent": "East ID V Boys",
+          "wins": 1,
+          "losses": 0,
+          "ties": 0,
+          "games": 1,
+          "goals_for": 15,
+          "goals_against": 0
+        },
+        {
+          "opponent": "MV V Boys",
+          "wins": 1,
+          "losses": 0,
+          "ties": 0,
+          "games": 1,
+          "goals_for": 13,
+          "goals_against": 3
+        },
+        {
+          "opponent": "Boise V Boys",
+          "wins": 1,
+          "losses": 0,
+          "ties": 0,
+          "games": 1,
+          "goals_for": 16,
+          "goals_against": 4
+        }
+      ],
+      "by_tournament": [
+        {
+          "tournament": "State 2026",
+          "wins": 3,
+          "losses": 0,
+          "ties": 0,
+          "games": 3,
+          "goals_for": 44,
+          "goals_against": 7
+        }
+      ]
+    },
+    {
+      "team": "18U Girls",
+      "games": 2,
+      "wins": 0,
+      "losses": 0,
+      "ties": 2,
+      "win_pct": 0,
+      "goals_for": 0,
+      "goals_against": 0,
+      "goal_differential": 0,
+      "avg_goals_for": 0,
+      "avg_goals_against": 0,
+      "record_str": "0-0-2",
+      "by_opponent": [
+        {
+          "opponent": "Fleet",
+          "wins": 0,
+          "losses": 0,
+          "ties": 1,
+          "games": 1,
+          "goals_for": 0,
+          "goals_against": 0
+        },
+        {
+          "opponent": "Kracken",
+          "wins": 0,
+          "losses": 0,
+          "ties": 1,
+          "games": 1,
+          "goals_for": 0,
+          "goals_against": 0
+        }
+      ],
+      "by_tournament": [
+        {
+          "tournament": "Junior Olympics 2025 - Dallas Texas",
+          "wins": 0,
+          "losses": 0,
+          "ties": 2,
+          "games": 2,
+          "goals_for": 0,
+          "goals_against": 0
+        }
+      ]
+    },
+    {
+      "team": "CDA 14U Boys",
+      "games": 1,
+      "wins": 1,
+      "losses": 0,
+      "ties": 0,
+      "win_pct": 1,
+      "goals_for": 14,
+      "goals_against": 9,
+      "goal_differential": 5,
+      "avg_goals_for": 14,
+      "avg_goals_against": 9,
+      "record_str": "1-0",
+      "by_opponent": [
+        {
+          "opponent": "Hillsboro 14U Boys",
+          "wins": 1,
+          "losses": 0,
+          "ties": 0,
+          "games": 1,
+          "goals_for": 14,
+          "goals_against": 9
+        }
+      ],
+      "by_tournament": [
+        {
+          "tournament": "KROC w/ HILLSBORO",
+          "wins": 1,
+          "losses": 0,
+          "ties": 0,
+          "games": 1,
+          "goals_for": 14,
+          "goals_against": 9
+        }
+      ]
+    },
+    {
+      "team": "CDA & HB All Stars",
+      "games": 1,
+      "wins": 1,
+      "losses": 0,
+      "ties": 0,
+      "win_pct": 1,
+      "goals_for": 18,
+      "goals_against": 8,
+      "goal_differential": 10,
+      "avg_goals_for": 18,
+      "avg_goals_against": 8,
+      "record_str": "1-0",
+      "by_opponent": [
+        {
+          "opponent": "CDA Masters",
+          "wins": 1,
+          "losses": 0,
+          "ties": 0,
+          "games": 1,
+          "goals_for": 18,
+          "goals_against": 8
+        }
+      ],
+      "by_tournament": [
+        {
+          "tournament": "KROC w/ HILLSBORO",
+          "wins": 1,
+          "losses": 0,
+          "ties": 0,
+          "games": 1,
+          "goals_for": 18,
+          "goals_against": 8
+        }
+      ]
+    },
+    {
+      "team": "NIWP 18u Boys",
+      "games": 1,
+      "wins": 1,
+      "losses": 0,
+      "ties": 0,
+      "win_pct": 1,
+      "goals_for": 10,
+      "goals_against": 4,
+      "goal_differential": 6,
+      "avg_goals_for": 10,
+      "avg_goals_against": 4,
+      "record_str": "1-0",
+      "by_opponent": [
+        {
+          "opponent": "Hillsboro 18u Boys plus",
+          "wins": 1,
+          "losses": 0,
+          "ties": 0,
+          "games": 1,
+          "goals_for": 10,
+          "goals_against": 4
+        }
+      ],
+      "by_tournament": [
+        {
+          "tournament": "KROC w/ HILLSBORO",
+          "wins": 1,
+          "losses": 0,
+          "ties": 0,
+          "games": 1,
+          "goals_for": 10,
+          "goals_against": 4
+        }
+      ]
+    },
+    {
+      "team": "NIWP 18u Girls",
+      "games": 1,
+      "wins": 1,
+      "losses": 0,
+      "ties": 0,
+      "win_pct": 1,
+      "goals_for": 10,
+      "goals_against": 4,
+      "goal_differential": 6,
+      "avg_goals_for": 10,
+      "avg_goals_against": 4,
+      "record_str": "1-0",
+      "by_opponent": [
+        {
+          "opponent": "HillsBoro 18u Girls",
+          "wins": 1,
+          "losses": 0,
+          "ties": 0,
+          "games": 1,
+          "goals_for": 10,
+          "goals_against": 4
+        }
+      ],
+      "by_tournament": [
+        {
+          "tournament": "KROC w/ HILLSBORO",
+          "wins": 1,
+          "losses": 0,
+          "ties": 0,
+          "games": 1,
+          "goals_for": 10,
+          "goals_against": 4
+        }
+      ]
+    },
+    {
+      "team": "MIX 18U Boys A",
+      "games": 1,
+      "wins": 1,
+      "losses": 0,
+      "ties": 0,
+      "win_pct": 1,
+      "goals_for": 9,
+      "goals_against": 5,
+      "goal_differential": 4,
+      "avg_goals_for": 9,
+      "avg_goals_against": 5,
+      "record_str": "1-0",
+      "by_opponent": [
+        {
+          "opponent": "Mix 18U Boys B",
+          "wins": 1,
+          "losses": 0,
+          "ties": 0,
+          "games": 1,
+          "goals_for": 9,
+          "goals_against": 5
+        }
+      ],
+      "by_tournament": [
+        {
+          "tournament": "KROC w/ HILLSBORO",
+          "wins": 1,
+          "losses": 0,
+          "ties": 0,
+          "games": 1,
+          "goals_for": 9,
+          "goals_against": 5
+        }
+      ]
+    },
+    {
+      "team": "NIWP 18U Boy",
+      "games": 1,
+      "wins": 1,
+      "losses": 0,
+      "ties": 0,
+      "win_pct": 1,
+      "goals_for": 19,
+      "goals_against": 7,
+      "goal_differential": 12,
+      "avg_goals_for": 19,
+      "avg_goals_against": 7,
+      "record_str": "1-0",
+      "by_opponent": [
+        {
+          "opponent": "",
+          "wins": 1,
+          "losses": 0,
+          "ties": 0,
+          "games": 1,
+          "goals_for": 19,
+          "goals_against": 7
+        }
+      ],
+      "by_tournament": [
+        {
+          "tournament": "KROC w/ HILLSBORO",
+          "wins": 1,
+          "losses": 0,
+          "ties": 0,
+          "games": 1,
+          "goals_for": 19,
+          "goals_against": 7
+        }
+      ]
+    },
+    {
+      "team": "NIWP 18U Girls",
+      "games": 1,
+      "wins": 1,
+      "losses": 0,
+      "ties": 0,
+      "win_pct": 1,
+      "goals_for": 13,
+      "goals_against": 10,
+      "goal_differential": 3,
+      "avg_goals_for": 13,
+      "avg_goals_against": 10,
+      "record_str": "1-0",
+      "by_opponent": [
+        {
+          "opponent": "HB 18U Boys",
+          "wins": 1,
+          "losses": 0,
+          "ties": 0,
+          "games": 1,
+          "goals_for": 13,
+          "goals_against": 10
+        }
+      ],
+      "by_tournament": [
+        {
+          "tournament": "KROC w/ HILLSBORO",
+          "wins": 1,
+          "losses": 0,
+          "ties": 0,
+          "games": 1,
+          "goals_for": 13,
+          "goals_against": 10
+        }
+      ]
+    },
+    {
+      "team": "NIWP 18U All Stars",
+      "games": 1,
+      "wins": 1,
+      "losses": 0,
+      "ties": 0,
+      "win_pct": 1,
+      "goals_for": 14,
+      "goals_against": 7,
+      "goal_differential": 7,
+      "avg_goals_for": 14,
+      "avg_goals_against": 7,
+      "record_str": "1-0",
+      "by_opponent": [
+        {
+          "opponent": "HB 18U All Stars",
+          "wins": 1,
+          "losses": 0,
+          "ties": 0,
+          "games": 1,
+          "goals_for": 14,
+          "goals_against": 7
+        }
+      ],
+      "by_tournament": [
+        {
+          "tournament": "KROC w/ HILLSBORO",
+          "wins": 1,
+          "losses": 0,
+          "ties": 0,
+          "games": 1,
+          "goals_for": 14,
+          "goals_against": 7
+        }
+      ]
+    },
+    {
+      "team": "COACHES + 18U A",
+      "games": 1,
+      "wins": 0,
+      "losses": 1,
+      "ties": 0,
+      "win_pct": 0,
+      "goals_for": 14,
+      "goals_against": 15,
+      "goal_differential": -1,
+      "avg_goals_for": 14,
+      "avg_goals_against": 15,
+      "record_str": "0-1",
+      "by_opponent": [
+        {
+          "opponent": "COACHES + 18U B",
+          "wins": 0,
+          "losses": 1,
+          "ties": 0,
+          "games": 1,
+          "goals_for": 14,
+          "goals_against": 15
+        }
+      ],
+      "by_tournament": [
+        {
+          "tournament": "KROC w/ HILLSBORO",
+          "wins": 0,
+          "losses": 1,
+          "ties": 0,
+          "games": 1,
+          "goals_for": 14,
+          "goals_against": 15
+        }
+      ]
+    },
+    {
+      "team": "18U",
+      "games": 1,
+      "wins": 1,
+      "losses": 0,
+      "ties": 0,
+      "win_pct": 1,
+      "goals_for": 12,
+      "goals_against": 3,
+      "goal_differential": 9,
+      "avg_goals_for": 12,
+      "avg_goals_against": 3,
+      "record_str": "1-0",
+      "by_opponent": [
+        {
+          "opponent": "Fleet",
+          "wins": 1,
+          "losses": 0,
+          "ties": 0,
+          "games": 1,
+          "goals_for": 12,
+          "goals_against": 3
+        }
+      ],
+      "by_tournament": [
+        {
+          "tournament": "Junior Olympics 2025 - Dallas Texas",
+          "wins": 1,
+          "losses": 0,
+          "ties": 0,
+          "games": 1,
+          "goals_for": 12,
+          "goals_against": 3
+        }
+      ]
+    },
+    {
+      "team": "12U Co d",
+      "games": 1,
+      "wins": 0,
+      "losses": 1,
+      "ties": 0,
+      "win_pct": 0,
+      "goals_for": 4,
+      "goals_against": 19,
+      "goal_differential": -15,
+      "avg_goals_for": 4,
+      "avg_goals_against": 19,
+      "record_str": "0-1",
+      "by_opponent": [
+        {
+          "opponent": "Warrior Aquatics",
+          "wins": 0,
+          "losses": 1,
+          "ties": 0,
+          "games": 1,
+          "goals_for": 4,
+          "goals_against": 19
+        }
+      ],
+      "by_tournament": [
+        {
+          "tournament": "Junior Olympics 2025 - Dallas Texas",
+          "wins": 0,
+          "losses": 1,
+          "ties": 0,
+          "games": 1,
+          "goals_for": 4,
+          "goals_against": 19
+        }
+      ]
+    },
+    {
+      "team": "18u boy",
+      "games": 1,
+      "wins": 0,
+      "losses": 0,
+      "ties": 1,
+      "win_pct": 0,
+      "goals_for": 2,
+      "goals_against": 2,
+      "goal_differential": 0,
+      "avg_goals_for": 2,
+      "avg_goals_against": 2,
+      "record_str": "0-0-1",
+      "by_opponent": [
+        {
+          "opponent": "Storm",
+          "wins": 0,
+          "losses": 0,
+          "ties": 1,
+          "games": 1,
+          "goals_for": 2,
+          "goals_against": 2
+        }
+      ],
+      "by_tournament": [
+        {
+          "tournament": "Junior Olympics 2025 - Dallas Texas",
+          "wins": 0,
+          "losses": 0,
+          "ties": 1,
+          "games": 1,
+          "goals_for": 2,
+          "goals_against": 2
+        }
+      ]
+    },
+    {
+      "team": "18U bo",
+      "games": 1,
+      "wins": 0,
+      "losses": 1,
+      "ties": 0,
+      "win_pct": 0,
+      "goals_for": 5,
+      "goals_against": 12,
+      "goal_differential": -7,
+      "avg_goals_for": 5,
+      "avg_goals_against": 12,
+      "record_str": "0-1",
+      "by_opponent": [
+        {
+          "opponent": "Heiland",
+          "wins": 0,
+          "losses": 1,
+          "ties": 0,
+          "games": 1,
+          "goals_for": 5,
+          "goals_against": 12
+        }
+      ],
+      "by_tournament": [
+        {
+          "tournament": "Junior Olympics 2025 - Dallas Texas",
+          "wins": 0,
+          "losses": 1,
+          "ties": 0,
+          "games": 1,
+          "goals_for": 5,
+          "goals_against": 12
+        }
+      ]
+    },
+    {
+      "team": "18U boys",
+      "games": 1,
+      "wins": 0,
+      "losses": 1,
+      "ties": 0,
+      "win_pct": 0,
+      "goals_for": 9,
+      "goals_against": 13,
+      "goal_differential": -4,
+      "avg_goals_for": 9,
+      "avg_goals_against": 13,
+      "record_str": "0-1",
+      "by_opponent": [
+        {
+          "opponent": "JUNGLE",
+          "wins": 0,
+          "losses": 1,
+          "ties": 0,
+          "games": 1,
+          "goals_for": 9,
+          "goals_against": 13
+        }
+      ],
+      "by_tournament": [
+        {
+          "tournament": "Junior Olympics 2025 - Dallas Texas",
+          "wins": 0,
+          "losses": 1,
+          "ties": 0,
+          "games": 1,
+          "goals_for": 9,
+          "goals_against": 13
+        }
+      ]
+    },
+    {
+      "team": "12 Co Ed",
+      "games": 1,
+      "wins": 1,
+      "losses": 0,
+      "ties": 0,
+      "win_pct": 1,
+      "goals_for": 13,
+      "goals_against": 7,
+      "goal_differential": 6,
+      "avg_goals_for": 13,
+      "avg_goals_against": 7,
+      "record_str": "1-0",
+      "by_opponent": [
+        {
+          "opponent": "Zilla",
+          "wins": 1,
+          "losses": 0,
+          "ties": 0,
+          "games": 1,
+          "goals_for": 13,
+          "goals_against": 7
+        }
+      ],
+      "by_tournament": [
+        {
+          "tournament": "Jr Olympics Lewisville",
+          "wins": 1,
+          "losses": 0,
+          "ties": 0,
+          "games": 1,
+          "goals_for": 13,
+          "goals_against": 7
+        }
+      ]
+    },
+    {
+      "team": "CDA Dev",
+      "games": 1,
+      "wins": 1,
+      "losses": 0,
+      "ties": 0,
+      "win_pct": 1,
+      "goals_for": 14,
+      "goals_against": 11,
+      "goal_differential": 3,
+      "avg_goals_for": 14,
+      "avg_goals_against": 11,
+      "record_str": "1-0",
+      "by_opponent": [
+        {
+          "opponent": "MV Girls",
+          "wins": 1,
+          "losses": 0,
+          "ties": 0,
+          "games": 1,
+          "goals_for": 14,
+          "goals_against": 11
+        }
+      ],
+      "by_tournament": [
+        {
+          "tournament": "CDA Classic",
+          "wins": 1,
+          "losses": 0,
+          "ties": 0,
+          "games": 1,
+          "goals_for": 14,
+          "goals_against": 11
+        }
+      ]
+    },
+    {
+      "team": "NIWP Girls Yellow",
+      "games": 1,
+      "wins": 1,
+      "losses": 0,
+      "ties": 0,
+      "win_pct": 1,
+      "goals_for": 20,
+      "goals_against": 4,
+      "goal_differential": 16,
+      "avg_goals_for": 20,
+      "avg_goals_against": 4,
+      "record_str": "1-0",
+      "by_opponent": [
+        {
+          "opponent": "TV Girls",
+          "wins": 1,
+          "losses": 0,
+          "ties": 0,
+          "games": 1,
+          "goals_for": 20,
+          "goals_against": 4
+        }
+      ],
+      "by_tournament": [
+        {
+          "tournament": "State 2026",
+          "wins": 1,
+          "losses": 0,
+          "ties": 0,
+          "games": 1,
+          "goals_for": 20,
+          "goals_against": 4
+        }
+      ]
+    },
+    {
+      "team": "CDA 18U. Boys",
+      "games": 1,
+      "wins": 1,
+      "losses": 0,
+      "ties": 0,
+      "win_pct": 1,
+      "goals_for": 13,
+      "goals_against": 3,
+      "goal_differential": 10,
+      "avg_goals_for": 13,
+      "avg_goals_against": 3,
+      "record_str": "1-0",
+      "by_opponent": [
+        {
+          "opponent": "Bend Gold",
+          "wins": 1,
+          "losses": 0,
+          "ties": 0,
+          "games": 1,
+          "goals_for": 13,
+          "goals_against": 3
+        }
+      ],
+      "by_tournament": [
+        {
+          "tournament": "Cascade Classic",
+          "wins": 1,
+          "losses": 0,
+          "ties": 0,
+          "games": 1,
+          "goals_for": 13,
+          "goals_against": 3
+        }
+      ]
+    },
+    {
+      "team": "CDA Boys 18U",
+      "games": 1,
+      "wins": 1,
+      "losses": 0,
+      "ties": 0,
+      "win_pct": 1,
+      "goals_for": 10,
+      "goals_against": 9,
+      "goal_differential": 1,
+      "avg_goals_for": 10,
+      "avg_goals_against": 9,
+      "record_str": "1-0",
+      "by_opponent": [
+        {
+          "opponent": "Eugene",
+          "wins": 1,
+          "losses": 0,
+          "ties": 0,
+          "games": 1,
+          "goals_for": 10,
+          "goals_against": 9
+        }
+      ],
+      "by_tournament": [
+        {
+          "tournament": "Cascade Classic",
+          "wins": 1,
+          "losses": 0,
+          "ties": 0,
+          "games": 1,
+          "goals_for": 10,
+          "goals_against": 9
+        }
+      ]
+    }
+  ],
+  "combined": {
+    "games": 82,
+    "wins": 46,
+    "losses": 27,
+    "ties": 9,
+    "goals_for": 794,
+    "goals_against": 665,
+    "win_pct": 0.561,
+    "goal_differential": 129,
+    "record_str": "46-27-9"
+  }
+}

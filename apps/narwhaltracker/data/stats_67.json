@@ -1,0 +1,93 @@
+[
+  {
+    "stat_id": "409",
+    "game_id": "67",
+    "player_id": "9",
+    "player_name": "B - Mason Curry",
+    "cap_number": "7",
+    "goals": "3",
+    "assists": "6",
+    "steals": "0",
+    "blocks": "0",
+    "kickouts": "1",
+    "updated_at": "2025-05-31 08:44:22"
+  },
+  {
+    "stat_id": "410",
+    "game_id": "67",
+    "player_id": "17",
+    "player_name": "B - Brennan McCrea",
+    "cap_number": "8",
+    "goals": "7",
+    "assists": "2",
+    "steals": "0",
+    "blocks": "0",
+    "kickouts": "0",
+    "updated_at": "2025-05-31 08:42:45"
+  },
+  {
+    "stat_id": "411",
+    "game_id": "67",
+    "player_id": "19",
+    "player_name": "B - Luke Griffiths",
+    "cap_number": "10",
+    "goals": "0",
+    "assists": "0",
+    "steals": "0",
+    "blocks": "0",
+    "kickouts": "1",
+    "updated_at": "2025-05-31 08:19:06"
+  },
+  {
+    "stat_id": "412",
+    "game_id": "67",
+    "player_id": "12",
+    "player_name": "B - Taylor Holding",
+    "cap_number": "2",
+    "goals": "5",
+    "assists": "3",
+    "steals": "2",
+    "blocks": "0",
+    "kickouts": "1",
+    "updated_at": "2025-05-31 08:41:09"
+  },
+  {
+    "stat_id": "413",
+    "game_id": "67",
+    "player_id": "10",
+    "player_name": "B - Jackson Curry",
+    "cap_number": "11",
+    "goals": "0",
+    "assists": "0",
+    "steals": "0",
+    "blocks": "0",
+    "kickouts": "0",
+    "updated_at": "2025-05-31 08:08:21"
+  },
+  {
+    "stat_id": "414",
+    "game_id": "67",
+    "player_id": "16",
+    "player_name": "B - Tucker Rigg",
+    "cap_number": "6",
+    "goals": "4",
+    "assists": "3",
+    "steals": "0",
+    "blocks": "0",
+    "kickouts": "0",
+    "updated_at": "2025-05-31 08:39:53"
+  },
+  {
+    "stat_id": "415",
+    "game_id": "67",
+    "player_id": "13",
+    "player_name": "B - David Schoeny",
+    "cap_number": "1",
+    "goals": "0",
+    "assists": "0",
+    "steals": "0",
+    "blocks": "5",
+    "kickouts": "0",
+    "updated_at": "2025-05-31 08:43:06"
+  }
+]

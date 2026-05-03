@@ -1,0 +1,1025 @@
+[
+  {
+    "tournament": "GRESHAM",
+    "games_played": 16,
+    "wins": 8,
+    "losses": 8,
+    "ties": 0,
+    "win_pct": 0.5,
+    "record_str": "8-8",
+    "goals_for": 126,
+    "goals_against": 147,
+    "goal_differential": -21,
+    "cda_teams": [
+      "CDA 14U Co-Ed",
+      "CDA 18U Boys",
+      "CDA 18U Girls"
+    ],
+    "opponents": [
+      "BC",
+      "BC 16U",
+      "Bend",
+      "LOWPO",
+      "Newberg",
+      "Northwest",
+      "PSP Boys",
+      "PSP Girls",
+      "WVWP"
+    ],
+    "game_log": [
+      {
+        "game_id": "42",
+        "date": "2025-05-16 17:50:00",
+        "home_team": "CDA 18U Boys",
+        "away_team": "WVWP",
+        "home_score": 15,
+        "away_score": 4,
+        "result": "W"
+      },
+      {
+        "game_id": "43",
+        "date": "2025-05-16 17:50:00",
+        "home_team": "CDA 14U Co-Ed",
+        "away_team": "LOWPO",
+        "home_score": 2,
+        "away_score": 10,
+        "result": "L"
+      },
+      {
+        "game_id": "44",
+        "date": "2025-05-16 18:40:00",
+        "home_team": "CDA 18U Girls",
+        "away_team": "LOWPO",
+        "home_score": 11,
+        "away_score": 10,
+        "result": "W"
+      },
+      {
+        "game_id": "45",
+        "date": "2025-05-16 20:20:00",
+        "home_team": "CDA 14U Co-Ed",
+        "away_team": "PSP Boys",
+        "home_score": 2,
+        "away_score": 18,
+        "result": "L"
+      },
+      {
+        "game_id": "47",
+        "date": "2025-05-17 09:10:00",
+        "home_team": "CDA 14U Co-Ed",
+        "away_team": "PSP Girls",
+        "home_score": 6,
+        "away_score": 15,
+        "result": "L"
+      },
+      {
+        "game_id": "49",
+        "date": "2025-05-17 13:20:00",
+        "home_team": "CDA 14U Co-Ed",
+        "away_team": "Bend",
+        "home_score": 12,
+        "away_score": 15,
+        "result": "L"
+      },
+      {
+        "game_id": "50",
+        "date": "2025-05-17 13:20:00",
+        "home_team": "CDA 18U Boys",
+        "away_team": "LOWPO",
+        "home_score": 0,
+        "away_score": 14,
+        "result": "L"
+      },
+      {
+        "game_id": "51",
+        "date": "2025-05-17 15:00:00",
+        "home_team": "CDA 18U Girls",
+        "away_team": "BC",
+        "home_score": 14,
+        "away_score": 8,
+        "result": "W"
+      },
+      {
+        "game_id": "52",
+        "date": "2025-05-17 19:10:00",
+        "home_team": "CDA 18U Girls",
+        "away_team": "Bend",
+        "home_score": 13,
+        "away_score": 2,
+        "result": "W"
+      },
+      {
+        "game_id": "53",
+        "date": "2025-05-17 20:00:00",
+        "home_team": "CDA 18U Boys",
+        "away_team": "BC",
+        "home_score": 6,
+        "away_score": 12,
+        "result": "L"
+      },
+      {
+        "game_id": "48",
+        "date": "2025-05-17 22:50:00",
+        "home_team": "CDA 18U Boys",
+        "away_team": "Newberg",
+        "home_score": 7,
+        "away_score": 5,
+        "result": "W"
+      },
+      {
+        "game_id": "58",
+        "date": "2025-05-18 00:00:00",
+        "home_team": "CDA 18U Girls",
+        "away_team": "BC",
+        "home_score": 8,
+        "away_score": 7,
+        "result": "W"
+      },
+      {
+        "game_id": "54",
+        "date": "2025-05-18 08:20:00",
+        "home_team": "CDA 18U Boys",
+        "away_team": "Bend",
+        "home_score": 5,
+        "away_score": 3,
+        "result": "W"
+      },
+      {
+        "game_id": "55",
+        "date": "2025-05-18 09:10:00",
+        "home_team": "CDA 18U Girls",
+        "away_team": "BC 16U",
+        "home_score": 17,
+        "away_score": 2,
+        "result": "W"
+      },
+      {
+        "game_id": "56",
+        "date": "2025-05-18 10:00:00",
+        "home_team": "CDA 14U Co-Ed",
+        "away_team": "BC",
+        "home_score": 8,
+        "away_score": 13,
+        "result": "L"
+      },
+      {
+        "game_id": "57",
+        "date": "2025-05-18 13:20:00",
+        "home_team": "CDA 14U Co-Ed",
+        "away_team": "Northwest",
+        "home_score": 0,
+        "away_score": 9,
+        "result": "L"
+      }
+    ]
+  },
+  {
+    "tournament": "Junior Olympics 2025 - Dallas Texas",
+    "games_played": 15,
+    "wins": 5,
+    "losses": 7,
+    "ties": 3,
+    "win_pct": 0.333,
+    "record_str": "5-7-3",
+    "goals_for": 103,
+    "goals_against": 161,
+    "goal_differential": -58,
+    "cda_teams": [
+      "12U Co Ed",
+      "12U Co d",
+      "18U",
+      "18U Boys",
+      "18U Girls",
+      "18U bo",
+      "18U boys",
+      "18u boy"
+    ],
+    "opponents": [
+      "BCWP",
+      "Fleet",
+      "Heiland",
+      "Hydralamo Black",
+      "JUNGLE",
+      "Kracken",
+      "Mavericks",
+      "PRWPC",
+      "Peak Polo White",
+      "Slap Blue",
+      "Storm",
+      "VP Blue",
+      "Warrior A",
+      "Warrior Aquatics"
+    ],
+    "game_log": [
+      {
+        "game_id": "73",
+        "date": "2025-07-31 09:00:00",
+        "home_team": "18U Girls",
+        "away_team": "Fleet",
+        "home_score": 0,
+        "away_score": 0,
+        "result": "T"
+      },
+      {
+        "game_id": "71",
+        "date": "2025-07-31 09:10:00",
+        "home_team": "18U Boys",
+        "away_team": "Slap Blue",
+        "home_score": 4,
+        "away_score": 15,
+        "result": "L"
+      },
+      {
+        "game_id": "74",
+        "date": "2025-07-31 10:50:00",
+        "home_team": "12U Co Ed",
+        "away_team": "Mavericks",
+        "home_score": 14,
+        "away_score": 11,
+        "result": "W"
+      },
+      {
+        "game_id": "72",
+        "date": "2025-07-31 11:40:00",
+        "home_team": "18U Boys",
+        "away_team": "VP Blue",
+        "home_score": 18,
+        "away_score": 10,
+        "result": "W"
+      },
+      {
+        "game_id": "78",
+        "date": "2025-07-31 14:10:00",
+        "home_team": "12U Co Ed",
+        "away_team": "Peak Polo White",
+        "home_score": 7,
+        "away_score": 22,
+        "result": "L"
+      },
+      {
+        "game_id": "75",
+        "date": "2025-07-31 15:00:00",
+        "home_team": "18U Girls",
+        "away_team": "Kracken",
+        "home_score": 0,
+        "away_score": 0,
+        "result": "T"
+      },
+      {
+        "game_id": "79",
+        "date": "2025-07-31 17:30:00",
+        "home_team": "12U Co Ed",
+        "away_team": "Warrior A",
+        "home_score": 10,
+        "away_score": 9,
+        "result": "W"
+      },
+      {
+        "game_id": "76",
+        "date": "2025-07-31 19:10:00",
+        "home_team": "18U",
+        "away_team": "Fleet",
+        "home_score": 12,
+        "away_score": 3,
+        "result": "W"
+      },
+      {
+        "game_id": "81",
+        "date": "2025-08-01 07:30:00",
+        "home_team": "18U Boys",
+        "away_team": "PRWPC",
+        "home_score": 7,
+        "away_score": 16,
+        "result": "L"
+      },
+      {
+        "game_id": "83",
+        "date": "2025-08-01 12:30:00",
+        "home_team": "18U Boys",
+        "away_team": "BCWP",
+        "home_score": 10,
+        "away_score": 4,
+        "result": "W"
+      },
+      {
+        "game_id": "85",
+        "date": "2025-08-01 15:20:00",
+        "home_team": "12U Co Ed",
+        "away_team": "Hydralamo Black",
+        "home_score": 1,
+        "away_score": 25,
+        "result": "L"
+      },
+      {
+        "game_id": "86",
+        "date": "2025-08-01 18:40:00",
+        "home_team": "12U Co d",
+        "away_team": "Warrior Aquatics",
+        "home_score": 4,
+        "away_score": 19,
+        "result": "L"
+      },
+      {
+        "game_id": "88",
+        "date": "2025-08-02 08:30:00",
+        "home_team": "18u boy",
+        "away_team": "Storm",
+        "home_score": 2,
+        "away_score": 2,
+        "result": "T"
+      },
+      {
+        "game_id": "90",
+        "date": "2025-08-02 13:30:00",
+        "home_team": "18U bo",
+        "away_team": "Heiland",
+        "home_score": 5,
+        "away_score": 12,
+        "result": "L"
+      },
+      {
+        "game_id": "93",
+        "date": "2025-08-03 12:30:00",
+        "home_team": "18U boys",
+        "away_team": "JUNGLE",
+        "home_score": 9,
+        "away_score": 13,
+        "result": "L"
+      }
+    ]
+  },
+  {
+    "tournament": "Boise",
+    "games_played": 15,
+    "wins": 7,
+    "losses": 3,
+    "ties": 5,
+    "win_pct": 0.467,
+    "record_str": "7-3-5",
+    "goals_for": 124,
+    "goals_against": 91,
+    "goal_differential": 33,
+    "cda_teams": [
+      "CDA Boys JV",
+      "CDA Boys V",
+      "CDA Girls JV",
+      "CDA Girls V"
+    ],
+    "opponents": [
+      "Boise Boys JV",
+      "Boise Boys V",
+      "Boise State",
+      "East ID Boys",
+      "East ID Girls",
+      "MV Boys",
+      "MV Girls",
+      "OPEN"
+    ],
+    "game_log": [
+      {
+        "game_id": "97",
+        "date": "2025-12-12 17:30:00",
+        "home_team": "CDA Boys V",
+        "away_team": "Boise Boys V",
+        "home_score": 15,
+        "away_score": 8,
+        "result": "W"
+      },
+      {
+        "game_id": "100",
+        "date": "2025-12-12 17:30:00",
+        "home_team": "CDA Girls V",
+        "away_team": "OPEN",
+        "home_score": 0,
+        "away_score": 0,
+        "result": "T"
+      },
+      {
+        "game_id": "103",
+        "date": "2025-12-12 17:30:00",
+        "home_team": "CDA Girls JV",
+        "away_team": "OPEN",
+        "home_score": 0,
+        "away_score": 0,
+        "result": "T"
+      },
+      {
+        "game_id": "99",
+        "date": "2025-12-12 18:20:00",
+        "home_team": "CDA Boys JV",
+        "away_team": "East ID Boys",
+        "home_score": 12,
+        "away_score": 11,
+        "result": "W"
+      },
+      {
+        "game_id": "101",
+        "date": "2025-12-12 18:20:00",
+        "home_team": "CDA Girls V",
+        "away_team": "East ID Girls",
+        "home_score": 18,
+        "away_score": 0,
+        "result": "W"
+      },
+      {
+        "game_id": "104",
+        "date": "2025-12-12 19:10:00",
+        "home_team": "CDA Girls JV",
+        "away_team": "MV Girls",
+        "home_score": 9,
+        "away_score": 5,
+        "result": "W"
+      },
+      {
+        "game_id": "98",
+        "date": "2025-12-12 20:00:00",
+        "home_team": "CDA Boys V",
+        "away_team": "Boise State",
+        "home_score": 14,
+        "away_score": 18,
+        "result": "L"
+      },
+      {
+        "game_id": "102",
+        "date": "2025-12-12 20:00:00",
+        "home_team": "CDA Girls V",
+        "away_team": "OPEN",
+        "home_score": 0,
+        "away_score": 0,
+        "result": "T"
+      },
+      {
+        "game_id": "105",
+        "date": "2025-12-12 20:00:00",
+        "home_team": "CDA Girls JV",
+        "away_team": "OPEN",
+        "home_score": 0,
+        "away_score": 0,
+        "result": "T"
+      },
+      {
+        "game_id": "106",
+        "date": "2025-12-13 08:20:00",
+        "home_team": "CDA Boys V",
+        "away_team": "MV Boys",
+        "home_score": 13,
+        "away_score": 4,
+        "result": "W"
+      },
+      {
+        "game_id": "108",
+        "date": "2025-12-13 09:10:00",
+        "home_team": "CDA Boys JV",
+        "away_team": "Boise Boys V",
+        "home_score": 6,
+        "away_score": 21,
+        "result": "L"
+      },
+      {
+        "game_id": "111",
+        "date": "2025-12-13 09:10:00",
+        "home_team": "CDA Girls JV",
+        "away_team": "East ID Girls",
+        "home_score": 15,
+        "away_score": 6,
+        "result": "W"
+      },
+      {
+        "game_id": "107",
+        "date": "2025-12-13 10:00:00",
+        "home_team": "CDA Boys V",
+        "away_team": "East ID Boys",
+        "home_score": 15,
+        "away_score": 4,
+        "result": "W"
+      },
+      {
+        "game_id": "110",
+        "date": "2025-12-13 10:00:00",
+        "home_team": "CDA Girls V",
+        "away_team": "MV Girls",
+        "home_score": 0,
+        "away_score": 0,
+        "result": "T"
+      },
+      {
+        "game_id": "109",
+        "date": "2025-12-13 10:50:00",
+        "home_team": "CDA Boys JV",
+        "away_team": "Boise Boys JV",
+        "home_score": 7,
+        "away_score": 14,
+        "result": "L"
+      }
+    ]
+  },
+  {
+    "tournament": "KROC w/ HILLSBORO",
+    "games_played": 11,
+    "wins": 10,
+    "losses": 1,
+    "ties": 0,
+    "win_pct": 0.909,
+    "record_str": "10-1",
+    "goals_for": 163,
+    "goals_against": 76,
+    "goal_differential": 87,
+    "cda_teams": [
+      "CDA & HB All Stars",
+      "CDA 14U Boys",
+      "CDA 18U Boys",
+      "CDA 18U Girls",
+      "COACHES + 18U A",
+      "MIX 18U Boys A",
+      "NIWP 18U All Stars",
+      "NIWP 18U Boy",
+      "NIWP 18U Girls",
+      "NIWP 18u Boys",
+      "NIWP 18u Girls"
+    ],
+    "opponents": [
+      "",
+      "CDA Masters",
+      "COACHES + 18U B",
+      "HB 18U All Stars",
+      "HB 18U Boys",
+      "HillsBoro 18u Girls",
+      "Hillsboro",
+      "Hillsboro 14U Boys",
+      "Hillsboro 18U Girls",
+      "Hillsboro 18u Boys plus",
+      "Mix 18U Boys B"
+    ],
+    "game_log": [
+      {
+        "game_id": "60",
+        "date": "2025-05-29 17:30:00",
+        "home_team": "CDA 18U Boys",
+        "away_team": "Hillsboro",
+        "home_score": 22,
+        "away_score": 3,
+        "result": "W"
+      },
+      {
+        "game_id": "61",
+        "date": "2025-05-29 18:30:00",
+        "home_team": "CDA 18U Girls",
+        "away_team": "Hillsboro 18U Girls",
+        "home_score": 20,
+        "away_score": 4,
+        "result": "W"
+      },
+      {
+        "game_id": "62",
+        "date": "2025-05-29 18:30:00",
+        "home_team": "CDA 14U Boys",
+        "away_team": "Hillsboro 14U Boys",
+        "home_score": 14,
+        "away_score": 9,
+        "result": "W"
+      },
+      {
+        "game_id": "63",
+        "date": "2025-05-29 19:30:00",
+        "home_team": "CDA & HB All Stars",
+        "away_team": "CDA Masters",
+        "home_score": 18,
+        "away_score": 8,
+        "result": "W"
+      },
+      {
+        "game_id": "64",
+        "date": "2025-05-30 17:30:00",
+        "home_team": "NIWP 18u Boys",
+        "away_team": "Hillsboro 18u Boys plus",
+        "home_score": 10,
+        "away_score": 4,
+        "result": "W"
+      },
+      {
+        "game_id": "65",
+        "date": "2025-05-30 18:30:00",
+        "home_team": "NIWP 18u Girls",
+        "away_team": "HillsBoro 18u Girls",
+        "home_score": 10,
+        "away_score": 4,
+        "result": "W"
+      },
+      {
+        "game_id": "66",
+        "date": "2025-05-30 19:10:00",
+        "home_team": "MIX 18U Boys A",
+        "away_team": "Mix 18U Boys B",
+        "home_score": 9,
+        "away_score": 5,
+        "result": "W"
+      },
+      {
+        "game_id": "67",
+        "date": "2025-05-31 00:00:00",
+        "home_team": "NIWP 18U Boy",
+        "away_team": "",
+        "home_score": 19,
+        "away_score": 7,
+        "result": "W"
+      },
+      {
+        "game_id": "68",
+        "date": "2025-05-31 09:00:00",
+        "home_team": "NIWP 18U Girls",
+        "away_team": "HB 18U Boys",
+        "home_score": 13,
+        "away_score": 10,
+        "result": "W"
+      },
+      {
+        "game_id": "69",
+        "date": "2025-05-31 10:00:00",
+        "home_team": "NIWP 18U All Stars",
+        "away_team": "HB 18U All Stars",
+        "home_score": 14,
+        "away_score": 7,
+        "result": "W"
+      },
+      {
+        "game_id": "70",
+        "date": "2025-05-31 12:00:00",
+        "home_team": "COACHES + 18U A",
+        "away_team": "COACHES + 18U B",
+        "home_score": 14,
+        "away_score": 15,
+        "result": "L"
+      }
+    ]
+  },
+  {
+    "tournament": "CDA Classic",
+    "games_played": 10,
+    "wins": 6,
+    "losses": 3,
+    "ties": 1,
+    "win_pct": 0.6,
+    "record_str": "6-3-1",
+    "goals_for": 82,
+    "goals_against": 60,
+    "goal_differential": 22,
+    "cda_teams": [
+      "CDA Boys JV",
+      "CDA Boys V",
+      "CDA Dev",
+      "CDA Girls JV",
+      "CDA Girls V"
+    ],
+    "opponents": [
+      "Boise Bo",
+      "Boise Boys V",
+      "MV + Boise Boys",
+      "MV Girls",
+      "Magic Valley Girls",
+      "Magic Valley V",
+      "S Idaho JV Girls",
+      "Twin Falls Boys",
+      "Twin Falls Girls V"
+    ],
+    "game_log": [
+      {
+        "game_id": "112",
+        "date": "2026-01-09 16:00:00",
+        "home_team": "CDA Boys V",
+        "away_team": "Boise Boys V",
+        "home_score": 9,
+        "away_score": 4,
+        "result": "W"
+      },
+      {
+        "game_id": "113",
+        "date": "2026-01-09 16:55:00",
+        "home_team": "CDA Girls V",
+        "away_team": "Twin Falls Girls V",
+        "home_score": 15,
+        "away_score": 1,
+        "result": "W"
+      },
+      {
+        "game_id": "114",
+        "date": "2026-01-09 18:45:00",
+        "home_team": "CDA Girls JV",
+        "away_team": "S Idaho JV Girls",
+        "home_score": 4,
+        "away_score": 19,
+        "result": "L"
+      },
+      {
+        "game_id": "115",
+        "date": "2026-01-09 19:40:00",
+        "home_team": "CDA Boys JV",
+        "away_team": "Twin Falls Boys",
+        "home_score": 0,
+        "away_score": 0,
+        "result": "T"
+      },
+      {
+        "game_id": "117",
+        "date": "2026-01-10 00:00:00",
+        "home_team": "CDA Dev",
+        "away_team": "MV Girls",
+        "home_score": 14,
+        "away_score": 11,
+        "result": "W"
+      },
+      {
+        "game_id": "118",
+        "date": "2026-01-10 00:00:00",
+        "home_team": "CDA Girls V",
+        "away_team": "Boise Bo",
+        "home_score": 4,
+        "away_score": 12,
+        "result": "L"
+      },
+      {
+        "game_id": "116",
+        "date": "2026-01-10 07:30:00",
+        "home_team": "CDA Boys V",
+        "away_team": "Magic Valley V",
+        "home_score": 10,
+        "away_score": 1,
+        "result": "W"
+      },
+      {
+        "game_id": "120",
+        "date": "2026-01-10 10:10:00",
+        "home_team": "CDA Boys JV",
+        "away_team": "Boise Boys V",
+        "home_score": 0,
+        "away_score": 2,
+        "result": "L"
+      },
+      {
+        "game_id": "121",
+        "date": "2026-01-10 11:00:00",
+        "home_team": "CDA Girls JV",
+        "away_team": "Magic Valley Girls",
+        "home_score": 11,
+        "away_score": 9,
+        "result": "W"
+      },
+      {
+        "game_id": "122",
+        "date": "2026-01-10 12:05:00",
+        "home_team": "CDA Boys V",
+        "away_team": "MV + Boise Boys",
+        "home_score": 15,
+        "away_score": 1,
+        "result": "W"
+      }
+    ]
+  },
+  {
+    "tournament": "Dare to Dream",
+    "games_played": 4,
+    "wins": 1,
+    "losses": 3,
+    "ties": 0,
+    "win_pct": 0.25,
+    "record_str": "1-3",
+    "goals_for": 63,
+    "goals_against": 54,
+    "goal_differential": 9,
+    "cda_teams": [
+      "North Idaho"
+    ],
+    "opponents": [
+      "LOPOW",
+      "Puget Soun",
+      "Rain City",
+      "Tualatin Hills"
+    ],
+    "game_log": [
+      {
+        "game_id": "123",
+        "date": "2026-01-31 15:20:00",
+        "home_team": "North Idaho",
+        "away_team": "Tualatin Hills",
+        "home_score": 18,
+        "away_score": 4,
+        "result": "W"
+      },
+      {
+        "game_id": "124",
+        "date": "2026-01-31 17:20:00",
+        "home_team": "North Idaho",
+        "away_team": "Puget Soun",
+        "home_score": 17,
+        "away_score": 18,
+        "result": "L"
+      },
+      {
+        "game_id": "125",
+        "date": "2026-02-01 08:00:00",
+        "home_team": "North Idaho",
+        "away_team": "Rain City",
+        "home_score": 11,
+        "away_score": 12,
+        "result": "L"
+      },
+      {
+        "game_id": "126",
+        "date": "2026-02-01 10:30:00",
+        "home_team": "North Idaho",
+        "away_team": "LOPOW",
+        "home_score": 17,
+        "away_score": 20,
+        "result": "L"
+      }
+    ]
+  },
+  {
+    "tournament": "State 2026",
+    "games_played": 4,
+    "wins": 4,
+    "losses": 0,
+    "ties": 0,
+    "win_pct": 1,
+    "record_str": "4-0",
+    "goals_for": 64,
+    "goals_against": 11,
+    "goal_differential": 53,
+    "cda_teams": [
+      "NIWP Girls Yellow",
+      "NIWP V Boys"
+    ],
+    "opponents": [
+      "Boise V Boys",
+      "East ID V Boys",
+      "MV V Boys",
+      "TV Girls"
+    ],
+    "game_log": [
+      {
+        "game_id": "128",
+        "date": "2026-02-06 18:00:00",
+        "home_team": "NIWP V Boys",
+        "away_team": "East ID V Boys",
+        "home_score": 15,
+        "away_score": 0,
+        "result": "W"
+      },
+      {
+        "game_id": "131",
+        "date": "2026-02-07 00:00:00",
+        "home_team": "NIWP V Boys",
+        "away_team": "Boise V Boys",
+        "home_score": 16,
+        "away_score": 4,
+        "result": "W"
+      },
+      {
+        "game_id": "130",
+        "date": "2026-02-07 09:10:00",
+        "home_team": "NIWP V Boys",
+        "away_team": "MV V Boys",
+        "home_score": 13,
+        "away_score": 3,
+        "result": "W"
+      },
+      {
+        "game_id": "127",
+        "date": "2026-02-07 17:10:00",
+        "home_team": "NIWP Girls Yellow",
+        "away_team": "TV Girls",
+        "home_score": 20,
+        "away_score": 4,
+        "result": "W"
+      }
+    ]
+  },
+  {
+    "tournament": "Cascade Classic",
+    "games_played": 4,
+    "wins": 4,
+    "losses": 0,
+    "ties": 0,
+    "win_pct": 1,
+    "record_str": "4-0",
+    "goals_for": 42,
+    "goals_against": 22,
+    "goal_differential": 20,
+    "cda_teams": [
+      "CDA 18U Boys",
+      "CDA 18U. Boys",
+      "CDA Boys 18U"
+    ],
+    "opponents": [
+      "Bend Black",
+      "Bend Gold",
+      "Blue Crush",
+      "Eugene"
+    ],
+    "game_log": [
+      {
+        "game_id": "132",
+        "date": "2026-04-17 18:30:00",
+        "home_team": "CDA 18U. Boys",
+        "away_team": "Bend Gold",
+        "home_score": 13,
+        "away_score": 3,
+        "result": "W"
+      },
+      {
+        "game_id": "133",
+        "date": "2026-04-18 10:20:00",
+        "home_team": "CDA 18U Boys",
+        "away_team": "Bend Black",
+        "home_score": 8,
+        "away_score": 7,
+        "result": "W"
+      },
+      {
+        "game_id": "134",
+        "date": "2026-04-18 12:00:00",
+        "home_team": "CDA 18U Boys",
+        "away_team": "Blue Crush",
+        "home_score": 11,
+        "away_score": 3,
+        "result": "W"
+      },
+      {
+        "game_id": "135",
+        "date": "2026-04-19 00:00:00",
+        "home_team": "CDA Boys 18U",
+        "away_team": "Eugene",
+        "home_score": 10,
+        "away_score": 9,
+        "result": "W"
+      }
+    ]
+  },
+  {
+    "tournament": "Jr Olympics Jesuit Dallas",
+    "games_played": 2,
+    "wins": 0,
+    "losses": 2,
+    "ties": 0,
+    "win_pct": 0,
+    "record_str": "0-2",
+    "goals_for": 14,
+    "goals_against": 36,
+    "goal_differential": -22,
+    "cda_teams": [
+      "12U Co Ed"
+    ],
+    "opponents": [
+      "Navy AC",
+      "Viper Pigeon Green"
+    ],
+    "game_log": [
+      {
+        "game_id": "89",
+        "date": "2025-08-02 09:30:00",
+        "home_team": "12U Co Ed",
+        "away_team": "Viper Pigeon Green",
+        "home_score": 7,
+        "away_score": 19,
+        "result": "L"
+      },
+      {
+        "game_id": "92",
+        "date": "2025-08-02 16:10:00",
+        "home_team": "12U Co Ed",
+        "away_team": "Navy AC",
+        "home_score": 7,
+        "away_score": 17,
+        "result": "L"
+      }
+    ]
+  },
+  {
+    "tournament": "Jr Olympics Lewisville",
+    "games_played": 1,
+    "wins": 1,
+    "losses": 0,
+    "ties": 0,
+    "win_pct": 1,
+    "record_str": "1-0",
+    "goals_for": 13,
+    "goals_against": 7,
+    "goal_differential": 6,
+    "cda_teams": [
+      "12 Co Ed"
+    ],
+    "opponents": [
+      "Zilla"
+    ],
+    "game_log": [
+      {
+        "game_id": "94",
+        "date": "2025-08-03 00:00:00",
+        "home_team": "12 Co Ed",
+        "away_team": "Zilla",
+        "home_score": 13,
+        "away_score": 7,
+        "result": "W"
+      }
+    ]
+  }
+]
