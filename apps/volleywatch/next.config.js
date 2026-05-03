@@ -8,7 +8,9 @@ const CANONICAL_ORIGIN = "https://volleywatch-app.vercel.app";
 //   volleywatch-<hash>-lswingrovers-projects.vercel.app       (alternate project name variant)
 //   volleywatch-lswingrovers-projects.vercel.app
 // Does NOT match volleywatch-app.vercel.app (canonical).
-const NON_CANONICAL_HOST_PATTERN = "volleywatch-.+\\.vercel\\.app";
+// NOTE: Must include "lswingrovers-projects" to avoid matching the canonical
+//       volleywatch-app.vercel.app itself (the -app part satisfies .+ too).
+const NON_CANONICAL_HOST_PATTERN = "volleywatch-.+-lswingrovers-projects\\.vercel\\.app";
 
 const nextConfig = {
   reactStrictMode: true,

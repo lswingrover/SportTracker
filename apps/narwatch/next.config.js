@@ -2,25 +2,33 @@
 
 const CANONICAL_ORIGIN = "https://narwatch.vercel.app";
 
-// Matches any Vercel-generated non-canonical hostname for this project:
-//   narwatch-<hash>-lswingrovers-projects.vercel.app  (per-deployment)
+// All non-canonical hostnames that should 308 → narwatch.vercel.app:
+//   narwatch-<hash>-lswingrovers-projects.vercel.app  (per-deployment hash URLs)
 //   narwatch-lswingrovers-projects.vercel.app          (team auto-alias)
-// Does NOT match narwatch.vercel.app (canonical — no hyphen after "narwatch").
-const NON_CANONICAL_HOST_PATTERN = "narwatch-.+\\.vercel\\.app";
+//   narwhaltracker.vercel.app                          (old project domain)
+//   narwhaltracker-gamma.vercel.app                    (old project domain)
+//   narwhaltracker-*.vercel.app                        (old project hash deploys)
+// Does NOT match narwatch.vercel.app (canonical).
+// NOTE: Must include "lswingrovers-projects" to avoid matching the canonical
+//       narwatch.vercel.app itself (narwatch-app matches narwatch-.+ too).
+const NON_CANONICAL_HOSTS = [
+  "narwatch-.+-lswingrovers-projects\\.vercel\\.app",
+  "narwhaltracker\\.vercel\\.app",
+  "narwhaltracker-.+\\.vercel\\.app",
+  "narwhaltracker-gamma\\.vercel\\.app",
+];
 
 const nextConfig = {
   reactStrictMode: true,
   transpilePackages: ['@sport-tracker/core'],
 
   async redirects() {
-    return [
-      {
-        source: "/:path*",
-        has: [{ type: "host", value: NON_CANONICAL_HOST_PATTERN }],
-        destination: `${CANONICAL_ORIGIN}/:path*`,
-        permanent: true,
-      },
-    ];
+    return NON_CANONICAL_HOSTS.map((hostPattern) => ({
+      source: "/:path*",
+      has: [{ type: "host", value: hostPattern }],
+      destination: `${CANONICAL_ORIGIN}/:path*`,
+      permanent: true,
+    }));
   },
 
   // Prevent CDN and browsers from caching the HTML document shell.
