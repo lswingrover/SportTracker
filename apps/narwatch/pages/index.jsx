@@ -24,29 +24,6 @@ const DEFAULT_REFRESH_MS = 2 * 60 * 1000;
 const CLIENT_DATA_CACHE = new Map(); // url → { payload, fetchedAt }
 const CLIENT_CACHE_TTL_MS = 60 * 1000; // 1 minute — matches server-side TTL
 
-function slugifyHashValue(s) {
-  return String(s || "")
-    .toLowerCase()
-    .replace(/\s*\([^)]*\)\s*$/, "")
-    .trim()
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-+|-+$/g, "");
-}
-
-function readHashParams() {
-  if (typeof window === "undefined") return {};
-  const raw = window.location.hash.replace(/^#/, "");
-  const out = {};
-  for (const pair of raw.split("&")) {
-    if (!pair) continue;
-    const eq = pair.indexOf("=");
-    const k = decodeURIComponent(eq === -1 ? pair : pair.slice(0, eq));
-    const v = eq === -1 ? "" : decodeURIComponent(pair.slice(eq + 1));
-    if (k) out[k] = v;
-  }
-  return out;
-}
-
 // NIWP schedule team filter options (mirrors LB_TEAM_FILTERS in the Leaderboard).
 const NIWP_TEAM_FILTERS = [
   { key: "all",  label: "All teams" },
@@ -711,7 +688,7 @@ function StaticTournamentCard({ tournament }) {
       )}
       <div className="static-divider" />
       <div className="static-note">
-        No game data available for this tournament yet. Check back closer to game time.
+        No data available for this tournament yet. Check back closer to game time.
       </div>
     </section>
   );
@@ -1566,10 +1543,10 @@ function StatsAccordion({ mode, games, tz, onClose, record }) {
   const filtered = (games || []).filter(
     (g) => g.done && (mode === "wins" ? g.result === "W" : g.result === "L")
   );
-  // The standings-derived record may count pool play matches that the
-  // upstream data source doesn't expose individually. games[] only has the
-  // matches we can pull. When the gap is non-zero, surface a footnote so
-  // users aren't confused why the count differs.
+  // The standings-derived record (4-1 for ERVA) counts pool play matches
+  // that AES doesn't expose on public endpoints. games[] only has the
+  // bracket-derived matches we can pull. When the gap is non-zero, surface
+  // a footnote so users aren't confused why the count differs.
   const totalForMode = mode === "wins" ? record?.wins ?? 0 : record?.losses ?? 0;
   const missing = Math.max(0, totalForMode - filtered.length);
   const tzLabel = tzShortLabel(tz);
@@ -1630,7 +1607,7 @@ function OpponentHistoryPage({ opponentName, tournaments, dataByTournament, load
   const [sortDesc, setSortDesc] = useState(true);
 
   // Flatten games from every tournament where the opponent appears.
-  // Opponent names sometimes carry trailing club tags ("Foo (EV)") or
+  // AES opponent names sometimes carry trailing club tags ("Foo (EV)") or
   // case differences vs. the standings teamName, so normalize before
   // comparing — case-insensitive, trimmed, ignore trailing parens.
   const norm = (s) =>
@@ -2077,6 +2054,7 @@ function LeaderboardTab({ players, loading, onPlayerTap }) {
           </thead>
           <tbody>
             {filtered.map((p, i) => {
+              const isSoren = p.player_name?.includes("Soren");
               return (
                 <tr
                   key={p.player_id}
@@ -2084,6 +2062,7 @@ function LeaderboardTab({ players, loading, onPlayerTap }) {
                   style={{
                     borderBottom: "1px solid var(--line)",
                     cursor: "pointer",
+                    background: isSoren ? "var(--accent-soft)" : "transparent",
                   }}
                 >
                   <td style={{ padding: "10px 16px", color: "var(--muted)", fontSize: 12 }}>{i + 1}</td>
@@ -2399,8 +2378,6 @@ export default function Home() {
   //   niwpWeekKey – null = show most recent week; string = specific week key selected
   const [niwpWeeks, setNiwpWeeks] = useState(null);
   const [niwpWeekKey, setNiwpWeekKey] = useState(null);
-  const [niwpFetchSettled, setNiwpFetchSettled] = useState(false);
-  const [hashHydrated, setHashHydrated] = useState(false);
 
   // Schedule team filter: "all" | "B" | "G" | "BJV" | "GJV" | "D"
   const [scheduleTeamFilter, setScheduleTeamFilter] = useState("all");
@@ -2706,72 +2683,6 @@ export default function Home() {
     }
   }
 
-  // ── hash routing ───────────────────────────────────────────────────────────
-  // On mount, restore #tournament=<id|weekKey> for the static-fallback chip
-  // row, and #h2h=<slug> by resolving the slug against the historical cache.
-  useEffect(() => {
-    if (typeof window === "undefined") return;
-    const hash = readHashParams();
-    let cancelled = false;
-    if (hash.tournament) {
-      const t = TOURNAMENTS.find((x) => x.id === hash.tournament);
-      if (t) {
-        setTournamentId(t.id);
-        if (!t.static) setTeamId(t.teamId);
-      }
-      // If hash.tournament doesn't match a static TOURNAMENTS id, the
-      // niwp-weeks fetch effect resolves it as a weekKey instead.
-    }
-    if (hash.h2h) {
-      (async () => {
-        let cache = allGamesCache;
-        if (!cache) {
-          setH2hGamesLoading(true);
-          try {
-            const r = await fetch("/api/historical?view=games");
-            if (r.ok) {
-              const json = await r.json();
-              cache = json.games || [];
-              if (!cancelled) setAllGamesCache(cache);
-            }
-          } catch {}
-          if (!cancelled) setH2hGamesLoading(false);
-        }
-        if (cancelled || !cache) return;
-        const match = cache.find(
-          (g) =>
-            slugifyHashValue(g.opponent_display_name) === hash.h2h ||
-            slugifyHashValue(g.away_team) === hash.h2h
-        );
-        if (match) setH2hSheet(match.opponent_display_name || match.away_team);
-      })();
-    }
-    setHashHydrated(true);
-    return () => { cancelled = true; };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  // Sync state → hash. Runs whenever tournament selection or H2H sheet changes,
-  // but only after the initial hash has been read AND the niwp-weeks fetch has
-  // settled (so we know whether NIWP mode is active and which value to write).
-  useEffect(() => {
-    if (typeof window === "undefined") return;
-    if (!hashHydrated || !niwpFetchSettled) return;
-    const parts = [];
-    const tournamentValue = niwpWeeks && niwpWeekKey
-      ? niwpWeekKey
-      : !niwpWeeks
-        ? tournamentId
-        : null;
-    if (tournamentValue) parts.push(`tournament=${encodeURIComponent(tournamentValue)}`);
-    if (h2hSheet) parts.push(`h2h=${encodeURIComponent(slugifyHashValue(h2hSheet))}`);
-    const newHash = parts.length ? `#${parts.join("&")}` : "";
-    if (newHash !== window.location.hash) {
-      const url = window.location.pathname + window.location.search + newHash;
-      window.history.replaceState(null, "", url || window.location.pathname);
-    }
-  }, [hashHydrated, niwpFetchSettled, niwpWeeks, niwpWeekKey, tournamentId, h2hSheet]);
-
   // Filtered + annotated games for the current H2H opponent.
   // home_team is always CDA (convention from compute-aggregates.js).
   const h2hGames = useMemo(() => {
@@ -2838,11 +2749,6 @@ export default function Home() {
         setData(null);
         setError(null);
         setLoading(false);
-        if (force) {
-          setUserRefreshing(false);
-          setRefreshDone(true);
-          setTimeout(() => setRefreshDone(false), 2000);
-        }
         return;
       }
 
@@ -2959,15 +2865,11 @@ export default function Home() {
       .then((weeks) => {
         if (!cancelled && Array.isArray(weeks) && weeks.length > 0) {
           setNiwpWeeks(weeks);
-          // Honor #tournament=<weekKey> if present and valid; otherwise
-          // default to the most recent week (last in sorted list).
-          const hashTour = readHashParams().tournament;
-          const matched = hashTour && weeks.find((w) => w.weekKey === hashTour);
-          setNiwpWeekKey(matched ? matched.weekKey : weeks[weeks.length - 1].weekKey);
+          // Default to the most recent week (last in sorted list)
+          setNiwpWeekKey(weeks[weeks.length - 1].weekKey);
         }
       })
-      .catch(() => {})
-      .finally(() => { if (!cancelled) setNiwpFetchSettled(true); });
+      .catch(() => {});
     return () => { cancelled = true; };
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -3017,10 +2919,22 @@ export default function Home() {
   const activeTzLabel = tzOverride === "local" ? null : tzShortLabel(venueTz);
 
   const games = data?.games || [];
-  // Apply schedule team filter (only meaningful in NIWP mode where subteam is set).
-  const visibleGames = scheduleTeamFilter === "all"
+  // Only show the team filter when ≥2 subteams are tagged in games[]. With
+  // 0 or 1 subteams represented, the dropdown is either useless or would
+  // produce zero-result filter options.
+  const availableSubteams = useMemo(() => {
+    const s = new Set();
+    for (const g of games) if (g.subteam) s.add(g.subteam);
+    return s;
+  }, [games]);
+  const showTeamFilter = availableSubteams.size >= 2;
+  const effectiveTeamFilter =
+    scheduleTeamFilter === "all" || availableSubteams.has(scheduleTeamFilter)
+      ? scheduleTeamFilter
+      : "all";
+  const visibleGames = effectiveTeamFilter === "all"
     ? games
-    : games.filter((g) => g.subteam === scheduleTeamFilter);
+    : games.filter((g) => g.subteam === effectiveTeamFilter);
   const pastGames = visibleGames.filter((g) => g.done);
   const upcomingGames = visibleGames.filter((g) => !g.done);
   const standings = data?.standings || [];
@@ -3122,7 +3036,7 @@ export default function Home() {
               onClick={() => { if (!userRefreshing) load(true); }}
               aria-label="Refresh"
               title="Refresh data"
-              disabled={userRefreshing}
+              disabled={userRefreshing || !tournament.eventId}
             >
               {refreshDone ? "✓" : "↺"}
             </button>
@@ -3166,10 +3080,8 @@ export default function Home() {
 
         <div className="chip-row" role="tablist" aria-label="Tournaments">
           {niwpWeeks
-            ? /* NIWP mode: one chip per calendar week, newest leftmost.
-                 Underlying array stays oldest→newest (default-selection
-                 logic relies on [length-1]); only render order is flipped. */
-              niwpWeeks.slice().reverse().map((w) => {
+            ? /* NIWP mode: one chip per calendar week, newest rightmost */
+              niwpWeeks.map((w) => {
                 const isActive = w.weekKey === (niwpWeekKey ?? niwpWeeks[niwpWeeks.length - 1]?.weekKey);
                 return (
                   <button
@@ -3352,8 +3264,7 @@ export default function Home() {
 
         {tab === "schedule" && (
           <>
-            {/* Team filter dropdown — shown in NIWP mode (niwpWeeks loaded) */}
-            {niwpWeeks && (
+            {niwpWeeks && showTeamFilter && (
               <div className="schedule-filter-row">
                 <label htmlFor="schedule-team-select" className="schedule-filter-label">
                   Team
@@ -3361,12 +3272,14 @@ export default function Home() {
                 <select
                   id="schedule-team-select"
                   className="team-select"
-                  value={scheduleTeamFilter}
+                  value={effectiveTeamFilter}
                   onChange={(e) => setScheduleTeamFilter(e.target.value)}
                 >
-                  {NIWP_TEAM_FILTERS.map(({ key, label }) => (
-                    <option key={key} value={key}>{label}</option>
-                  ))}
+                  {NIWP_TEAM_FILTERS
+                    .filter(({ key }) => key === "all" || availableSubteams.has(key))
+                    .map(({ key, label }) => (
+                      <option key={key} value={key}>{label}</option>
+                    ))}
                 </select>
               </div>
             )}
@@ -3436,7 +3349,7 @@ export default function Home() {
             )}
             {pastGames.length === 0 && upcomingGames.length === 0 && (
               <div className="empty">
-                No games scheduled yet for this team.
+                No games found yet.
                 <br />
                 Check back when the tournament starts.
               </div>
