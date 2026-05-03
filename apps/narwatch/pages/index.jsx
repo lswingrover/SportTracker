@@ -688,7 +688,7 @@ function StaticTournamentCard({ tournament }) {
       )}
       <div className="static-divider" />
       <div className="static-note">
-        No data available for this tournament yet. Check back closer to game time.
+        No game data available for this tournament yet. Check back closer to game time.
       </div>
     </section>
   );
@@ -1261,7 +1261,7 @@ const TOUR_STEPS = [
   { selector: ".chip-row", title: "Tournaments", body: "Tap any chip to switch tournaments. Past events show final records; future ones show countdowns." },
   { selector: ".stats", title: "Tournament record", body: "Tap Wins or Losses to see a game-by-game breakdown." },
   { selector: ".card.upcoming", setupTab: "schedule", title: "Upcoming game", body: "Court number is the hero — tap it for venue details. Tap the opponent name for head-to-head history." },
-  { title: "Live score banner", body: "When a game is live, this banner appears with real-time scores pulled from AES every 30 seconds." },
+  { title: "Live score banner", body: "When a game is live, this banner appears with real-time scores updated every 30 seconds." },
   { sideEffect: "confetti", title: "🎉 Wins!", body: "Win a game and the app celebrates with confetti." },
   { selector: ".card.past", setupTab: "schedule", title: "Past games", body: "Tap any past game to expand. See set-by-set scores and share the result as an image." },
   { selector: ".tabs button:nth-child(2)", setupTab: "standings", title: "Standings", body: "Tap any team row to see their record and your head-to-head history. The Narwhals row pinned at the top opens a season summary." },
@@ -1453,7 +1453,7 @@ function PoolGrid({ pool, onTeamTap }) {
         </tbody>
       </table>
       <div className="pool-grid-footnote">
-        Round-robin match results not available from AES
+        Round-robin match results not available
       </div>
     </section>
   );
@@ -1543,10 +1543,10 @@ function StatsAccordion({ mode, games, tz, onClose, record }) {
   const filtered = (games || []).filter(
     (g) => g.done && (mode === "wins" ? g.result === "W" : g.result === "L")
   );
-  // The standings-derived record (4-1 for ERVA) counts pool play matches
-  // that AES doesn't expose on public endpoints. games[] only has the
-  // bracket-derived matches we can pull. When the gap is non-zero, surface
-  // a footnote so users aren't confused why the count differs.
+  // The standings-derived record may count pool play matches that the
+  // upstream data source doesn't expose individually. games[] only has the
+  // matches we can pull. When the gap is non-zero, surface a footnote so
+  // users aren't confused why the count differs.
   const totalForMode = mode === "wins" ? record?.wins ?? 0 : record?.losses ?? 0;
   const missing = Math.max(0, totalForMode - filtered.length);
   const tzLabel = tzShortLabel(tz);
@@ -1561,7 +1561,7 @@ function StatsAccordion({ mode, games, tz, onClose, record }) {
       {filtered.length === 0 ? (
         <div className="meta" style={{ padding: "10px 14px" }}>
           {missing > 0
-            ? `${missing} ${mode === "wins" ? "win" : "loss"}${missing === 1 ? "" : "es"} in pool play — match details not available from AES.`
+            ? `${missing} ${mode === "wins" ? "win" : "loss"}${missing === 1 ? "" : "es"} in pool play — match details not available.`
             : `No ${mode === "wins" ? "wins" : "losses"} yet this tournament.`}
         </div>
       ) : (
@@ -1590,7 +1590,7 @@ function StatsAccordion({ mode, games, tz, onClose, record }) {
       {filtered.length > 0 && missing > 0 && (
         <div className="stats-accordion-footnote">
           + {missing} pool play {mode === "wins" ? "win" : "loss"}
-          {missing === 1 ? "" : mode === "wins" ? "s" : "es"} — match details not available from AES
+          {missing === 1 ? "" : mode === "wins" ? "s" : "es"} — match details not available
         </div>
       )}
     </section>
@@ -1607,7 +1607,7 @@ function OpponentHistoryPage({ opponentName, tournaments, dataByTournament, load
   const [sortDesc, setSortDesc] = useState(true);
 
   // Flatten games from every tournament where the opponent appears.
-  // AES opponent names sometimes carry trailing club tags ("Foo (EV)") or
+  // Opponent names sometimes carry trailing club tags ("Foo (EV)") or
   // case differences vs. the standings teamName, so normalize before
   // comparing — case-insensitive, trimmed, ignore trailing parens.
   const norm = (s) =>
@@ -3336,7 +3336,7 @@ export default function Home() {
             )}
             {pastGames.length === 0 && upcomingGames.length === 0 && (
               <div className="empty">
-                No games returned by AES yet for this team.
+                No games scheduled yet for this team.
                 <br />
                 Check back when the tournament starts.
               </div>
