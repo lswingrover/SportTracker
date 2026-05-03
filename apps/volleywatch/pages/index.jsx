@@ -1271,15 +1271,15 @@ function PastGameCard({ game, expanded, onToggle, venue, tz, opponentInfo, onSha
               Lost
             </button>
           )}
-          {game.watchUrl && (
+          {(game.videoLink || game.watchUrl) && (
             <a
               className="watch-chip"
-              href={game.watchUrl}
+              href={game.videoLink || game.watchUrl}
               target="_blank"
               rel="noopener noreferrer"
               onClick={(e) => e.stopPropagation()}
-              aria-label={`Watch ${game.opponent} on Hudl Fan`}
-              title="Watch on Hudl Fan"
+              aria-label={`Watch ${game.opponent}`}
+              title={game.videoLink ? "Watch on BallerTV" : "Watch on Hudl Fan"}
             >
               ▶ Watch
             </a>
