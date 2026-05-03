@@ -2206,6 +2206,12 @@ export default function Home() {
     tournament.teamId
   );
 
+  // NIWP multi-week state:
+  //   niwpWeeks  – null while loading, array of {weekKey,chipLabel,label,...} when ready
+  //   niwpWeekKey – null = show most recent week; string = specific week key selected
+  const [niwpWeeks, setNiwpWeeks] = useState(null);
+  const [niwpWeekKey, setNiwpWeekKey] = useState(null);
+
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -2495,7 +2501,11 @@ export default function Home() {
   const load = useCallback(
     async (force = false) => {
       if (force) setUserRefreshing(true);
-      if (tournament.static) {
+      // Static-tournament early bail: only applies when NOT in NIWP mode.
+      // When niwpWeeks is populated, the chip row is driven by live NIWP week
+      // data, so the selected "tournament" (often a static placeholder) is
+      // irrelevant and we skip straight to the API call.
+      if (tournament.static && !niwpWeeks) {
         // Static tournaments aren't on AES — no data to fetch. Reset state so
         // switching from a live tournament doesn't leak its games/standings.
         prevDataRef.current = null;
@@ -2508,7 +2518,12 @@ export default function Home() {
       }
       try {
         setLoading(true);
-        const url = `/api/tournament?eventId=${encodeURIComponent(tournament.eventId)}&divId=${encodeURIComponent(tournament.divId)}&teamId=${encodeURIComponent(teamId)}&teamName=${encodeURIComponent(teamName)}${force ? "&force=1" : ""}`;
+        // In NIWP mode: pass weekKey (or nothing = latest). eventId/divId are
+        // ignored by niwp.js but still forwarded for future flexibility.
+        const weekParam = niwpWeeks && niwpWeekKey
+          ? `&weekKey=${encodeURIComponent(niwpWeekKey)}`
+          : "";
+        const url = `/api/tournament?eventId=${encodeURIComponent(tournament.eventId)}&divId=${encodeURIComponent(tournament.divId)}&teamId=${encodeURIComponent(teamId)}&teamName=${encodeURIComponent(teamName)}${weekParam}${force ? "&force=1" : ""}`;
         const res = await fetch(url);
         if (!res.ok) throw new Error(`API ${res.status}`);
         const next = await res.json();
@@ -2567,7 +2582,7 @@ export default function Home() {
         if (force) { setUserRefreshing(false); setRefreshDone(true); setTimeout(() => setRefreshDone(false), 2000); }
       }
     },
-    [tournament.eventId, tournament.divId, teamId, teamName, themeId]
+    [tournament.eventId, tournament.divId, teamId, teamName, themeId, niwpWeeks, niwpWeekKey]
   );
 
   useEffect(() => {
@@ -2575,6 +2590,25 @@ export default function Home() {
     prevDataRef.current = null;
     load();
   }, [load]);
+
+  // Fetch available NIWP tournament weeks once on mount (and if force-refresh).
+  // When the server has NIWP_API_ENABLED=true, this populates the dynamic chip
+  // row. If the endpoint returns [] (NIWP disabled) or errors, niwpWeeks stays
+  // null and the static TOURNAMENTS chip row is used as the fallback.
+  useEffect(() => {
+    let cancelled = false;
+    fetch("/api/niwp-weeks")
+      .then((r) => r.ok ? r.json() : null)
+      .then((weeks) => {
+        if (!cancelled && Array.isArray(weeks) && weeks.length > 0) {
+          setNiwpWeeks(weeks);
+          // Default to the most recent week (last in sorted list)
+          setNiwpWeekKey(weeks[weeks.length - 1].weekKey);
+        }
+      })
+      .catch(() => {});
+    return () => { cancelled = true; };
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Adaptive poll interval — driven by _pollSchedule from the NIWP API.
   // Falls back to DEFAULT_REFRESH_MS until first data arrives or for non-NIWP sources.
@@ -2727,23 +2761,44 @@ export default function Home() {
         )}
 
         <div className="chip-row" role="tablist" aria-label="Tournaments">
-          {TOURNAMENTS.map((t) => (
-            <button
-              key={t.id}
-              id={`chip-${t.id}`}
-              className={`chip${tournamentId === t.id ? " active" : ""}`}
-              onClick={() => {
-                setTournamentId(t.id);
-                if (!t.static) setTeamId(t.teamId);
-              }}
-              role="tab"
-              aria-selected={tournamentId === t.id ? "true" : "false"}
-              aria-controls="tournament-panel"
-              tabIndex={tournamentId === t.id ? 0 : -1}
-            >
-              {t.chipLabel || t.label}
-            </button>
-          ))}
+          {niwpWeeks
+            ? /* NIWP mode: one chip per calendar week, newest rightmost */
+              niwpWeeks.map((w) => {
+                const isActive = w.weekKey === (niwpWeekKey ?? niwpWeeks[niwpWeeks.length - 1]?.weekKey);
+                return (
+                  <button
+                    key={w.weekKey}
+                    id={`chip-niwp-${w.weekKey}`}
+                    className={`chip${isActive ? " active" : ""}`}
+                    onClick={() => setNiwpWeekKey(w.weekKey)}
+                    role="tab"
+                    aria-selected={isActive ? "true" : "false"}
+                    aria-controls="tournament-panel"
+                    tabIndex={isActive ? 0 : -1}
+                  >
+                    {w.chipLabel}
+                  </button>
+                );
+              })
+            : /* Fallback: static TOURNAMENTS list (used when NIWP disabled) */
+              TOURNAMENTS.map((t) => (
+                <button
+                  key={t.id}
+                  id={`chip-${t.id}`}
+                  className={`chip${tournamentId === t.id ? " active" : ""}`}
+                  onClick={() => {
+                    setTournamentId(t.id);
+                    if (!t.static) setTeamId(t.teamId);
+                  }}
+                  role="tab"
+                  aria-selected={tournamentId === t.id ? "true" : "false"}
+                  aria-controls="tournament-panel"
+                  tabIndex={tournamentId === t.id ? 0 : -1}
+                >
+                  {t.chipLabel || t.label}
+                </button>
+              ))
+          }
         </div>
 
         <div

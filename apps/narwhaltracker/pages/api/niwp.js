@@ -87,7 +87,7 @@ function shortDate(dateStr) {
 
 // ─── Main fetch ───────────────────────────────────────────────────────────────
 
-async function fetchFromNIWP(teamPrefix) {
+async function fetchFromNIWP(teamPrefix, requestedWeekKey) {
   const prefix = (teamPrefix || "B").toUpperCase();
 
   // Fetch games and players in parallel
@@ -153,11 +153,12 @@ async function fetchFromNIWP(teamPrefix) {
     return buildEmptyPayload(prefix);
   }
 
-  // Use the most recent week as the "current" tournament
-  // (The frontend uses chip-selection for multi-tournament; this adapter
-  //  returns the most recent week's data by default. For multi-week support
-  //  the caller can pass ?weekKey= — future enhancement.)
-  const weekKey = sortedWeeks[sortedWeeks.length - 1];
+  // Resolve which week to serve:
+  //   - If caller passes ?weekKey=YYYY-Www and it exists, use it.
+  //   - Otherwise fall back to the most recent week.
+  const weekKey = (requestedWeekKey && byWeek.has(requestedWeekKey))
+    ? requestedWeekKey
+    : sortedWeeks[sortedWeeks.length - 1];
   const weekGames = byWeek.get(weekKey);
 
   const location = dominantLocation(weekGames);
@@ -307,10 +308,13 @@ export default async function handler(req, res) {
   res.setHeader("Access-Control-Allow-Headers", "Content-Type");
   if (req.method === "OPTIONS") { res.status(204).end(); return; }
 
-  const teamPrefix = String(req.query?.team || "B").toUpperCase();
-  const force      = req.query?.force === "1";
-  const now        = Date.now();
-  const entry      = cacheMap.get(teamPrefix);
+  const teamPrefix  = String(req.query?.team || "B").toUpperCase();
+  const weekKey     = req.query?.weekKey ? String(req.query.weekKey) : null;
+  const force       = req.query?.force === "1";
+  const now         = Date.now();
+  // Cache key includes weekKey so each week is cached independently
+  const cacheKey    = weekKey ? `${teamPrefix}:${weekKey}` : teamPrefix;
+  const entry       = cacheMap.get(cacheKey);
 
   if (!force && entry && now - entry.fetchedAt < CACHE_TTL_MS) {
     res.setHeader("Cache-Control", "public, max-age=30, stale-while-revalidate=60");
@@ -319,8 +323,8 @@ export default async function handler(req, res) {
   }
 
   try {
-    const payload = await fetchFromNIWP(teamPrefix);
-    cacheMap.set(teamPrefix, { payload, fetchedAt: now });
+    const payload = await fetchFromNIWP(teamPrefix, weekKey);
+    cacheMap.set(cacheKey, { payload, fetchedAt: now });
     res.setHeader("Cache-Control", "public, max-age=30, stale-while-revalidate=60");
     res.status(200).json(payload);
   } catch (err) {
