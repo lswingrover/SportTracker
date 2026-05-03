@@ -7,7 +7,8 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start -p ${PORT:-3000}",
-    "lint": "next lint"
+    "lint": "next lint",
+    "harvest": "node scripts/harvest-niwp.js && node scripts/normalize-teams.js && node scripts/compute-aggregates.js"
   },
   "dependencies": {
     "@vercel/blob": "^2.3.3",

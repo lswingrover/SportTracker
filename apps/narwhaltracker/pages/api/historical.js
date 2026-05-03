@@ -56,6 +56,7 @@ export default async function handler(req, res) {
     try {
       console.log("[historical] Running harvest + aggregate pipeline…");
       runScript("harvest-niwp.js");
+      runScript("normalize-teams.js");
       runScript("compute-aggregates.js");
       console.log("[historical] Pipeline complete.");
     } catch (err) {
