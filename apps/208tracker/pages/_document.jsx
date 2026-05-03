@@ -9,13 +9,12 @@ export default function Document() {
         <meta name="msapplication-TileColor" content="#000000" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-        <meta name="apple-mobile-web-app-title" content="208 Tracker" />
+        <meta name="apple-mobile-web-app-title" content="VolleyWatch" />
         <meta name="mobile-web-app-capable" content="yes" />
-        <link rel="manifest" href="/manifest.json" />
-        <link rel="apple-touch-icon" href="/icon-192.png" />
-        <link rel="icon" type="image/png" sizes="192x192" href="/icon-192.png" />
-        <link rel="icon" type="image/png" sizes="512x512" href="/icon-512.png" />
-        <link rel="icon" type="image/svg+xml" href="/icon-192.svg" />
+        <link rel="manifest" href="/manifest.json?v=2" />
+        <link rel="apple-touch-icon" href="/icon-192.png?v=2" />
+        <link rel="icon" type="image/png" sizes="192x192" href="/icon-192.png?v=2" />
+        <link rel="icon" type="image/png" sizes="512x512" href="/icon-512.png?v=2" />
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <link

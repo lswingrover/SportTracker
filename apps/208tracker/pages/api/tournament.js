@@ -181,7 +181,7 @@ function formatLocalTime(iso) {
   }
 }
 
-function normalizeMatch(m, { done, idx = 0, kind = "match" }) {
+function normalizeMatch(m, { done, idx = 0, kind = "match", teamId = null }) {
   const start = pickFirst(m, [
     "MatchDate",
     "ScheduledStartDateTime",
@@ -191,12 +191,16 @@ function normalizeMatch(m, { done, idx = 0, kind = "match" }) {
     "StartTime",
   ]);
   const { iso, ms } = parseTime(start);
+  const _firstId = String(m?.FirstTeamId ?? "");
+  const _isFirst = teamId && _firstId === String(teamId);
   const opponent =
+    (_isFirst ? m?.SecondTeamName : _firstId ? m?.FirstTeamName : null) ||
     pickFirst(m, ["OpponentTeamName", "OpponentName", "AwayTeamName"]) ||
     pickFirst(m?.OpponentTeam || {}, ["TeamName", "Name"]) ||
     "TBD";
   const court =
-    pickFirst(m, ["Court", "CourtName", "CourtText", "Location"]) ||
+    (typeof m?.Court === "object" ? m?.Court?.Name : null) ||
+    pickFirst(m, ["CourtName", "CourtText", "Location"]) ||
     pickFirst(m?.CourtInfo || {}, ["Name", "CourtName"]) ||
     "TBD";
 
@@ -204,7 +208,13 @@ function normalizeMatch(m, { done, idx = 0, kind = "match" }) {
   let score = null;
   let sets = null;
   if (done) {
-    const won = teamWonMatch(m);
+    let won = null;
+    if (teamId && m?.FirstTeamId != null) {
+      const isFirst = String(m.FirstTeamId) === String(teamId);
+      const myWon = isFirst ? m.FirstTeamWon : m.SecondTeamWon;
+      if (m.HasScores) won = myWon === true ? true : false;
+    }
+    if (won === null) won = teamWonMatch(m);
     if (won === true) result = "W";
     else if (won === false) result = "L";
     score = scoreString(m);
@@ -555,12 +565,28 @@ function extractPoolForTeam(pools, teamIdStr) {
   };
 }
 
-function buildResponse({ eventMeta, team, current, future, work, standings, nextAssignments, brackets, pools, remoteTimestamp, ctx }) {
-  const playedRaw = Array.isArray(current) ? current : [];
-  const upcomingRaw = Array.isArray(future) ? future : [];
+// AES schedule endpoints return play-group-wrapped arrays:
+// [{ Play: {..., Courts: [...]}, Matches: [{match}, ...] }]
+// Flatten into a plain match array, injecting court from the Play
+// group when the individual match lacks it.
+function flattenPlayGroups(raw) {
+  if (!Array.isArray(raw)) return [];
+  if (!raw.length || !raw[0]?.Matches) return raw;
+  return raw.flatMap((group) => {
+    const playCourt = group?.Play?.Courts?.[0] || null;
+    return (group.Matches || []).map((m) => {
+      if (!m.Court && playCourt) return { ...m, Court: playCourt };
+      return m;
+    });
+  });
+}
 
-  const played = playedRaw.map((m, i) => normalizeMatch(m, { done: true, idx: i, kind: "past" }));
-  const upcoming = upcomingRaw.map((m, i) => normalizeMatch(m, { done: false, idx: i, kind: "next" }));
+function buildResponse({ eventMeta, team, current, future, work, standings, nextAssignments, brackets, pools, remoteTimestamp, ctx }) {
+  const playedRaw = flattenPlayGroups(current);
+  const upcomingRaw = flattenPlayGroups(future);
+
+  const played = playedRaw.map((m, i) => normalizeMatch(m, { done: true, idx: i, kind: "past", teamId: ctx.teamId }));
+  const upcoming = upcomingRaw.map((m, i) => normalizeMatch(m, { done: false, idx: i, kind: "next", teamId: ctx.teamId }));
 
   const games = [...played, ...upcoming]
     .filter((g) => g.timeMs != null || g.timeISO != null)

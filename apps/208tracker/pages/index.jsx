@@ -108,6 +108,36 @@ const TOURNAMENTS = [
   },
 ];
 
+// Pick the tournament whose date is closest to today, preferring ones that
+// started ≤7 days ago (active/recent) over future events.
+function getSmartDefaultTournamentId() {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const todayMs = today.getTime();
+
+  const withDates = TOURNAMENTS.map((t) => {
+    // Multi-week ranges like "Jan 3 – Apr 18, 2026" → use the end date
+    const raw = t.date || "";
+    const clean = raw.includes("–") ? raw.split("–")[1].trim() : raw;
+    const d = new Date(clean);
+    return isNaN(d.getTime()) ? null : { id: t.id, ms: d.getTime() };
+  }).filter(Boolean);
+
+  if (!withDates.length) return TOURNAMENTS[0].id;
+
+  // Prefer tournaments that started ≤7 days ago (pick most recent of those)
+  const sevenDaysAgo = todayMs - 7 * 24 * 60 * 60 * 1000;
+  const recent = withDates.filter((t) => t.ms >= sevenDaysAgo && t.ms <= todayMs);
+  if (recent.length > 0) {
+    return recent.sort((a, b) => b.ms - a.ms)[0].id;
+  }
+
+  // Otherwise pick the tournament closest to today (past or future)
+  return withDates.reduce((a, b) =>
+    Math.abs(a.ms - todayMs) < Math.abs(b.ms - todayMs) ? a : b
+  ).id;
+}
+
 const THEMES = [
   { id: "default", label: "Sport (orange)" },
   { id: "208", label: "208 (royal blue/black)" },
@@ -990,7 +1020,7 @@ async function shareGameImage({ game, teamName, tz }) {
   ctx.font = '600 10px system-ui, sans-serif';
   ctx.textAlign = "right";
   ctx.textBaseline = "bottom";
-  ctx.fillText("208tracker.vercel.app", W - 18, H - 16);
+  ctx.fillText("volleywatch-app.vercel.app", W - 18, H - 16);
   ctx.textAlign = "left";
 
   // Convert to blob → File and share / download
@@ -1169,7 +1199,7 @@ function PastGameCard({ game, expanded, onToggle, venue, tz, opponentInfo, onSha
         aria-expanded={expanded}
       >
         <div className="past-summary-left">
-          <div className="score-hero">{setsCount || (game.result === "W" ? "Won" : "Lost")}</div>
+          <div className="score-hero">{setsCount || game.score || (game.result === "W" ? "Won" : game.result === "L" ? "Lost" : "—")}</div>
           <div className="score-meta">
             vs{" "}
             <span
@@ -1299,7 +1329,7 @@ const TOUR_STEPS = [
   { selector: ".notif-card", setupTab: "schedule", title: "Notifications", body: "Subscribe to push alerts. Each alert type has its own timing — set how early you want the heads-up." },
   { selector: ".calendar-section", title: "Calendar", body: "Subscribe to the team calendar so every tournament auto-appears in your phone's calendar app." },
   { title: "Add to Home Screen", body: "Add this app to your home screen for a native app experience — Safari → Share → Add to Home Screen. No App Store required." },
-  { sideEffect: "confetti", title: "You're all set. Go 208! 🏐", body: "" },
+  { sideEffect: "confetti", title: "You're all set. Go get 'em! 🏐", body: "" },
 ];
 
 function Tour({ step, onNext, onPrev, onSkip, onSetupTab, onConfetti }) {
@@ -1548,7 +1578,7 @@ function BracketTree({ bracket }) {
 }
 
 function BracketView({ brackets }) {
-  const [open, setOpen] = useState(false);
+  const [open, setOpen] = useState(true);
   if (!brackets || brackets.length === 0) return null;
   return (
     <div className="bracket-section">
@@ -1983,7 +2013,39 @@ function DutySticky({ workAssignments, dismissed, onDismiss, tz }) {
 }
 
 export default function Home() {
-  const [tournamentId, setTournamentId] = usePersistentState("tournamentId", TOURNAMENTS[0].id);
+  // Tournament selection: uses smart default on fresh/stale visits, restores
+  // the previous selection only if the user was here within the last 48 hours.
+  const [tournamentId, setTournamentId] = usePersistentState(
+    "tournamentId",
+    getSmartDefaultTournamentId()
+  );
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    try {
+      const stored = JSON.parse(localStorage.getItem("vw_last_tournament") || "null");
+      const now = Date.now();
+      const fortyEightHours = 48 * 60 * 60 * 1000;
+      if (stored && stored.id && stored.timestamp && (now - stored.timestamp) < fortyEightHours) {
+        // Recent visit — restore their tournament selection if still valid
+        const valid = TOURNAMENTS.find((t) => t.id === stored.id);
+        setTournamentId(valid ? stored.id : getSmartDefaultTournamentId());
+      } else {
+        // First visit or >48 h since last visit — pick smart default
+        setTournamentId(getSmartDefaultTournamentId());
+      }
+    } catch {}
+    // intentionally only run on mount
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Persist tournament selection with timestamp so the 48h restore works
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    try {
+      localStorage.setItem("vw_last_tournament", JSON.stringify({ id: tournamentId, timestamp: Date.now() }));
+    } catch {}
+  }, [tournamentId]);
+
   const [themeId, setThemeId] = usePersistentState("themeId", "208");
   const tournament = TOURNAMENTS.find((t) => t.id === tournamentId) || TOURNAMENTS[0];
   const [teamId, setTeamId] = usePersistentState(
@@ -2073,7 +2135,7 @@ export default function Home() {
     const payload = {
       title: "208 U14 Red Tracker",
       text: "Live scores & schedule for 208 U14 Red volleyball",
-      url: typeof window !== "undefined" ? window.location.origin : "https://208tracker.vercel.app",
+      url: typeof window !== "undefined" ? window.location.origin : "https://volleywatch-app.vercel.app",
     };
     if (typeof navigator !== "undefined" && typeof navigator.share === "function") {
       try {
@@ -2101,6 +2163,8 @@ export default function Home() {
   const [opponentHistory, setOpponentHistory] = useState(null); // opponent name | null
   const [historyData, setHistoryData] = useState({}); // tournamentId -> payload
   const [historyLoading, setHistoryLoading] = useState(false);
+  const [userRefreshing, setUserRefreshing] = useState(false);
+  const [refreshDone, setRefreshDone] = useState(false);
 
   async function openOpponentHistory(name) {
     setOpponentSheet(null);
@@ -2281,6 +2345,7 @@ export default function Home() {
 
   const load = useCallback(
     async (force = false) => {
+      if (force) setUserRefreshing(true);
       if (tournament.static) {
         // Static tournaments aren't on AES — no data to fetch. Reset state so
         // switching from a live tournament doesn't leak its games/standings.
@@ -2350,6 +2415,7 @@ export default function Home() {
         setError(String(e.message || e));
       } finally {
         setLoading(false);
+        if (force) { setUserRefreshing(false); setRefreshDone(true); setTimeout(() => setRefreshDone(false), 2000); }
       }
     },
     [tournament.eventId, tournament.divId, teamId, teamName, themeId]
@@ -2399,7 +2465,7 @@ export default function Home() {
       : `${teamName} fell to ${g.opponent}${g.score ? ` ${g.score}` : ""}`;
     const full = `${text} #208volleyball #volleyball`;
     if (typeof navigator !== "undefined" && navigator.share) {
-      navigator.share({ title: "208 Tracker", text: full }).catch(() => {});
+      navigator.share({ title: "VolleyWatch", text: full }).catch(() => {});
     } else if (typeof navigator !== "undefined" && navigator.clipboard) {
       navigator.clipboard.writeText(full).then(() => alert("Copied")).catch(() => {});
     }
@@ -2424,7 +2490,7 @@ export default function Home() {
     }
     const text = lines.join("\n");
     try {
-      if (navigator.share) await navigator.share({ title: "208 Tracker", text });
+      if (navigator.share) await navigator.share({ title: "VolleyWatch", text });
       else {
         await navigator.clipboard.writeText(text);
         alert("Copied to clipboard");
@@ -2435,7 +2501,7 @@ export default function Home() {
   return (
     <>
       <Head>
-        <title>208 Tournament Tracker</title>
+        <title>VolleyWatch</title>
         <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
       </Head>
       <div className="app">
@@ -2451,13 +2517,22 @@ export default function Home() {
         ) : (
         <>
         <header className="header-compact">
-          <div className="team-name" title="208 U14 Red">208 🏐</div>
+          <div className="team-name" title="VolleyWatch">🏐 VolleyWatch</div>
           {data?.liveGame && (
             <span className="live-pill" aria-label="Live game">
               <span className="live-dot" /> LIVE
             </span>
           )}
           <div className="header-compact-actions">
+            <button
+              className={`icon-only-btn${userRefreshing ? " spinning" : ""}${refreshDone ? " done" : ""}`}
+              onClick={() => { if (!userRefreshing) load(true); }}
+              aria-label="Refresh"
+              title="Refresh data"
+              disabled={userRefreshing || !tournament.eventId}
+            >
+              {refreshDone ? "✓" : "↺"}
+            </button>
             <button
               className={`icon-only-btn${isStandalone ? " installed" : ""}`}
               onClick={handleInstallTap}
@@ -2746,7 +2821,6 @@ export default function Home() {
                 Check back when the tournament starts.
               </div>
             )}
-            <BracketView brackets={data?.brackets || []} />
           </>
         )}
 
@@ -2846,6 +2920,8 @@ export default function Home() {
         )}
           </>
         )}
+
+        <BracketView brackets={data?.brackets || []} />
 
         <footer className="footer-bar">
           <div>
