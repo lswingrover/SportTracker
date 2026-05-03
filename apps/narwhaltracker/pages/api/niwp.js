@@ -18,6 +18,7 @@
 // is unaffected. Also includes _pollSchedule for adaptive client polling.
 
 import { computePollSchedule } from "../../lib/pollSchedule.js";
+import { deriveStandings } from "@sport-tracker/core/gameNorm.js";
 
 const NIWP_BASE = "https://www.northidahowaterpolo.org/wp-json/niwp-stats/v1";
 const CACHE_TTL_MS = 60 * 1000;
@@ -296,46 +297,6 @@ function buildEmptyPayload(prefix) {
     _dataSource: "niwp",
     _teamPrefix: prefix,
   };
-}
-
-function deriveStandings(games, teamName, teamId) {
-  const map = new Map();
-  const ensure = (name, isUs) => {
-    if (!map.has(name)) {
-      map.set(name, {
-        teamId:      isUs ? teamId : name.toLowerCase().replace(/\s+/g, "-"),
-        teamName:    name,
-        isUs,
-        rank:        null,
-        matchesWon:  0,
-        matchesLost: 0,
-        goalDiff:    0,
-        setPercent:  0,
-        earnedBid:   false,
-        bidAlias:    null,
-      });
-    }
-    return map.get(name);
-  };
-
-  for (const g of games) {
-    if (!g.done || !g.result) continue;
-    const us   = ensure(teamName, true);
-    const them = ensure(g.opponent, false);
-    if (g.result === "W") { us.matchesWon++;   them.matchesLost++; }
-    else                  { us.matchesLost++;  them.matchesWon++;  }
-    for (const s of g.sets || []) {
-      us.goalDiff   += (s.us   || 0) - (s.them || 0);
-      them.goalDiff += (s.them || 0) - (s.us   || 0);
-    }
-  }
-
-  const rows = Array.from(map.values()).sort((a, b) => {
-    if (b.matchesWon !== a.matchesWon) return b.matchesWon - a.matchesWon;
-    return b.goalDiff - a.goalDiff;
-  });
-  rows.forEach((r, i) => { r.rank = i + 1; });
-  return rows;
 }
 
 // ─── API route handler ────────────────────────────────────────────────────────

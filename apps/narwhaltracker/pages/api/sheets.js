@@ -20,6 +20,8 @@
 // AUTH: public sheet + API key (read-only). No OAuth needed.
 // CACHE: 60-second TTL (matches the UI's polling interval).
 
+import { deriveStandings } from "@sport-tracker/core/gameNorm.js";
+
 const SHEETS_BASE = "https://sheets.googleapis.com/v4/spreadsheets";
 const CACHE_TTL_MS = 60 * 1000;
 
@@ -223,53 +225,6 @@ function parseStandings(rows, teamName) {
     });
   }
   return standings;
-}
-
-// ─── Derive standings from game results ───────────────────────────────────────
-// Used when the Standings tab is empty or absent.
-
-function deriveStandings(games, teamName, teamId) {
-  if (games.length === 0) return [];
-  const map = new Map();
-
-  const ensure = (name, isUs) => {
-    if (!map.has(name)) {
-      map.set(name, {
-        teamId:      isUs ? teamId : name.toLowerCase().replace(/\s+/g, "-"),
-        teamName:    name,
-        isUs,
-        rank:        null,
-        matchesWon:  0,
-        matchesLost: 0,
-        goalDiff:    0,
-        setPercent:  0,
-        earnedBid:   false,
-        bidAlias:    null,
-      });
-    }
-    return map.get(name);
-  };
-
-  for (const g of games) {
-    if (!g.done || !g.result) continue;
-    const us   = ensure(teamName, true);
-    const them = ensure(g.opponent, false);
-    if (g.result === "W") { us.matchesWon++;   them.matchesLost++; }
-    else                  { us.matchesLost++;  them.matchesWon++;  }
-    if (Array.isArray(g.sets)) {
-      for (const s of g.sets) {
-        us.goalDiff   += (s.us   || 0) - (s.them || 0);
-        them.goalDiff += (s.them || 0) - (s.us   || 0);
-      }
-    }
-  }
-
-  const rows = Array.from(map.values()).sort((a, b) => {
-    if (b.matchesWon !== a.matchesWon) return b.matchesWon - a.matchesWon;
-    return b.goalDiff - a.goalDiff;
-  });
-  rows.forEach((r, i) => { r.rank = i + 1; });
-  return rows;
 }
 
 // ─── Main fetch ───────────────────────────────────────────────────────────────
