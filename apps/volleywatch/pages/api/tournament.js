@@ -1,7 +1,5 @@
 import { diffAndPush } from "@sport-tracker/core/stateDiff.js";
 import { maybeSnapshot } from "@sport-tracker/core/snapshots.js";
-import { readJson, writeJson } from "@sport-tracker/core/blobStore.js";
-import { findBroadcast, isInTournamentWindow, HUDL_TEAM_URL } from "../../lib/hudl-broadcasts.js";
 
 // Deferred for v3 (intentionally not implemented yet):
 //   - Pool standings tab: render `/division/{div}/pools` so we can show
@@ -16,13 +14,6 @@ const DEFAULT_EVENT_ID = process.env.EVENT_ID || "PTAwMDAwNDI2MDU90";
 const DEFAULT_DIVISION_ID = process.env.DIVISION_ID || "203854";
 const DEFAULT_TEAM_ID = process.env.TEAM_ID || "201772";
 const DEFAULT_TEAM_NAME = process.env.TEAM_NAME || "208 U14 Red";
-
-// Maps AES eventId → VolleyWatch tournament slug (for Hudl watchUrl + live-window detection).
-// Add new entries here when EVENT_ID env var is updated for a new tournament.
-const AES_SLUG_MAP = {
-  "PTAwMDAwNDI5NjU90": "big-sky-volleyfest-2026",
-  "PTAwMDAwNDI2MDU90": "erva-regional-2026",
-};
 
 const CACHE_TTL_MS = 2 * 60 * 1000;
 
@@ -47,56 +38,45 @@ function pickFirst(obj, keys) {
   return null;
 }
 
-// Convert a bare "YYYY-MM-DDTHH:MM:SS" string (no timezone marker) from the
-// AES API into UTC milliseconds, treating it as venue-local time.
-// Uses the Intl reflection trick: format a candidate UTC instant in the
-// venue timezone, measure the offset, iterate to converge (handles DST).
-function venueLocalToUtcMs(localStr, venueIana) {
-  // Seed: pretend the string is UTC to get a rough candidate.
-  const target = new Date(localStr + "Z").getTime();
-  let guess = target;
-  for (let i = 0; i < 3; i++) {
-    const fmt = new Intl.DateTimeFormat("en-CA", {
-      timeZone: venueIana,
-      year: "numeric",
-      month: "2-digit",
-      day: "2-digit",
-      hour: "2-digit",
-      minute: "2-digit",
-      second: "2-digit",
-      hour12: false,
-    });
-    const parts = Object.fromEntries(
-      fmt.formatToParts(new Date(guess)).map(({ type, value }) => [type, value])
-    );
-    const h = +parts.hour === 24 ? 0 : +parts.hour;
-    const localMs = Date.UTC(
-      +parts.year,
-      +parts.month - 1,
-      +parts.day,
-      h,
-      +parts.minute,
-      +parts.second
-    );
-    guess = target + (target - localMs);
+// AES returns match datetimes as venue-local wall-clock with NO timezone
+// offset (e.g. "2026-05-03T08:00:00"). On Vercel's UTC server, new Date()
+// would treat that as UTC and shift the displayed time by 6–8 hours.
+// Same fix pattern as parseDateAsPT() in apps/narwatch/pages/api/niwp.js:
+// attach the venue's DST offset, verify with Intl, fall back to standard.
+const TZ_OFFSETS = {
+  "America/Los_Angeles": { dst: "-07:00", std: "-08:00", dstAbbr: "PDT" },
+  "America/Denver":      { dst: "-06:00", std: "-07:00", dstAbbr: "MDT" },
+};
+
+function parseTimeInTz(value, tz) {
+  if (!value) return { iso: null, ms: null };
+  const s = String(value).trim();
+  // Already has explicit TZ info (Z or ±hh:mm) — trust it.
+  if (/[Zz]$/.test(s) || /[+-]\d{1,2}:?\d{2}$/.test(s)) {
+    const d = new Date(s);
+    return Number.isNaN(d.getTime()) ? { iso: null, ms: null } : { iso: d.toISOString(), ms: d.getTime() };
   }
-  return guess;
+  const offsets = TZ_OFFSETS[tz];
+  if (!offsets) {
+    const d = new Date(s);
+    return Number.isNaN(d.getTime()) ? { iso: null, ms: null } : { iso: d.toISOString(), ms: d.getTime() };
+  }
+  const iso = s.replace(" ", "T");
+  let attempt = new Date(iso + offsets.dst);
+  if (Number.isNaN(attempt.getTime())) return { iso: null, ms: null };
+  const tzLabel = new Intl.DateTimeFormat("en-US", {
+    timeZone: tz,
+    timeZoneName: "short",
+  }).formatToParts(attempt).find((p) => p.type === "timeZoneName")?.value || "";
+  if (!tzLabel.includes(offsets.dstAbbr)) {
+    attempt = new Date(iso + offsets.std);
+    if (Number.isNaN(attempt.getTime())) return { iso: null, ms: null };
+  }
+  return { iso: attempt.toISOString(), ms: attempt.getTime() };
 }
 
-function parseTime(value, venueTimezone) {
-  if (!value) return { iso: null, ms: null };
-  const v = String(value).trim();
-  // AES returns bare local datetimes like "2026-05-03T09:00:00" — no Z, no
-  // offset. Node.js on a UTC server treats these as UTC, so 9 AM MT becomes
-  // 9 AM UTC → displayed as 2 AM PT in browsers. When we have a venue IANA
-  // timezone, reinterpret the string as venue-local before converting.
-  if (venueTimezone && /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}$/.test(v)) {
-    const ms = venueLocalToUtcMs(v, venueTimezone);
-    if (!Number.isNaN(ms)) return { iso: new Date(ms).toISOString(), ms };
-  }
-  const d = new Date(v);
-  if (Number.isNaN(d.getTime())) return { iso: null, ms: null };
-  return { iso: d.toISOString(), ms: d.getTime() };
+function parseTime(value, tz) {
+  return parseTimeInTz(value, tz);
 }
 
 function setsFromMatch(m) {
@@ -192,7 +172,7 @@ function liveScoreShape(m, opponentName) {
   };
 }
 
-function detectLive(m, opponentName, venueTimezone) {
+function detectLive(m, opponentName, tz) {
   const start = pickFirst(m, [
     "MatchDate",
     "ScheduledStartDateTime",
@@ -201,7 +181,7 @@ function detectLive(m, opponentName, venueTimezone) {
     "ScheduledStart",
     "StartTime",
   ]);
-  const { ms } = parseTime(start, venueTimezone);
+  const { ms } = parseTime(start, tz);
   if (ms == null) return null;
   const now = Date.now();
   if (ms > now) return null;
@@ -220,24 +200,22 @@ function detectLive(m, opponentName, venueTimezone) {
   return liveScoreShape(m, opponentName);
 }
 
-function formatLocalTime(iso, venueTimezone) {
+function formatLocalTime(iso) {
   try {
     const d = new Date(iso);
-    const opts = {
+    return d.toLocaleString("en-US", {
       weekday: "short",
       month: "short",
       day: "numeric",
       hour: "numeric",
       minute: "2-digit",
-    };
-    if (venueTimezone) opts.timeZone = venueTimezone;
-    return d.toLocaleString("en-US", opts);
+    });
   } catch {
     return iso;
   }
 }
 
-function normalizeMatch(m, { done, idx = 0, kind = "match", teamId = null, venueTimezone = null }) {
+function normalizeMatch(m, { done, idx = 0, kind = "match", teamId = null, tz = null }) {
   const start = pickFirst(m, [
     "MatchDate",
     "ScheduledStartDateTime",
@@ -246,7 +224,7 @@ function normalizeMatch(m, { done, idx = 0, kind = "match", teamId = null, venue
     "ScheduledStart",
     "StartTime",
   ]);
-  const { iso, ms } = parseTime(start, venueTimezone);
+  const { iso, ms } = parseTime(start, tz);
   const _firstId = String(m?.FirstTeamId ?? "");
   const _isFirst = teamId && _firstId === String(teamId);
   const opponent =
@@ -306,11 +284,11 @@ function normalizeMatch(m, { done, idx = 0, kind = "match", teamId = null, venue
   }
 
   const endRaw = pickFirst(m, ["ScheduledEndDateTime", "EndDateTime", "MatchEndDateTime"]);
-  const { iso: endISO } = parseTime(endRaw, venueTimezone);
+  const { iso: endISO } = parseTime(endRaw, tz);
 
   const courtStay = !done ? courtStayHints(m) : null;
 
-  const live = !done ? detectLive(m, opponent, venueTimezone) : null;
+  const live = !done ? detectLive(m, opponent, tz) : null;
   const videoLink =
     pickFirst(m?.CourtInfo || {}, ["VideoLink"]) ||
     pickFirst(m?.Court || {}, ["VideoLink"]) ||
@@ -328,7 +306,7 @@ function normalizeMatch(m, { done, idx = 0, kind = "match", teamId = null, venue
     court,
     opponent,
     videoLink,
-    time: iso ? formatLocalTime(iso, venueTimezone) : null,
+    time: iso ? formatLocalTime(iso) : null,
     timeISO: iso,
     timeMs: ms,
     endISO,
@@ -337,14 +315,14 @@ function normalizeMatch(m, { done, idx = 0, kind = "match", teamId = null, venue
   };
 }
 
-function normalizeWork(w, idx = 0, venueTimezone = null) {
+function normalizeWork(w, idx = 0, tz = null) {
   const start = pickFirst(w, [
     "MatchDate",
     "ScheduledStartDateTime",
     "StartDateTime",
     "WorkStartDateTime",
   ]);
-  const { iso, ms } = parseTime(start, venueTimezone);
+  const { iso, ms } = parseTime(start, tz);
   return {
     id:
       pickFirst(w, ["MatchId", "WorkAssignmentId", "Id"])?.toString() ||
@@ -356,7 +334,7 @@ function normalizeWork(w, idx = 0, venueTimezone = null) {
       "TBD",
     timeISO: iso,
     timeMs: ms,
-    time: iso ? formatLocalTime(iso, venueTimezone) : null,
+    time: iso ? formatLocalTime(iso) : null,
     teams:
       [
         pickFirst(w, ["HomeTeamName", "Team1Name"]),
@@ -552,7 +530,7 @@ function extractBracketsForTeam(brackets, teamIdStr) {
   return out;
 }
 
-function bracketMatchToGame(m, teamIdStr, venueTimezone = null) {
+function bracketMatchToGame(m, teamIdStr, tz = null) {
   const teamId = Number(teamIdStr);
   const ourSide = m.FirstTeam?.TeamId === teamId ? "first" : "second";
   const won =
@@ -578,7 +556,7 @@ function bracketMatchToGame(m, teamIdStr, venueTimezone = null) {
     })
     .filter(Boolean);
   const start = m.ScheduledStartDateTime || null;
-  const { iso, ms } = parseTime(start, venueTimezone);
+  const { iso, ms } = parseTime(start, tz);
   const score = sets.length ? sets.map((s) => `${s.us}–${s.them}`).join(", ") : null;
   const courtName =
     m.Court?.Name ||
@@ -593,7 +571,7 @@ function bracketMatchToGame(m, teamIdStr, venueTimezone = null) {
     court: courtName,
     opponent,
     videoLink: m.Court?.VideoLink || null,
-    time: iso ? formatLocalTime(iso, venueTimezone) : null,
+    time: iso ? formatLocalTime(iso) : null,
     timeISO: iso,
     timeMs: ms,
     endISO: m.ScheduledEndDateTime || null,
@@ -655,34 +633,12 @@ function flattenPlayGroups(raw) {
   });
 }
 
-// Work endpoint returns { Play, Match (singular), PlayType } per entry —
-// a different shape from schedule/current's { Play, Matches: [] }.
-// Flatten each entry to a plain object that normalizeWork can handle.
-function flattenWorkGroups(raw) {
-  if (!Array.isArray(raw)) return [];
-  if (!raw.length || !raw[0]?.Match || raw[0]?.Matches) return raw;
-  return raw.map((entry) => {
-    const m = entry.Match || {};
-    const courtObj = m.Court && typeof m.Court === "object" ? m.Court : null;
-    return {
-      MatchId: m.MatchId ?? null,
-      ScheduledStartDateTime: m.ScheduledStartDateTime ?? null,
-      ScheduledEndDateTime: m.ScheduledEndDateTime ?? null,
-      Court: courtObj ? courtObj.Name : (m.Court || null),
-      CourtInfo: courtObj,
-      WorkRole: "Work duty",
-      PlayName: entry?.Play?.FullName || null,
-    };
-  });
-}
-
-function buildResponse({ eventMeta, team, current, future, work, standings, nextAssignments, brackets, pools, remoteTimestamp, ctx, persistedPoolPlay = [] }) {
+function buildResponse({ eventMeta, team, current, future, work, standings, nextAssignments, brackets, pools, remoteTimestamp, ctx }) {
   const playedRaw = flattenPlayGroups(current);
   const upcomingRaw = flattenPlayGroups(future);
 
-  const vTz = ctx.venueTimezone || null;
-  const played = playedRaw.map((m, i) => normalizeMatch(m, { done: true, idx: i, kind: "past", teamId: ctx.teamId, venueTimezone: vTz }));
-  const upcoming = upcomingRaw.map((m, i) => normalizeMatch(m, { done: false, idx: i, kind: "next", teamId: ctx.teamId, venueTimezone: vTz }));
+  const played = playedRaw.map((m, i) => normalizeMatch(m, { done: true, idx: i, kind: "past", teamId: ctx.teamId, tz: ctx.tz }));
+  const upcoming = upcomingRaw.map((m, i) => normalizeMatch(m, { done: false, idx: i, kind: "next", teamId: ctx.teamId, tz: ctx.tz }));
 
   const games = [...played, ...upcoming]
     .filter((g) => g.timeMs != null || g.timeISO != null)
@@ -700,24 +656,10 @@ function buildResponse({ eventMeta, team, current, future, work, standings, next
   if (Array.isArray(brackets) && brackets.length > 0) {
     const have = new Set(games.map((g) => String(g.id)));
     const bracketGames = extractTeamMatchesFromBrackets(brackets, ctx.teamId)
-      .map((m) => bracketMatchToGame(m, ctx.teamId, vTz))
+      .map((m) => bracketMatchToGame(m, ctx.teamId, ctx.tz))
       .filter((g) => !have.has(String(g.id)));
     if (bracketGames.length > 0) {
       games.push(...bracketGames);
-      games.sort((a, b) => (a.timeMs || 0) - (b.timeMs || 0));
-    }
-  }
-
-  // Merge persisted pool play games when AES schedule/current returns empty.
-  // Pool play matches aren't in AES public endpoints post-tournament; we
-  // persist them ourselves while they're live and replay them after.
-  if (playedRaw.length === 0 && persistedPoolPlay.length > 0) {
-    const have = new Set(games.map((g) => String(g.id)));
-    const persistedNew = persistedPoolPlay
-      .filter((g) => !have.has(String(g.id)))
-      .map((g) => ({ ...g, done: true, timeMs: g.timeISO ? new Date(g.timeISO).getTime() : null }));
-    if (persistedNew.length > 0) {
-      games.push(...persistedNew);
       games.sort((a, b) => (a.timeMs || 0) - (b.timeMs || 0));
     }
   }
@@ -728,15 +670,6 @@ function buildResponse({ eventMeta, team, current, future, work, standings, next
     delete g.timeMs;
   }
 
-  // Hudl Option 1: inject watchUrl per game (matches broadcast by opponent name fuzzy match)
-  const tournamentSlug = AES_SLUG_MAP[ctx.eventId] || null;
-  for (const g of games) {
-    if (g.opponent) {
-      const hudl = findBroadcast(g.opponent, tournamentSlug);
-      if (hudl) g.watchUrl = hudl.watchUrl;
-    }
-  }
-
   const liveGame = games.find((g) => !g.done && g.live);
 
   const standingsRows = normalizeStandings(standings?.value, ctx.teamId);
@@ -745,8 +678,7 @@ function buildResponse({ eventMeta, team, current, future, work, standings, next
   const us = standingsRows.find((s) => s.isUs);
   const poolPosition = us ? us.rankText || (us.rank ? String(us.rank) : null) : null;
 
-  const workRaw = flattenWorkGroups(Array.isArray(work) ? work : []);
-  const workAssignments = workRaw.map((w, i) => normalizeWork(w, i, vTz));
+  const workAssignments = (Array.isArray(work) ? work : []).map((w, i) => normalizeWork(w, i, ctx.tz));
 
   const nextGameObj = games.find((g) => !g.done && g.timeISO);
   const nextWorkObj = workAssignments
@@ -837,12 +769,7 @@ function buildResponse({ eventMeta, team, current, future, work, standings, next
       }
     : null;
 
-  // Hudl Option 2: live banner — show team Hudl page during known tournament game windows.
-  // Hudl Fan is fully client-rendered; server-side live detection is not possible.
-  // Heuristic: today is a game day AND current hour is 7am–7pm in the venue timezone.
-  const _slug = AES_SLUG_MAP[ctx.eventId] || null;
-  const teamWatchNowLink =
-    (_slug && isInTournamentWindow(_slug)) ? HUDL_TEAM_URL : (team?.WatchNowLink || null);
+  const teamWatchNowLink = team?.WatchNowLink || null;
 
   const bracketStructures = extractBracketsForTeam(brackets, ctx.teamId);
   const pool = extractPoolForTeam(pools, ctx.teamId);
@@ -910,32 +837,6 @@ async function loadFresh(ctx) {
     fetchJson(urls.timestamp).catch(() => null),
   ]);
   const remoteTimestamp = timestamp?.LastUpdatedTimestamp || null;
-
-  // Pool play persistence: AES schedule/current returns [] after tournament ends.
-  // While the tournament is live, snapshot done pool games to Vercel Blob so we
-  // can replay them later. When current is empty (post-tournament), load the
-  // persisted games as fallback — they'll be merged into the games list by
-  // buildResponse above bracket backfill.
-  const rawCurrentFlat = flattenPlayGroups(current);
-  const blobKey = `pool-play/${eventId}/${divisionId}/${teamId}.json`;
-  let persistedPoolPlay = [];
-
-  if (rawCurrentFlat.length === 0) {
-    // Tournament may be over — load whatever we persisted during live play.
-    persistedPoolPlay = await readJson(blobKey, []).catch(() => []);
-  } else {
-    // Games are live — snapshot done games fire-and-forget.
-    const vTz = ctx.venueTimezone || null;
-    const doneGames = rawCurrentFlat
-      .map((m, i) => normalizeMatch(m, { done: true, idx: i, kind: "past", teamId: ctx.teamId, venueTimezone: vTz }))
-      .filter((g) => g.result === "W" || g.result === "L");
-    if (doneGames.length > 0) {
-      writeJson(blobKey, doneGames).catch((err) =>
-        console.error("[poolPlayPersist]", err?.message || err)
-      );
-    }
-  }
-
   const payload = buildResponse({
     eventMeta,
     team,
@@ -948,7 +849,6 @@ async function loadFresh(ctx) {
     pools,
     remoteTimestamp,
     ctx,
-    persistedPoolPlay,
   });
   return { payload, remoteTimestamp };
 }
@@ -967,12 +867,9 @@ export default async function handler(req, res) {
     divisionId: String(req.query?.divId || req.query?.divisionId || DEFAULT_DIVISION_ID),
     teamId: String(req.query?.teamId || DEFAULT_TEAM_ID),
     teamName: String(req.query?.teamName || DEFAULT_TEAM_NAME),
-    // IANA timezone for the venue — passed by the frontend so bare AES
-    // datetime strings ("2026-05-03T09:00:00", no offset) are interpreted
-    // as venue-local time rather than UTC.
-    venueTimezone: req.query?.tz || null,
+    tz: req.query?.tz ? String(req.query.tz) : "America/Los_Angeles",
   };
-  const cacheKey = `${ctx.eventId}|${ctx.divisionId}|${ctx.teamId}`;
+  const cacheKey = `${ctx.eventId}|${ctx.divisionId}|${ctx.teamId}|${ctx.tz}`;
 
   const force = req.query?.force === "1";
   const now = Date.now();

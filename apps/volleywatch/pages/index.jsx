@@ -1062,7 +1062,7 @@ function setsCountForRow(sets) {
 }
 
 function UpcomingGameCard({ game, expanded, onToggle, venue, tz, teamWatchNowLink, opponentInfo, onAddCal, onOpenOpponent, onCourtTap }) {
-  const watchUrl = game.videoLink || (game.live ? teamWatchNowLink : null) || game.watchUrl || null;
+  const watchUrl = game.videoLink || (game.live ? teamWatchNowLink : null);
   const tzLabel = tzShortLabel(tz);
   const localized = game.timeISO
     ? `${formatInTz(game.timeISO, tz)}${tzLabel ? ` ${tzLabel}` : ""}`
@@ -2176,7 +2176,7 @@ export default function Home() {
     await Promise.all(
       todo.map(async (t) => {
         try {
-          const url = `/api/tournament?eventId=${encodeURIComponent(t.eventId)}&divId=${encodeURIComponent(t.divId)}&teamId=${encodeURIComponent(t.teamId)}&teamName=${encodeURIComponent(t.teamName)}`;
+          const url = `/api/tournament?eventId=${encodeURIComponent(t.eventId)}&divId=${encodeURIComponent(t.divId)}&teamId=${encodeURIComponent(t.teamId)}&teamName=${encodeURIComponent(t.teamName)}${t.venue?.tz ? `&tz=${encodeURIComponent(t.venue.tz)}` : ""}`;
           const res = await fetch(url);
           if (!res.ok) return;
           const json = await res.json();
@@ -2352,8 +2352,7 @@ export default function Home() {
       }
       try {
         setLoading(true);
-        const tz = tournament.venue?.tz || "";
-        const url = `/api/tournament?eventId=${encodeURIComponent(tournament.eventId)}&divId=${encodeURIComponent(tournament.divId)}&teamId=${encodeURIComponent(teamId)}&teamName=${encodeURIComponent(teamName)}${tz ? `&tz=${encodeURIComponent(tz)}` : ""}${force ? "&force=1" : ""}`;
+        const url = `/api/tournament?eventId=${encodeURIComponent(tournament.eventId)}&divId=${encodeURIComponent(tournament.divId)}&teamId=${encodeURIComponent(teamId)}&teamName=${encodeURIComponent(teamName)}${tournament.venue?.tz ? `&tz=${encodeURIComponent(tournament.venue.tz)}` : ""}${force ? "&force=1" : ""}`;
         const res = await fetch(url);
         if (!res.ok) throw new Error(`API ${res.status}`);
         const next = await res.json();
@@ -2519,7 +2518,7 @@ export default function Home() {
           )}
           <div className="header-compact-actions">
             <button
-              className={`icon-only-btn refresh-btn${userRefreshing ? " spinning" : ""}${refreshDone ? " done" : ""}`}
+              className={`icon-only-btn${userRefreshing ? " spinning" : ""}${refreshDone ? " done" : ""}`}
               onClick={() => { if (!userRefreshing) load(true); }}
               aria-label="Refresh"
               title="Refresh data"
