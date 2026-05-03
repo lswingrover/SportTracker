@@ -998,7 +998,7 @@ function UpcomingGameCard({ game, expanded, onToggle, venue, tz, teamWatchNowLin
           <div className="matchup">
             vs{" "}
             <span
-              className="opp-tap"
+              className="opp-tap h2h-link"
               role="button"
               tabIndex={0}
               onClick={(e) => {
@@ -1198,7 +1198,7 @@ function PastGameCard({ game, expanded, onToggle, venue, tz, opponentInfo, onSha
           <div className="score-meta">
             vs{" "}
             <span
-              className="opp-tap"
+              className="opp-tap h2h-link"
               role="button"
               tabIndex={0}
               onClick={(e) => {
