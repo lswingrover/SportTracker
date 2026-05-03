@@ -614,7 +614,7 @@ function flattenWorkGroups(raw) {
       ScheduledEndDateTime: m.ScheduledEndDateTime ?? null,
       Court: courtObj ? courtObj.Name : (m.Court || null),
       CourtInfo: courtObj,
-      WorkRole: entry?.PlayType || "Work duty",
+      WorkRole: "Work duty",
       PlayName: entry?.Play?.FullName || null,
     };
   });
