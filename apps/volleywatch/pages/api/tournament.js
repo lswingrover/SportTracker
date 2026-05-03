@@ -211,16 +211,18 @@ function detectLive(m, opponentName, venueTimezone) {
   return liveScoreShape(m, opponentName);
 }
 
-function formatLocalTime(iso) {
+function formatLocalTime(iso, venueTimezone) {
   try {
     const d = new Date(iso);
-    return d.toLocaleString("en-US", {
+    const opts = {
       weekday: "short",
       month: "short",
       day: "numeric",
       hour: "numeric",
       minute: "2-digit",
-    });
+    };
+    if (venueTimezone) opts.timeZone = venueTimezone;
+    return d.toLocaleString("en-US", opts);
   } catch {
     return iso;
   }
@@ -317,7 +319,7 @@ function normalizeMatch(m, { done, idx = 0, kind = "match", teamId = null, venue
     court,
     opponent,
     videoLink,
-    time: iso ? formatLocalTime(iso) : null,
+    time: iso ? formatLocalTime(iso, venueTimezone) : null,
     timeISO: iso,
     timeMs: ms,
     endISO,
@@ -345,7 +347,7 @@ function normalizeWork(w, idx = 0, venueTimezone = null) {
       "TBD",
     timeISO: iso,
     timeMs: ms,
-    time: iso ? formatLocalTime(iso) : null,
+    time: iso ? formatLocalTime(iso, venueTimezone) : null,
     teams:
       [
         pickFirst(w, ["HomeTeamName", "Team1Name"]),
@@ -582,7 +584,7 @@ function bracketMatchToGame(m, teamIdStr, venueTimezone = null) {
     court: courtName,
     opponent,
     videoLink: m.Court?.VideoLink || null,
-    time: iso ? formatLocalTime(iso) : null,
+    time: iso ? formatLocalTime(iso, venueTimezone) : null,
     timeISO: iso,
     timeMs: ms,
     endISO: m.ScheduledEndDateTime || null,
