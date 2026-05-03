@@ -1957,21 +1957,28 @@ button.stat:hover { border-color: var(--accent); }
   cursor: pointer;
 }
 
-/* Tappable opponent name — visually a regular text element with subtle
-   underline-on-hover so users discover it's interactive. */
+/* Tappable opponent name — accent color + persistent underline makes it
+   clearly interactive. Negative margin preserved for hit-area; text-decoration
+   respects the text baseline so it never bleeds onto the line below. */
 .opp-tap {
   background: transparent;
   border: 0;
   padding: 8px 6px;
   margin: -8px -6px;
   font: inherit;
-  color: inherit;
+  color: var(--accent);
   cursor: pointer;
   text-align: left;
-  border-bottom: 1px dashed transparent;
+  text-decoration: underline;
+  text-decoration-color: color-mix(in srgb, var(--accent) 50%, transparent);
+  text-underline-offset: 3px;
+  text-decoration-thickness: 1px;
   display: inline-block;
+  transition: text-decoration-color 0.15s;
 }
-.opp-tap:hover { border-bottom-color: var(--muted); }
+.opp-tap:hover {
+  text-decoration-color: var(--accent);
+}
 
 .modal-backdrop {
   position: fixed;
@@ -2035,6 +2042,9 @@ button.stat:hover { border-color: var(--accent); }
 
 .watermark {
   margin-top: 24px;
+  /* Extra bottom clearance: sits above the sticky duty banner (76px) +
+     bottom nav (~64px) + safe area, so it's never hidden behind either. */
+  margin-bottom: 160px;
   text-align: center;
   font-size: 10px;
   letter-spacing: 0.04em;
