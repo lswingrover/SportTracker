@@ -1,6 +1,29 @@
 import { useEffect, useMemo, useRef, useState, useCallback } from "react";
 import Head from "next/head";
 
+function slugifyHashValue(s) {
+  return String(s || "")
+    .toLowerCase()
+    .replace(/\s*\([^)]*\)\s*$/, "")
+    .trim()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+}
+
+function readHashParams() {
+  if (typeof window === "undefined") return {};
+  const raw = window.location.hash.replace(/^#/, "");
+  const out = {};
+  for (const pair of raw.split("&")) {
+    if (!pair) continue;
+    const eq = pair.indexOf("=");
+    const k = decodeURIComponent(eq === -1 ? pair : pair.slice(0, eq));
+    const v = eq === -1 ? "" : decodeURIComponent(pair.slice(eq + 1));
+    if (k) out[k] = v;
+  }
+  return out;
+}
+
 // Confirmed via AES /api/event/{key}/standings for TeamId 201772, plus the
 // SportsEngine team iCal feed for tournaments not on AES (those carry
 // static: true and render a "no live data" card instead of fetching).
@@ -2186,6 +2209,69 @@ export default function Home() {
     );
     setHistoryLoading(false);
   }
+
+  // ── hash routing ───────────────────────────────────────────────────────────
+  // On mount, restore #tournament=<id> directly, and #opponent=<slug> by
+  // loading every tournament until we find a match.
+  const [hashHydrated, setHashHydrated] = useState(false);
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const hash = readHashParams();
+    let cancelled = false;
+    if (hash.tournament) {
+      const t = TOURNAMENTS.find((x) => x.id === hash.tournament);
+      if (t) setTournamentId(t.id);
+    }
+    if (hash.opponent) {
+      (async () => {
+        // Pull every dynamic tournament so we can scan opponents.
+        const fetched = {};
+        await Promise.all(
+          TOURNAMENTS.filter((t) => !t.static).map(async (t) => {
+            try {
+              const url = `/api/tournament?eventId=${encodeURIComponent(t.eventId)}&divId=${encodeURIComponent(t.divId)}&teamId=${encodeURIComponent(t.teamId)}&teamName=${encodeURIComponent(t.teamName)}`;
+              const res = await fetch(url);
+              if (!res.ok) return;
+              fetched[t.id] = await res.json();
+            } catch {}
+          })
+        );
+        if (cancelled) return;
+        let matchName = null;
+        for (const tid of Object.keys(fetched)) {
+          for (const g of fetched[tid]?.games || []) {
+            if (slugifyHashValue(g.opponent) === hash.opponent) {
+              matchName = g.opponent;
+              break;
+            }
+          }
+          if (matchName) break;
+        }
+        if (matchName) {
+          setHistoryData(fetched);
+          setOpponentHistory(matchName);
+        }
+      })();
+    }
+    setHashHydrated(true);
+    return () => { cancelled = true; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Sync state → hash. Only writes after hash has been read on mount so we
+  // don't clobber the user's deep link before restore completes.
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    if (!hashHydrated) return;
+    const parts = [];
+    if (tournamentId) parts.push(`tournament=${encodeURIComponent(tournamentId)}`);
+    if (opponentHistory) parts.push(`opponent=${encodeURIComponent(slugifyHashValue(opponentHistory))}`);
+    const newHash = parts.length ? `#${parts.join("&")}` : "";
+    if (newHash !== window.location.hash) {
+      const url = window.location.pathname + window.location.search + newHash;
+      window.history.replaceState(null, "", url || window.location.pathname);
+    }
+  }, [hashHydrated, tournamentId, opponentHistory]);
 
   function startTour() {
     setTourStep(1);
