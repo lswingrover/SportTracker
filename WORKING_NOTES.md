@@ -183,7 +183,11 @@ and 208tracker (67c9aca).
   discovery.
 - Known JO league IDs: 2024 JOs = `cd6b2b16-...` (verify at runtime — IDs
   rotate each season; use auto-discovery).
-- **Toggle**: `SIXEIGHT_ENABLED=true` in narwatch Vercel project.
+- **Toggle**: No longer needed. 6-8 Sports auto-detects JO season (commit 63aa19c).
+  `probeNarwhalsGames()` exported from sixeight.js; called in tournament.js before
+  the NIWP branch. Activates when any Narwhal game is in_progress or scheduled
+  today. Negative cache: 10 min. Positive cache: 2 min.
+  Override: `SIXEIGHT_ENABLED=true` (force) / `SIXEIGHT_DISABLED=true` (suppress).
 - **Team filter**: `SIXEIGHT_TEAM_NAME=Narwhal` (default) — matched as
   case-insensitive substring against home/away team names.
 
@@ -261,12 +265,16 @@ to test whether a self-registered key can read other directors' event data
 (i.e., Altitude Classic). If access confirmed: build exposureevents.js adapter
 and wire into tournament.js priority chain.
 
-### 3. JO prep — confirm 6-8 Sports league ID for 2026
+### ~~3. JO prep — manual toggle~~ ✓ ELIMINATED (2026-05-02, commit 63aa19c)
 
-Before JOs (typically July), test `SIXEIGHT_ENABLED=true` in a preview deployment.
-The auto-discovery should find the 2026 JO league ID from `/v2/leagues/links/`.
-If auto-discovery works → no action. If the heuristic misses → pin the correct
-UUID in `SIXEIGHT_LEAGUE_ID`.
+6-8 Sports now auto-detects JO season. `probeNarwhalsGames()` fires on every
+request, checks for in_progress or today-scheduled Narwhal games, and routes
+to the 6-8 Sports handler automatically. 10min negative cache = zero overhead
+outside JO season. 2min positive cache during JOs for fast live updates.
+
+One remaining action: before July, smoke-test in a Vercel preview with
+`SIXEIGHT_ENABLED=true` to confirm 2026 league ID is discoverable.
+Escape hatches: `SIXEIGHT_DISABLED=true` (suppress), `SIXEIGHT_ENABLED=true` (force).
 
 ### ~~1. Wire Vercel git integration~~ ✓ DONE (2026-05-02)
 narwatch and volleywatch-app both now auto-deploy on `git push origin main`.
