@@ -308,7 +308,7 @@ function normalizeStandings(rows, teamId) {
       matchesLost: r.MatchesLost ?? 0,
       setsWon: r.SetsWon ?? 0,
       setsLost: r.SetsLost ?? 0,
-      setPercent: r.SetPercent ?? 0,
+      setPercent: parseFloat(r.SetPercent ?? 0) || 0,
       pointRatio: parseFloat(r.PointRatio ?? 0) || 0,
       club: r.Club?.Name || null,
       earnedBid,
@@ -546,7 +546,7 @@ function extractPoolForTeam(pools, teamIdStr) {
     losses: t.MatchesLost ?? 0,
     setsWon: t.SetsWon ?? 0,
     setsLost: t.SetsLost ?? 0,
-    setPercent: t.SetPercent ?? 0,
+    setPercent: parseFloat(t.SetPercent ?? 0) || 0,
     pointRatio: parseFloat(t.PointRatio ?? 0) || 0,
     club: t.Club?.Name || null,
   }));
