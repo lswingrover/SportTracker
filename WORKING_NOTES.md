@@ -6,7 +6,7 @@
 
 ---
 
-## Current State (2026-05-02, updated 19:30)
+## Current State (2026-05-02, updated 19:45)
 
 ### What's deployed and where
 
@@ -137,16 +137,23 @@ the output shapes remain compatible. No behaviour change.
 
 ---
 
-### 2. NarWatch: multi-week tournament support
-**What:** `niwp.js` currently returns only the most recent calendar week.
-Multiple weeks = multiple tournaments. The frontend chip row should show
-one chip per week.
+### ~~2. NarWatch: multi-week tournament support~~ ✓ DONE (2026-05-02)
+Commit `15da052`. Three changes:
 
-**Complexity:** Requires a change to how `TOURNAMENTS` is populated —
-currently static in `lib/tournamentData.js`. Either make it dynamic
-(fetch from NIWP on app load) or generate it at build time.
+1. `/api/niwp-weeks` (new) — fetches all NIWP games, groups by ISO week,
+   returns `[{weekKey, chipLabel, label, startDate, endDate, location}]`.
+   Returns `[]` when `NIWP_API_ENABLED` is not set (safe no-op for non-NIWP).
 
-**Deferred until:** NIWP has multi-week data to test against.
+2. `niwp.js` — `?weekKey=YYYY-Www` param: serves specified week or falls
+   back to most recent. Cache keyed by `teamPrefix:weekKey` so weeks are
+   cached independently.
+
+3. `index.jsx` — fetches `/api/niwp-weeks` on mount. When weeks are
+   present, chip row renders one chip per NIWP week (oldest→newest).
+   **Also fixed a latent bug**: the static-tournament early-return in
+   `load()` was silently preventing any API call when the placeholder
+   tournament had `static:true` — meaning NIWP data NEVER actually loaded
+   in production despite `NIWP_API_ENABLED=true`. Now bypassed in NIWP mode.
 
 ---
 
