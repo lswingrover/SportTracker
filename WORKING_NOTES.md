@@ -6,14 +6,14 @@
 
 ---
 
-## Current State (2026-05-02)
+## Current State (2026-05-02, updated 18:50)
 
 ### What's deployed and where
 
 | App | Vercel Project | URL | Git-connected? |
 |-----|---------------|-----|---------------|
-| narwhaltracker | `narwatch` (`prj_RTZprqmEXqD9DhmyrPOgR2e1P1ym`) | narwhaltracker.vercel.app | **No** |
-| 208tracker | unknown — check `vercel ls` | unknown | unknown |
+| narwhaltracker | `narwatch` (`prj_RTZprqmEXqD9DhmyrPOgR2e1P1ym`) | narwhaltracker.vercel.app | **Yes** ✓ (wired 2026-05-02) |
+| 208tracker | `volleywatch-app` (git-connected, rootDirectory fixed) | check Vercel dashboard | **Yes** ✓ (rootDir fixed 2026-05-02) |
 | monorepo root | `sport-tracker` (`prj_rdepbE14qRVfGvZoxaogBVt4RUdR`) | sport-tracker-rust.vercel.app | unknown |
 
 ### Data source status
@@ -33,7 +33,17 @@ Not yet used for: data-fetching logic, standings derivation, game normalization
 
 ## Deployment Protocol
 
-**The correct way to deploy narwhaltracker right now** (until git integration is wired):
+**The correct way to deploy narwhaltracker** (`git push origin main` now triggers it automatically):
+
+```bash
+cd ~/Developer/sport-tracker
+git add -A && git commit -m "your message"
+git push origin main
+# Vercel auto-deploys narwatch from apps/narwhaltracker
+# Vercel auto-deploys volleywatch-app from apps/208tracker
+```
+
+**Manual deploy fallback** (if git integration breaks or you need to force):
 
 ```bash
 cd ~/Developer/sport-tracker
@@ -48,8 +58,6 @@ vercel --prod
 # 3. Restore
 mv .vercel/project.json.bak .vercel/project.json
 ```
-
-This is a workaround. The real fix is in **Next Steps** below.
 
 **Never** run `vercel --prod` from inside `apps/narwhaltracker/` — Vercel's
 rootDirectory setting (`apps/narwhaltracker`) is relative to the repo root,
@@ -76,16 +84,29 @@ real terminal. The sandbox `git add` works fine; only `git commit` fails.
 - No auth needed. No rate limit documented. Server-side 60s cache means
   at most 2 req/min to the NIWP server regardless of NarWatch user count.
 
-### Vercel / deployment
+### Vercel / deployment (updated 2026-05-02)
 
-- The narwatch Vercel project is **not** connected to GitHub. Deploys are
-  manual CLI only.
+- **narwatch is now git-connected** to `lswingrover/sport-tracker` via the
+  Vercel API (`POST /v9/projects/{id}/link`). repoId=1223949946,
+  gitCredentialId=`cred_c569f8a164f20bea332b9c139a1196e8f080bde9`.
+  Verified: push d910e8a triggered dpl_8MBqP3UsxHoe1MR4a6oJVXr8Bemb (READY).
+- **volleywatch-app rootDirectory** was `null`, causing every push to fail
+  in ~3s. Fixed to `apps/208tracker` via `PATCH /v9/projects/volleywatch-app`.
+  Verified: next push built READY (dpl_fBDWiL3KNLipd1RCzNh88wjSZqcQ).
+- **208tracker project** (old dead project) is separate from volleywatch-app
+  — ignore it. The live 208tracker app is `volleywatch-app`.
 - `vercel redeploy <url>` re-runs the old build — it does NOT pick up new
   code or new env vars at runtime. Always do a fresh `vercel --prod`.
 - Env vars set via `vercel env add` take effect on the *next* fresh deploy,
   not on a redeploy.
 - `vercel env ls --cwd <app-dir>` correctly identifies which project you're
   in and lists its vars.
+- **Vercel API token creation**: `vercel tokens create` requires a classic
+  PAT scope and fails for OAuth sessions. Instead: go to
+  vercel.com/account/tokens → create token with "lswingrover's projects"
+  scope → use in curl with `Authorization: Bearer <token>`.
+- **Git lock files**: sandbox Claude Code sessions can leave `.git/*.lock`
+  files that block commits. Fix: `find .git -name '*.lock' -exec rm {} \;`
 
 ### Next.js + monorepo
 
@@ -99,32 +120,15 @@ real terminal. The sandbox `git add` works fine; only `git commit` fails.
 
 ## Next Steps (priority order)
 
-### 1. Wire Vercel git integration (unblocks everything else)
-**What:** Connect the `narwatch` Vercel project to the GitHub repo so that
-`git push origin main` triggers a production deploy automatically.
+### ~~1. Wire Vercel git integration~~ ✓ DONE (2026-05-02)
+narwatch and volleywatch-app both now auto-deploy on `git push origin main`.
 
-**How:** Vercel dashboard → narwatch project → Settings → Git →
-Connect to `lswingrover/sport-tracker` with rootDirectory `apps/narwhaltracker`.
-
-**Risk:** Low. The project already has rootDirectory set correctly on
-Vercel's side — we just need to connect the repo.
-
-**Test:** After connecting, push a one-line comment change and confirm the
-Vercel dashboard shows a triggered build.
+### ~~2. Audit 208tracker deployment~~ ✓ DONE (2026-05-02)
+208tracker live app = volleywatch-app (rootDirectory now fixed to apps/208tracker).
 
 ---
 
-### 2. Audit 208tracker deployment
-**What:** Find out which Vercel project serves 208tracker, whether it's
-git-connected, and what data source it's using.
-
-**How:** `vercel ls` from the root or `vercel ls 208tracker`.
-
-**Risk:** None (read-only audit).
-
----
-
-### 3. Consolidate shared logic into `packages/core`
+### 1. Consolidate shared logic into `packages/core`
 **What:** Game normalization (W/L derivation, score parsing, standings
 derivation) is duplicated between `sheets.js`, `niwp.js`, and the
 208tracker equivalent. Move to `packages/core/gameNorm.js`.
@@ -133,12 +137,11 @@ derivation) is duplicated between `sheets.js`, `niwp.js`, and the
 change to field names breaks the frontend. Do this with a side-by-side
 diff before touching either app.
 
-**When:** After git integration is wired (item 1), so mistakes are
-recoverable via revert rather than manual redeploy.
+**When:** Now safe — git integration is wired. Mistakes are recoverable via revert.
 
 ---
 
-### 4. NarWatch: multi-week tournament support
+### 2. NarWatch: multi-week tournament support
 **What:** `niwp.js` currently returns only the most recent calendar week.
 Multiple weeks = multiple tournaments. The frontend chip row should show
 one chip per week.
