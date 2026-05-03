@@ -2208,3 +2208,151 @@ button.stat:hover { border-color: var(--accent); }
   border-radius: 4px;
   margin-left: 6px;
 }
+
+/* ── H2H Sheet ─────────────────────────────────────────────────────────── */
+/* Extends the .sheet skeleton with H2H-specific layout.                   */
+
+/* Override max-height to let longer game lists scroll comfortably */
+.h2h-sheet { max-height: 82vh; }
+
+/* × close button — top-right of the header */
+.h2h-x {
+  background: transparent;
+  border: 0;
+  color: var(--muted);
+  font-size: 22px;
+  line-height: 1;
+  padding: 4px 6px;
+  margin: -4px -4px 0 0;
+  cursor: pointer;
+  border-radius: 6px;
+}
+.h2h-x:hover { color: var(--text); }
+
+/* Three-cell summary row (Record · Goal Diff · Games) */
+.h2h-summary-row {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 14px;
+}
+.h2h-stat {
+  flex: 1;
+  background: var(--panel-2);
+  border-radius: 10px;
+  padding: 10px 8px;
+  text-align: center;
+}
+.h2h-record {
+  font-family: "Barlow Condensed", Barlow, sans-serif;
+  font-weight: 900;
+  font-size: 22px;
+  line-height: 1.1;
+  color: var(--text);
+}
+.h2h-record.win  { color: var(--win); }
+.h2h-record.loss { color: var(--loss); }
+.h2h-label {
+  font-size: 10px;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  margin-top: 3px;
+}
+
+/* Subteam breakdown — only rendered when >1 subteam */
+.h2h-breakdown {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  overflow: hidden;
+  margin-bottom: 14px;
+}
+.h2h-breakdown-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 12px;
+  font-size: 13px;
+  border-bottom: 1px solid var(--line);
+}
+.h2h-breakdown-row:last-child { border-bottom: none; }
+.h2h-breakdown-team { color: var(--muted); }
+.h2h-breakdown-rec {
+  font-family: "Barlow Condensed", Barlow, sans-serif;
+  font-weight: 800;
+  font-size: 15px;
+  color: var(--text);
+}
+.h2h-breakdown-rec.win  { color: var(--win); }
+.h2h-breakdown-rec.loss { color: var(--loss); }
+
+/* "All N games / Most recent first" heading */
+.h2h-games-hdr {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--muted);
+  margin-bottom: 6px;
+  padding: 0 2px;
+}
+
+/* Game list */
+.h2h-game-list {
+  list-style: none;
+  margin: 0 0 6px;
+  padding: 0;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  overflow: hidden;
+}
+.h2h-game-row {
+  display: grid;
+  grid-template-columns: 72px 1fr auto auto;
+  gap: 8px;
+  align-items: center;
+  padding: 9px 12px;
+  border-bottom: 1px solid var(--line);
+  font-size: 13px;
+  border-left: 3px solid transparent;
+}
+.h2h-game-row:last-child { border-bottom: none; }
+.h2h-game-row.win  { border-left-color: var(--win); }
+.h2h-game-row.loss { border-left-color: var(--loss); }
+.h2h-game-date {
+  color: var(--muted);
+  font-size: 11px;
+  white-space: nowrap;
+}
+.h2h-game-info { min-width: 0; }
+.h2h-game-loc {
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.h2h-game-score {
+  font-family: "Barlow Condensed", Barlow, sans-serif;
+  font-weight: 800;
+  font-size: 16px;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+.h2h-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 28px;
+  padding: 2px 6px;
+  border-radius: 6px;
+  font-family: "Barlow Condensed", Barlow, sans-serif;
+  font-weight: 800;
+  font-size: 13px;
+  letter-spacing: 0.04em;
+  border: 1px solid transparent;
+}
+.h2h-badge.win  { background: rgba(34,197,94,0.15);  color: var(--win);  border-color: rgba(34,197,94,0.4); }
+.h2h-badge.loss { background: rgba(239,68,68,0.15);  color: var(--loss); border-color: rgba(239,68,68,0.4); }
+.h2h-badge.tie  { background: var(--panel-2);        color: var(--muted); border-color: var(--line); }

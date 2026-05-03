@@ -2214,6 +2214,141 @@ function PlayerSheet({ player, onClose }) {
   );
 }
 
+// ── H2HSheet ──────────────────────────────────────────────────────────────────
+// Bottom sheet showing full historical head-to-head record vs an opponent.
+// Data comes from /api/historical?view=games (games.json — all 82 games).
+// Convention from compute-aggregates.js: home_team is always CDA; away_team
+// is the opponent. So home_score = Narwhals score, away_score = opp score.
+
+function H2HSheet({ opponentName, games, loading, onClose }) {
+  useEffect(() => {
+    if (!opponentName) return;
+    function onKey(e) { if (e.key === "Escape") onClose(); }
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [opponentName, onClose]);
+
+  const open = Boolean(opponentName);
+
+  const wins        = (games || []).filter((g) => g._result === "W").length;
+  const losses      = (games || []).filter((g) => g._result === "L").length;
+  const ties        = (games || []).filter((g) => g._result === "T").length;
+  const totalGoalDiff = (games || []).reduce((s, g) => s + g._goalDiff, 0);
+
+  // Subteam breakdown — only rendered when >1 subteam present
+  const bySubteam = useMemo(() => {
+    const m = new Map();
+    for (const g of (games || [])) {
+      const k = g.team_short || "Other";
+      if (!m.has(k)) m.set(k, { w: 0, l: 0, t: 0 });
+      const s = m.get(k);
+      if (g._result === "W") s.w++;
+      else if (g._result === "L") s.l++;
+      else s.t++;
+    }
+    return m;
+  }, [games]);
+
+  return (
+    <>
+      <div
+        className={`sheet-backdrop${open ? " open" : ""}`}
+        onClick={onClose}
+        aria-hidden={!open}
+      />
+      <aside
+        className={`sheet h2h-sheet${open ? " open" : ""}`}
+        role="dialog"
+        aria-label={opponentName ? `Head-to-head vs ${opponentName}` : undefined}
+        aria-hidden={!open}
+      >
+        <div className="sheet-handle" />
+
+        {/* Header row */}
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 14 }}>
+          <div>
+            <h3>vs {opponentName || ""}</h3>
+            <div className="sub" style={{ marginBottom: 0 }}>Season head-to-head</div>
+          </div>
+          <button className="h2h-x" onClick={onClose} aria-label="Close">×</button>
+        </div>
+
+        {loading ? (
+          <div style={{ padding: "24px 0", color: "var(--muted)", textAlign: "center" }}>
+            Loading history…
+          </div>
+        ) : !games || games.length === 0 ? (
+          <div style={{ padding: "24px 0", color: "var(--muted)", textAlign: "center" }}>
+            No historical games found vs {opponentName}.
+          </div>
+        ) : (
+          <>
+            {/* Summary stat boxes */}
+            <div className="h2h-summary-row">
+              <div className="h2h-stat">
+                <div className={`h2h-record${wins > losses ? " win" : losses > wins ? " loss" : ""}`}>
+                  {wins}–{losses}{ties > 0 ? `–${ties}` : ""}
+                </div>
+                <div className="h2h-label">Record</div>
+              </div>
+              <div className="h2h-stat">
+                <div className={`h2h-record${totalGoalDiff > 0 ? " win" : totalGoalDiff < 0 ? " loss" : ""}`}>
+                  {totalGoalDiff > 0 ? "+" : ""}{totalGoalDiff}
+                </div>
+                <div className="h2h-label">Goal Diff</div>
+              </div>
+              <div className="h2h-stat">
+                <div className="h2h-record">{games.length}</div>
+                <div className="h2h-label">Games</div>
+              </div>
+            </div>
+
+            {/* Subteam breakdown — only shown when multiple subteams played this opponent */}
+            {bySubteam.size > 1 && (
+              <div className="h2h-breakdown">
+                {[...bySubteam.entries()].map(([team, r]) => (
+                  <div key={team} className="h2h-breakdown-row">
+                    <span className="h2h-breakdown-team">{team}</span>
+                    <span className={`h2h-breakdown-rec${r.w > r.l ? " win" : r.l > r.w ? " loss" : ""}`}>
+                      {r.w}–{r.l}{r.t > 0 ? `–${r.t}` : ""}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* Games list */}
+            <div className="h2h-games-hdr">
+              <span>All {games.length} game{games.length !== 1 ? "s" : ""}</span>
+              <span style={{ color: "var(--muted)", fontSize: 11 }}>Most recent first</span>
+            </div>
+            <ul className="h2h-game-list">
+              {games.map((g) => (
+                <li
+                  key={g.game_id}
+                  className={`h2h-game-row${g._result === "W" ? " win" : g._result === "L" ? " loss" : ""}`}
+                >
+                  <div className="h2h-game-date">{g._dateLabel}</div>
+                  <div className="h2h-game-info">
+                    <div className="h2h-game-loc">{g.location}</div>
+                    {g.team_short && <div className="meta">{g.team_short}</div>}
+                  </div>
+                  <div className="h2h-game-score">{g._narwhalScore}–{g._oppScore}</div>
+                  <span className={`h2h-badge${g._result === "W" ? " win" : g._result === "L" ? " loss" : " tie"}`}>
+                    {g._result}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          </>
+        )}
+
+        <button className="sheet-close" onClick={onClose}>Close</button>
+      </aside>
+    </>
+  );
+}
+
 // ─────────────────────────────────────────────────────────────────────────────
 
 export default function Home() {
@@ -2342,6 +2477,11 @@ export default function Home() {
   const [leaderboardData, setLeaderboardData]       = useState(null);
   const [leaderboardLoading, setLeaderboardLoading] = useState(false);
   const [playerSheet, setPlayerSheet]               = useState(null);
+
+  // H2H sheet — lazily loads all games once and caches them
+  const [h2hSheet, setH2hSheet]             = useState(null); // null | opponent name string
+  const [allGamesCache, setAllGamesCache]   = useState(null); // null | game[]
+  const [h2hGamesLoading, setH2hGamesLoading] = useState(false);
 
   useEffect(() => {
     if (tab !== "stats" || leaderboardData || leaderboardLoading) return;
@@ -2508,6 +2648,55 @@ export default function Home() {
       setPercent: row?.setPercent ?? null,
     });
   }
+
+  // ── openH2H ────────────────────────────────────────────────────────────────
+  // Opens the H2H sheet for the given opponent name. Lazily fetches
+  // /api/historical?view=games on first call and caches the full game list.
+  async function openH2H(opponentName) {
+    if (!opponentName) return;
+    setH2hSheet(opponentName);
+    if (!allGamesCache && !h2hGamesLoading) {
+      setH2hGamesLoading(true);
+      try {
+        const r = await fetch("/api/historical?view=games");
+        if (r.ok) {
+          const json = await r.json();
+          setAllGamesCache(json.games || []);
+        }
+      } catch {
+        // silently degrade — sheet will show "no games found"
+      }
+      setH2hGamesLoading(false);
+    }
+  }
+
+  // Filtered + annotated games for the current H2H opponent.
+  // home_team is always CDA (convention from compute-aggregates.js).
+  const h2hGames = useMemo(() => {
+    if (!h2hSheet || !allGamesCache) return null;
+    const norm = (s) =>
+      String(s || "").toLowerCase().replace(/\s*\([^)]*\)\s*$/, "").trim();
+    const target = norm(h2hSheet);
+    const filtered = allGamesCache.filter(
+      (g) =>
+        norm(g.opponent_display_name) === target ||
+        norm(g.away_team) === target
+    );
+    return filtered
+      .map((g) => {
+        const narwhalScore = parseInt(g.home_score) || 0;
+        const oppScore     = parseInt(g.away_score) || 0;
+        const result = narwhalScore > oppScore ? "W" : narwhalScore < oppScore ? "L" : "T";
+        const goalDiff = narwhalScore - oppScore;
+        const dateLabel = g.game_date
+          ? new Date(g.game_date).toLocaleDateString("en-US", {
+              month: "short", day: "numeric", year: "numeric",
+            })
+          : "—";
+        return { ...g, _result: result, _narwhalScore: narwhalScore, _oppScore: oppScore, _goalDiff: goalDiff, _dateLabel: dateLabel };
+      })
+      .sort((a, b) => (b.game_date || "").localeCompare(a.game_date || ""));
+  }, [h2hSheet, allGamesCache]);
 
   useEffect(() => {
     if (typeof window !== "undefined") setOrigin(window.location.origin);
@@ -3028,7 +3217,7 @@ export default function Home() {
                       teamWatchNowLink={data?.teamWatchNowLink}
                       opponentInfo={standingsById.get(g.opponent)}
                       onAddCal={addCalSingle}
-                      onOpenOpponent={openOpponent}
+                      onOpenOpponent={openH2H}
                       onCourtTap={showCourtInfo}
                     />
                   ))}
@@ -3066,7 +3255,7 @@ export default function Home() {
                       opponentInfo={standingsById.get(g.opponent)}
                       onShare={shareGame}
                       justWon={recentWinIds.has(g.id)}
-                      onOpenOpponent={openOpponent}
+                      onOpenOpponent={openH2H}
                       onCourtTap={showCourtInfo}
                       onResultBadgeTap={(mode) => {
                         setStatsAccordion(mode);
@@ -3205,6 +3394,13 @@ export default function Home() {
       </div>
 
       <PlayerSheet player={playerSheet} onClose={() => setPlayerSheet(null)} />
+
+      <H2HSheet
+        opponentName={h2hSheet}
+        games={h2hGames}
+        loading={h2hGamesLoading && !allGamesCache}
+        onClose={() => setH2hSheet(null)}
+      />
 
       <OpponentSheet
         data={opponentSheet}

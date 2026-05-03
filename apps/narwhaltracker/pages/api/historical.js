@@ -103,6 +103,20 @@ export default async function handler(req, res) {
     case "games": {
       const data = readDataFile("games.json");
       if (!data) return res.status(404).json({ error: "not_found", file: "games.json" });
+      // Optional ?opponent_id= or ?opponent_name= filter
+      const { opponent_id, opponent_name } = req.query;
+      if (opponent_id) {
+        const filtered = data.filter((g) => g.opponent_id === opponent_id);
+        return res.status(200).json({ meta, games: filtered, opponent_id });
+      }
+      if (opponent_name) {
+        const norm = (s) => String(s || "").toLowerCase().replace(/\s*\([^)]*\)\s*$/, "").trim();
+        const target = norm(opponent_name);
+        const filtered = data.filter(
+          (g) => norm(g.opponent_display_name) === target || norm(g.away_team) === target
+        );
+        return res.status(200).json({ meta, games: filtered, opponent_name });
+      }
       return res.status(200).json({ meta, games: data });
     }
     default: {
