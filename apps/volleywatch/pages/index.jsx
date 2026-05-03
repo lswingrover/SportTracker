@@ -2519,7 +2519,7 @@ export default function Home() {
           )}
           <div className="header-compact-actions">
             <button
-              className={`icon-only-btn${userRefreshing ? " spinning" : ""}${refreshDone ? " done" : ""}`}
+              className={`icon-only-btn refresh-btn${userRefreshing ? " spinning" : ""}${refreshDone ? " done" : ""}`}
               onClick={() => { if (!userRefreshing) load(true); }}
               aria-label="Refresh"
               title="Refresh data"
