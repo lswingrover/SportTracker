@@ -1,21 +1,26 @@
 /** @type {import('next').NextConfig} */
 
 const CANONICAL_ORIGIN = "https://narwatch.vercel.app";
-const NON_CANONICAL_HOSTS = [
-  "narwatch-lswingrovers-projects.vercel.app",
-];
+
+// Matches any Vercel-generated non-canonical hostname for this project:
+//   narwatch-<hash>-lswingrovers-projects.vercel.app  (per-deployment)
+//   narwatch-lswingrovers-projects.vercel.app          (team auto-alias)
+// Does NOT match narwatch.vercel.app (canonical — no hyphen after "narwatch").
+const NON_CANONICAL_HOST_PATTERN = "narwatch-.+\\.vercel\\.app";
 
 const nextConfig = {
   reactStrictMode: true,
   transpilePackages: ['@sport-tracker/core'],
 
   async redirects() {
-    return NON_CANONICAL_HOSTS.map((host) => ({
-      source: "/:path*",
-      has: [{ type: "host", value: host }],
-      destination: `${CANONICAL_ORIGIN}/:path*`,
-      permanent: true,
-    }));
+    return [
+      {
+        source: "/:path*",
+        has: [{ type: "host", value: NON_CANONICAL_HOST_PATTERN }],
+        destination: `${CANONICAL_ORIGIN}/:path*`,
+        permanent: true,
+      },
+    ];
   },
 
   // Prevent CDN and browsers from caching the HTML document shell.

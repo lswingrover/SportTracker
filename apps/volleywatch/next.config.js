@@ -1,22 +1,28 @@
 /** @type {import('next').NextConfig} */
 
 const CANONICAL_ORIGIN = "https://volleywatch-app.vercel.app";
-const NON_CANONICAL_HOSTS = [
-  "volleywatch-app-lswingrovers-projects.vercel.app",
-  "volleywatch-lswingrovers-projects.vercel.app",
-];
+
+// Matches any Vercel-generated non-canonical hostname for this project:
+//   volleywatch-app-<hash>-lswingrovers-projects.vercel.app  (per-deployment)
+//   volleywatch-app-lswingrovers-projects.vercel.app          (team auto-alias)
+//   volleywatch-<hash>-lswingrovers-projects.vercel.app       (alternate project name variant)
+//   volleywatch-lswingrovers-projects.vercel.app
+// Does NOT match volleywatch-app.vercel.app (canonical).
+const NON_CANONICAL_HOST_PATTERN = "volleywatch-.+\\.vercel\\.app";
 
 const nextConfig = {
   reactStrictMode: true,
   transpilePackages: ['@sport-tracker/core'],
 
   async redirects() {
-    return NON_CANONICAL_HOSTS.map((host) => ({
-      source: "/:path*",
-      has: [{ type: "host", value: host }],
-      destination: `${CANONICAL_ORIGIN}/:path*`,
-      permanent: true,
-    }));
+    return [
+      {
+        source: "/:path*",
+        has: [{ type: "host", value: NON_CANONICAL_HOST_PATTERN }],
+        destination: `${CANONICAL_ORIGIN}/:path*`,
+        permanent: true,
+      },
+    ];
   },
 
   async headers() {
