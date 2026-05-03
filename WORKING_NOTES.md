@@ -6,7 +6,7 @@
 
 ---
 
-## Current State (2026-05-02, updated 19:45)
+## Current State (2026-05-02, updated 19:37)
 
 ### What's deployed and where
 
@@ -134,6 +134,26 @@ narwatch and volleywatch-app both now auto-deploy on `git push origin main`.
 Both `niwp.js` and `sheets.js` now import from core. The 208tracker uses
 `normalizeStandings` (AES-specific) so it was not part of this change —
 the output shapes remain compatible. No behaviour change.
+
+---
+
+### ~~3. NarWatch: render guard bug~~ ✓ DONE (2026-05-02, commit b91eb26)
+The JSX render had the same `tournament.static` check as the `load()` bail
+we fixed earlier — but in the return JSX, not the function body.
+
+```jsx
+// BEFORE (bug):
+{tournament.static ? <StaticTournamentCard /> : <live content>}
+
+// AFTER (fix):
+{tournament.static && !niwpWeeks ? <StaticTournamentCard /> : <live content>}
+```
+
+Effect: NIWP data was loading (network tab showed successful API calls,
+chip row rendered correctly), but the page always showed the static Bend
+placeholder card because the render condition never checked whether
+`niwpWeeks` was available. One character change, same `&& !niwpWeeks`
+guard pattern as the `load()` fix.
 
 ---
 

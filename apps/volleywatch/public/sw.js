@@ -11,6 +11,17 @@ self.addEventListener("activate", (event) => {
   event.waitUntil(self.clients.claim());
 });
 
+// Network-first for page navigation. Falls back to cache only if offline.
+// Prevents iOS from serving a stale app shell after a Vercel deploy.
+self.addEventListener("fetch", (event) => {
+  if (event.request.mode === "navigate") {
+    event.respondWith(
+      fetch(event.request).catch(() => caches.match(event.request))
+    );
+  }
+  // Non-navigation requests (JS, CSS, API, fonts): browser handles normally.
+});
+
 self.addEventListener("push", (event) => {
   let data = {};
   try {
