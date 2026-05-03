@@ -6,7 +6,7 @@
 
 ---
 
-## Current State (2026-05-02, updated 18:50)
+## Current State (2026-05-02, updated 19:30)
 
 ### What's deployed and where
 
@@ -25,9 +25,10 @@
 
 ### Shared package (`packages/core`)
 
-Used by both apps for: push subscriptions, blob storage, snapshots, state diffing.
-Not yet used for: data-fetching logic, standings derivation, game normalization
-(those are still duplicated between the two apps).
+Used by both apps for: push subscriptions, blob storage, snapshots, state diffing,
+standings derivation (`gameNorm.js` — added 2026-05-02).
+Not yet consolidated: data-fetching logic, game normalization (source-specific
+parsing still lives in each adapter — niwp.js, sheets.js, tournament.js).
 
 ---
 
@@ -128,16 +129,11 @@ narwatch and volleywatch-app both now auto-deploy on `git push origin main`.
 
 ---
 
-### 1. Consolidate shared logic into `packages/core`
-**What:** Game normalization (W/L derivation, score parsing, standings
-derivation) is duplicated between `sheets.js`, `niwp.js`, and the
-208tracker equivalent. Move to `packages/core/gameNorm.js`.
-
-**Risk:** Medium. Both apps depend on the normalized game shape — any
-change to field names breaks the frontend. Do this with a side-by-side
-diff before touching either app.
-
-**When:** Now safe — git integration is wired. Mistakes are recoverable via revert.
+### ~~1. Consolidate shared logic into `packages/core`~~ ✓ DONE (2026-05-02)
+`deriveStandings` extracted to `packages/core/gameNorm.js` (commit e8add64).
+Both `niwp.js` and `sheets.js` now import from core. The 208tracker uses
+`normalizeStandings` (AES-specific) so it was not part of this change —
+the output shapes remain compatible. No behaviour change.
 
 ---
 
