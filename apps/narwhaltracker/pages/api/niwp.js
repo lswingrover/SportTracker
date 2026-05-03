@@ -15,7 +15,9 @@
 //   GJV = Girls JV
 //
 // OUTPUT: same JSON shape as tournament.js / sheets.js so the frontend
-// is unaffected.
+// is unaffected. Also includes _pollSchedule for adaptive client polling.
+
+import { computePollSchedule } from "../../lib/pollSchedule.js";
 
 const NIWP_BASE = "https://www.northidahowaterpolo.org/wp-json/niwp-stats/v1";
 const CACHE_TTL_MS = 60 * 1000;
@@ -125,6 +127,20 @@ async function fetchFromNIWP(teamPrefix) {
   const cdaGames = allGames.filter(
     (g) => isCDATeam(g.home_team) || isCDATeam(g.away_team)
   );
+
+  // Compute adaptive poll schedule from ALL CDA games (not just current week).
+  // Needs timeISO — same normalization used in normalized game objects below.
+  const pollScheduleInput = cdaGames.map((g) => {
+    let timeISO = null;
+    if (g.game_date) {
+      try {
+        const d = new Date(g.game_date);
+        if (!isNaN(d.getTime())) timeISO = d.toISOString();
+      } catch {}
+    }
+    return { timeISO };
+  });
+  const pollSchedule = computePollSchedule(pollScheduleInput);
 
   // Group by calendar week to form pseudo-tournaments
   const byWeek = groupIntoTournaments(cdaGames);
@@ -256,6 +272,7 @@ async function fetchFromNIWP(teamPrefix) {
     _dataSource:          "niwp",
     _teamPrefix:          prefix,
     _weekKey:             weekKey,
+    _pollSchedule:        pollSchedule,
   };
 }
 

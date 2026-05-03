@@ -7,7 +7,9 @@ const THEMES = [
   { id: "narwhal", label: "Narwhal (teal)" },
 ];
 
-const REFRESH_MS = 2 * 60 * 1000;
+// Default fallback — used before first data load and for non-NIWP sources.
+// Once the NIWP API responds, _pollSchedule overrides this dynamically.
+const DEFAULT_REFRESH_MS = 2 * 60 * 1000;
 const CONFETTI_SRC = "https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js";
 
 function pad(n) {
@@ -2258,7 +2260,11 @@ export default function Home() {
     load();
   }, [load]);
 
-  useInterval(() => load(), REFRESH_MS);
+  // Adaptive poll interval — driven by _pollSchedule from the NIWP API.
+  // Falls back to DEFAULT_REFRESH_MS until first data arrives or for non-NIWP sources.
+  // Modes: live (90s) → hot (3m) → cooldown (5m) → warm (10m) → cold (4h).
+  const pollIntervalMs = data?._pollSchedule?.intervalMs ?? DEFAULT_REFRESH_MS;
+  useInterval(() => load(), pollIntervalMs);
 
   const games = data?.games || [];
   const pastGames = games.filter((g) => g.done);
