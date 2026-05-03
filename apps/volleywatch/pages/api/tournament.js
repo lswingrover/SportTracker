@@ -1,5 +1,6 @@
 import { diffAndPush } from "@sport-tracker/core/stateDiff.js";
 import { maybeSnapshot } from "@sport-tracker/core/snapshots.js";
+import { readJson, writeJson } from "@sport-tracker/core/blobStore.js";
 import { findBroadcast, isInTournamentWindow, HUDL_TEAM_URL } from "../../lib/hudl-broadcasts.js";
 
 // Deferred for v3 (intentionally not implemented yet):
@@ -675,7 +676,7 @@ function flattenWorkGroups(raw) {
   });
 }
 
-function buildResponse({ eventMeta, team, current, future, work, standings, nextAssignments, brackets, pools, remoteTimestamp, ctx }) {
+function buildResponse({ eventMeta, team, current, future, work, standings, nextAssignments, brackets, pools, remoteTimestamp, ctx, persistedPoolPlay = [] }) {
   const playedRaw = flattenPlayGroups(current);
   const upcomingRaw = flattenPlayGroups(future);
 
@@ -703,6 +704,20 @@ function buildResponse({ eventMeta, team, current, future, work, standings, next
       .filter((g) => !have.has(String(g.id)));
     if (bracketGames.length > 0) {
       games.push(...bracketGames);
+      games.sort((a, b) => (a.timeMs || 0) - (b.timeMs || 0));
+    }
+  }
+
+  // Merge persisted pool play games when AES schedule/current returns empty.
+  // Pool play matches aren't in AES public endpoints post-tournament; we
+  // persist them ourselves while they're live and replay them after.
+  if (playedRaw.length === 0 && persistedPoolPlay.length > 0) {
+    const have = new Set(games.map((g) => String(g.id)));
+    const persistedNew = persistedPoolPlay
+      .filter((g) => !have.has(String(g.id)))
+      .map((g) => ({ ...g, done: true, timeMs: g.timeISO ? new Date(g.timeISO).getTime() : null }));
+    if (persistedNew.length > 0) {
+      games.push(...persistedNew);
       games.sort((a, b) => (a.timeMs || 0) - (b.timeMs || 0));
     }
   }
@@ -895,6 +910,32 @@ async function loadFresh(ctx) {
     fetchJson(urls.timestamp).catch(() => null),
   ]);
   const remoteTimestamp = timestamp?.LastUpdatedTimestamp || null;
+
+  // Pool play persistence: AES schedule/current returns [] after tournament ends.
+  // While the tournament is live, snapshot done pool games to Vercel Blob so we
+  // can replay them later. When current is empty (post-tournament), load the
+  // persisted games as fallback — they'll be merged into the games list by
+  // buildResponse above bracket backfill.
+  const rawCurrentFlat = flattenPlayGroups(current);
+  const blobKey = `pool-play/${eventId}/${divisionId}/${teamId}.json`;
+  let persistedPoolPlay = [];
+
+  if (rawCurrentFlat.length === 0) {
+    // Tournament may be over — load whatever we persisted during live play.
+    persistedPoolPlay = await readJson(blobKey, []).catch(() => []);
+  } else {
+    // Games are live — snapshot done games fire-and-forget.
+    const vTz = ctx.venueTimezone || null;
+    const doneGames = rawCurrentFlat
+      .map((m, i) => normalizeMatch(m, { done: true, idx: i, kind: "past", teamId: ctx.teamId, venueTimezone: vTz }))
+      .filter((g) => g.result === "W" || g.result === "L");
+    if (doneGames.length > 0) {
+      writeJson(blobKey, doneGames).catch((err) =>
+        console.error("[poolPlayPersist]", err?.message || err)
+      );
+    }
+  }
+
   const payload = buildResponse({
     eventMeta,
     team,
@@ -907,6 +948,7 @@ async function loadFresh(ctx) {
     pools,
     remoteTimestamp,
     ctx,
+    persistedPoolPlay,
   });
   return { payload, remoteTimestamp };
 }
