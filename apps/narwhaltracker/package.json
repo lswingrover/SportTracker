@@ -11,11 +11,12 @@
     "harvest": "node scripts/harvest-niwp.js && node scripts/normalize-teams.js && node scripts/compute-aggregates.js"
   },
   "dependencies": {
+    "@sport-tracker/core": "*",
     "@vercel/blob": "^2.3.3",
+    "cheerio": "^1.2.0",
     "next": "15.5.15",
     "react": "19.0.0",
     "react-dom": "19.0.0",
-    "web-push": "^3.6.7",
-    "@sport-tracker/core": "*"
+    "web-push": "^3.6.7"
   }
 }

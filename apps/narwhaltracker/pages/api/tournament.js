@@ -2,14 +2,22 @@
 //
 // DATA SOURCE PRIORITY:
 //   1. NIWP WordPress API (live) — if NIWP_API_ENABLED=true env var is set,
-//      traffic is delegated to /api/niwp.js. This is the primary live source
-//      for North Idaho Water Polo tournament data. No auth required.
+//      traffic is delegated to /api/niwp.js. Primary live source for
+//      North Idaho Water Polo tournament data. No auth required.
 //      Optional: NIWP_TEAM_PREFIX=B|G|BJV|GJV (default: B = Boys Varsity)
-//   2. Google Sheets (live)      — if GOOGLE_SHEETS_ID env var is set, all
-//      traffic is delegated to /api/sheets.js. The sheet is authoritative
-//      and the frontend receives the same JSON shape either way.
-//   3. Static data               — falls back to lib/tournamentData.js (the
-//      v1 default) when neither live source is configured.
+//   2. 6-8 Sports (live JOs)    — if SIXEIGHT_LEAGUE_ID is set (or auto-
+//      discovered), delegates to /api/sixeight.js. Used for USAWP Junior
+//      Olympics. No auth, CORS *, live in_progress flag. Auto-discovers the
+//      current JO league ID at runtime if SIXEIGHT_LEAGUE_ID is blank.
+//      Toggle: SIXEIGHT_ENABLED=true
+//   3. TorMatch (live)          — if TORMATCH_TOURNAMENT_ID is set, delegates
+//      to /api/tormatch.js. Used for tournaments on the TorMatch platform.
+//   4. SportsEngine Tourney     — if SPORTSENGINE_TOURNAMENT_ID is set,
+//      delegates to /api/sportsengine.js. HTML-scrapes tourneymachine.com.
+//      Used for general tournaments not on other platforms.
+//   5. Google Sheets (live)     — if GOOGLE_SHEETS_ID is set, delegates to
+//      /api/sheets.js. Manual data entry fallback.
+//   6. Static data              — falls back to lib/tournamentData.js.
 //
 // This design lets a team parent enable live data for a specific tournament
 // by simply setting env vars — no frontend changes required.
@@ -83,12 +91,29 @@ export default async function handler(req, res) {
     return niwpHandler(req, res);
   }
 
+  // ── 6-8 Sports branch (USAWP Junior Olympics) ───────────────────────────
+  // Set SIXEIGHT_ENABLED=true to activate. SIXEIGHT_LEAGUE_ID is optional —
+  // if blank the adapter auto-discovers the current JO league at runtime.
+  // SIXEIGHT_TEAM_NAME defaults to "Narwhal".
+  if (process.env.SIXEIGHT_ENABLED === "true") {
+    const { default: sixeightHandler } = await import('./sixeight.js');
+    return sixeightHandler(req, res);
+  }
+
   // -- TorMatch live branch -----------------------------------------------
   // When TORMATCH_TOURNAMENT_ID is set, delegate to tormatch.js.
-  // Pass ?id= or use TORMATCH_TOURNAMENT_ID env var to select tournament.
   if (process.env.TORMATCH_TOURNAMENT_ID) {
     const { default: tormatchHandler } = await import('./tormatch.js');
     return tormatchHandler(req, res);
+  }
+
+  // ── SportsEngine TourneyMachine branch ──────────────────────────────────
+  // Set SPORTSENGINE_TOURNAMENT_ID to the tourneymachine.com hash ID.
+  // SPORTSENGINE_TEAM_NAME defaults to "Narwhal".
+  // Discover the ID: Google `site:tourneymachine.com "Tournament Name"`.
+  if (process.env.SPORTSENGINE_TOURNAMENT_ID) {
+    const { default: sportsengineHandler } = await import('./sportsengine.js');
+    return sportsengineHandler(req, res);
   }
 
   // -- Live Sheets branch ──────────────────────────────────────────────────
