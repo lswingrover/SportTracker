@@ -10,7 +10,9 @@
     "steals": "0",
     "blocks": "0",
     "kickouts": "0",
-    "updated_at": "2025-05-16 18:51:44"
+    "updated_at": "2025-05-16 18:51:44",
+    "team_id": "cda-18u-girls",
+    "team_display_name": "CDA 18U Girls"
   },
   {
     "stat_id": "73",
@@ -23,7 +25,9 @@
     "steals": "0",
     "blocks": "0",
     "kickouts": "0",
-    "updated_at": "2025-05-16 19:10:40"
+    "updated_at": "2025-05-16 19:10:40",
+    "team_id": "cda-18u-girls",
+    "team_display_name": "CDA 18U Girls"
   },
   {
     "stat_id": "74",
@@ -36,7 +40,9 @@
     "steals": "1",
     "blocks": "0",
     "kickouts": "3",
-    "updated_at": "2025-05-16 19:35:45"
+    "updated_at": "2025-05-16 19:35:45",
+    "team_id": "cda-18u-girls",
+    "team_display_name": "CDA 18U Girls"
   },
   {
     "stat_id": "75",
@@ -49,7 +55,9 @@
     "steals": "0",
     "blocks": "5",
     "kickouts": "0",
-    "updated_at": "2025-05-16 19:31:26"
+    "updated_at": "2025-05-16 19:31:26",
+    "team_id": "cda-18u-girls",
+    "team_display_name": "CDA 18U Girls"
   },
   {
     "stat_id": "76",
@@ -62,7 +70,9 @@
     "steals": "1",
     "blocks": "0",
     "kickouts": "0",
-    "updated_at": "2025-05-16 19:12:00"
+    "updated_at": "2025-05-16 19:12:00",
+    "team_id": "cda-18u-girls",
+    "team_display_name": "CDA 18U Girls"
   },
   {
     "stat_id": "77",
@@ -75,7 +85,9 @@
     "steals": "0",
     "blocks": "0",
     "kickouts": "1",
-    "updated_at": "2025-05-16 19:31:47"
+    "updated_at": "2025-05-16 19:31:47",
+    "team_id": "cda-18u-girls",
+    "team_display_name": "CDA 18U Girls"
   },
   {
     "stat_id": "78",
@@ -88,7 +100,9 @@
     "steals": "2",
     "blocks": "0",
     "kickouts": "0",
-    "updated_at": "2025-05-16 19:33:11"
+    "updated_at": "2025-05-16 19:33:11",
+    "team_id": "cda-18u-girls",
+    "team_display_name": "CDA 18U Girls"
   },
   {
     "stat_id": "79",
@@ -101,7 +115,9 @@
     "steals": "0",
     "blocks": "0",
     "kickouts": "0",
-    "updated_at": "2025-05-16 19:17:35"
+    "updated_at": "2025-05-16 19:17:35",
+    "team_id": "cda-18u-girls",
+    "team_display_name": "CDA 18U Girls"
   },
   {
     "stat_id": "80",
@@ -114,7 +130,9 @@
     "steals": "0",
     "blocks": "0",
     "kickouts": "0",
-    "updated_at": "2025-05-16 18:53:16"
+    "updated_at": "2025-05-16 18:53:16",
+    "team_id": "cda-18u-girls",
+    "team_display_name": "CDA 18U Girls"
   },
   {
     "stat_id": "81",
@@ -127,7 +145,9 @@
     "steals": "2",
     "blocks": "0",
     "kickouts": "0",
-    "updated_at": "2025-05-16 19:26:33"
+    "updated_at": "2025-05-16 19:26:33",
+    "team_id": "cda-18u-girls",
+    "team_display_name": "CDA 18U Girls"
   },
   {
     "stat_id": "82",
@@ -140,7 +160,9 @@
     "steals": "0",
     "blocks": "0",
     "kickouts": "0",
-    "updated_at": "2025-05-16 18:54:47"
+    "updated_at": "2025-05-16 18:54:47",
+    "team_id": "cda-18u-girls",
+    "team_display_name": "CDA 18U Girls"
   },
   {
     "stat_id": "84",
@@ -153,7 +175,9 @@
     "steals": "0",
     "blocks": "0",
     "kickouts": "0",
-    "updated_at": "2025-05-16 19:20:35"
+    "updated_at": "2025-05-16 19:20:35",
+    "team_id": "cda-18u-girls",
+    "team_display_name": "CDA 18U Girls"
   },
   {
     "stat_id": "85",
@@ -166,6 +190,8 @@
     "steals": "2",
     "blocks": "0",
     "kickouts": "1",
-    "updated_at": "2025-05-16 19:26:00"
+    "updated_at": "2025-05-16 19:26:00",
+    "team_id": "cda-18u-girls",
+    "team_display_name": "CDA 18U Girls"
   }
 ]

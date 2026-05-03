@@ -10,7 +10,9 @@
     "steals": "5",
     "blocks": "1",
     "kickouts": "1",
-    "updated_at": "2026-02-01 08:41:10"
+    "updated_at": "2026-02-01 08:41:10",
+    "team_id": "cda-18u-boys",
+    "team_display_name": "CDA 18U Boys"
   },
   {
     "stat_id": "1047",
@@ -23,7 +25,9 @@
     "steals": "0",
     "blocks": "0",
     "kickouts": "1",
-    "updated_at": "2026-02-01 08:43:09"
+    "updated_at": "2026-02-01 08:43:09",
+    "team_id": "cda-18u-boys",
+    "team_display_name": "CDA 18U Boys"
   },
   {
     "stat_id": "1048",
@@ -36,7 +40,9 @@
     "steals": "0",
     "blocks": "2",
     "kickouts": "1",
-    "updated_at": "2026-02-01 08:43:14"
+    "updated_at": "2026-02-01 08:43:14",
+    "team_id": "cda-18u-boys",
+    "team_display_name": "CDA 18U Boys"
   },
   {
     "stat_id": "1049",
@@ -49,7 +55,9 @@
     "steals": "0",
     "blocks": "0",
     "kickouts": "0",
-    "updated_at": "2026-01-31 22:10:48"
+    "updated_at": "2026-01-31 22:10:48",
+    "team_id": "cda-18u-boys",
+    "team_display_name": "CDA 18U Boys"
   },
   {
     "stat_id": "1050",
@@ -62,7 +70,9 @@
     "steals": "0",
     "blocks": "0",
     "kickouts": "0",
-    "updated_at": "2026-01-31 22:10:49"
+    "updated_at": "2026-01-31 22:10:49",
+    "team_id": "cda-18u-boys",
+    "team_display_name": "CDA 18U Boys"
   },
   {
     "stat_id": "1051",
@@ -75,7 +85,9 @@
     "steals": "1",
     "blocks": "0",
     "kickouts": "0",
-    "updated_at": "2026-02-01 08:30:02"
+    "updated_at": "2026-02-01 08:30:02",
+    "team_id": "cda-18u-boys",
+    "team_display_name": "CDA 18U Boys"
   },
   {
     "stat_id": "1052",
@@ -88,7 +100,9 @@
     "steals": "1",
     "blocks": "0",
     "kickouts": "0",
-    "updated_at": "2026-02-01 08:10:48"
+    "updated_at": "2026-02-01 08:10:48",
+    "team_id": "cda-18u-boys",
+    "team_display_name": "CDA 18U Boys"
   },
   {
     "stat_id": "1053",
@@ -101,7 +115,9 @@
     "steals": "0",
     "blocks": "1",
     "kickouts": "0",
-    "updated_at": "2026-02-01 08:01:45"
+    "updated_at": "2026-02-01 08:01:45",
+    "team_id": "cda-18u-boys",
+    "team_display_name": "CDA 18U Boys"
   },
   {
     "stat_id": "1054",
@@ -114,7 +130,9 @@
     "steals": "1",
     "blocks": "0",
     "kickouts": "0",
-    "updated_at": "2026-02-01 08:15:47"
+    "updated_at": "2026-02-01 08:15:47",
+    "team_id": "cda-18u-boys",
+    "team_display_name": "CDA 18U Boys"
   },
   {
     "stat_id": "1055",
@@ -127,7 +145,9 @@
     "steals": "2",
     "blocks": "0",
     "kickouts": "0",
-    "updated_at": "2026-02-01 08:34:07"
+    "updated_at": "2026-02-01 08:34:07",
+    "team_id": "cda-18u-boys",
+    "team_display_name": "CDA 18U Boys"
   },
   {
     "stat_id": "1056",
@@ -140,7 +160,9 @@
     "steals": "0",
     "blocks": "1",
     "kickouts": "0",
-    "updated_at": "2026-02-01 08:23:17"
+    "updated_at": "2026-02-01 08:23:17",
+    "team_id": "cda-18u-boys",
+    "team_display_name": "CDA 18U Boys"
   },
   {
     "stat_id": "1057",
@@ -153,7 +175,9 @@
     "steals": "1",
     "blocks": "2",
     "kickouts": "0",
-    "updated_at": "2026-02-01 08:13:26"
+    "updated_at": "2026-02-01 08:13:26",
+    "team_id": "cda-18u-boys",
+    "team_display_name": "CDA 18U Boys"
   },
   {
     "stat_id": "1058",
@@ -166,7 +190,9 @@
     "steals": "2",
     "blocks": "0",
     "kickouts": "0",
-    "updated_at": "2026-02-01 08:28:57"
+    "updated_at": "2026-02-01 08:28:57",
+    "team_id": "cda-18u-boys",
+    "team_display_name": "CDA 18U Boys"
   },
   {
     "stat_id": "1059",
@@ -179,6 +205,8 @@
     "steals": "0",
     "blocks": "0",
     "kickouts": "0",
-    "updated_at": "2026-02-01 08:07:33"
+    "updated_at": "2026-02-01 08:07:33",
+    "team_id": "cda-18u-boys",
+    "team_display_name": "CDA 18U Boys"
   }
 ]

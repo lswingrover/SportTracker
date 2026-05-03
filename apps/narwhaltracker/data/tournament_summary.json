@@ -514,145 +514,6 @@
     ]
   },
   {
-    "tournament": "KROC w/ HILLSBORO",
-    "games_played": 11,
-    "wins": 10,
-    "losses": 1,
-    "ties": 0,
-    "win_pct": 0.909,
-    "record_str": "10-1",
-    "goals_for": 163,
-    "goals_against": 76,
-    "goal_differential": 87,
-    "cda_teams": [
-      "CDA & HB All Stars",
-      "CDA 14U Boys",
-      "CDA 18U Boys",
-      "CDA 18U Girls",
-      "COACHES + 18U A",
-      "MIX 18U Boys A",
-      "NIWP 18U All Stars",
-      "NIWP 18U Boy",
-      "NIWP 18U Girls",
-      "NIWP 18u Boys",
-      "NIWP 18u Girls"
-    ],
-    "opponents": [
-      "",
-      "CDA Masters",
-      "COACHES + 18U B",
-      "HB 18U All Stars",
-      "HB 18U Boys",
-      "HillsBoro 18u Girls",
-      "Hillsboro",
-      "Hillsboro 14U Boys",
-      "Hillsboro 18U Girls",
-      "Hillsboro 18u Boys plus",
-      "Mix 18U Boys B"
-    ],
-    "game_log": [
-      {
-        "game_id": "60",
-        "date": "2025-05-29 17:30:00",
-        "home_team": "CDA 18U Boys",
-        "away_team": "Hillsboro",
-        "home_score": 22,
-        "away_score": 3,
-        "result": "W"
-      },
-      {
-        "game_id": "61",
-        "date": "2025-05-29 18:30:00",
-        "home_team": "CDA 18U Girls",
-        "away_team": "Hillsboro 18U Girls",
-        "home_score": 20,
-        "away_score": 4,
-        "result": "W"
-      },
-      {
-        "game_id": "62",
-        "date": "2025-05-29 18:30:00",
-        "home_team": "CDA 14U Boys",
-        "away_team": "Hillsboro 14U Boys",
-        "home_score": 14,
-        "away_score": 9,
-        "result": "W"
-      },
-      {
-        "game_id": "63",
-        "date": "2025-05-29 19:30:00",
-        "home_team": "CDA & HB All Stars",
-        "away_team": "CDA Masters",
-        "home_score": 18,
-        "away_score": 8,
-        "result": "W"
-      },
-      {
-        "game_id": "64",
-        "date": "2025-05-30 17:30:00",
-        "home_team": "NIWP 18u Boys",
-        "away_team": "Hillsboro 18u Boys plus",
-        "home_score": 10,
-        "away_score": 4,
-        "result": "W"
-      },
-      {
-        "game_id": "65",
-        "date": "2025-05-30 18:30:00",
-        "home_team": "NIWP 18u Girls",
-        "away_team": "HillsBoro 18u Girls",
-        "home_score": 10,
-        "away_score": 4,
-        "result": "W"
-      },
-      {
-        "game_id": "66",
-        "date": "2025-05-30 19:10:00",
-        "home_team": "MIX 18U Boys A",
-        "away_team": "Mix 18U Boys B",
-        "home_score": 9,
-        "away_score": 5,
-        "result": "W"
-      },
-      {
-        "game_id": "67",
-        "date": "2025-05-31 00:00:00",
-        "home_team": "NIWP 18U Boy",
-        "away_team": "",
-        "home_score": 19,
-        "away_score": 7,
-        "result": "W"
-      },
-      {
-        "game_id": "68",
-        "date": "2025-05-31 09:00:00",
-        "home_team": "NIWP 18U Girls",
-        "away_team": "HB 18U Boys",
-        "home_score": 13,
-        "away_score": 10,
-        "result": "W"
-      },
-      {
-        "game_id": "69",
-        "date": "2025-05-31 10:00:00",
-        "home_team": "NIWP 18U All Stars",
-        "away_team": "HB 18U All Stars",
-        "home_score": 14,
-        "away_score": 7,
-        "result": "W"
-      },
-      {
-        "game_id": "70",
-        "date": "2025-05-31 12:00:00",
-        "home_team": "COACHES + 18U A",
-        "away_team": "COACHES + 18U B",
-        "home_score": 14,
-        "away_score": 15,
-        "result": "L"
-      }
-    ]
-  },
-  {
     "tournament": "CDA Classic",
     "games_played": 10,
     "wins": 6,
@@ -770,6 +631,101 @@
         "away_team": "MV + Boise Boys",
         "home_score": 15,
         "away_score": 1,
+        "result": "W"
+      }
+    ]
+  },
+  {
+    "tournament": "KROC w/ HILLSBORO",
+    "games_played": 7,
+    "wins": 7,
+    "losses": 0,
+    "ties": 0,
+    "win_pct": 1,
+    "record_str": "7-0",
+    "goals_for": 108,
+    "goals_against": 41,
+    "goal_differential": 67,
+    "cda_teams": [
+      "CDA 14U Boys",
+      "CDA 18U Boys",
+      "CDA 18U Girls",
+      "NIWP 18U Boy",
+      "NIWP 18U Girls",
+      "NIWP 18u Boys",
+      "NIWP 18u Girls"
+    ],
+    "opponents": [
+      "",
+      "HB 18U Boys",
+      "HillsBoro 18u Girls",
+      "Hillsboro",
+      "Hillsboro 14U Boys",
+      "Hillsboro 18U Girls",
+      "Hillsboro 18u Boys plus"
+    ],
+    "game_log": [
+      {
+        "game_id": "60",
+        "date": "2025-05-29 17:30:00",
+        "home_team": "CDA 18U Boys",
+        "away_team": "Hillsboro",
+        "home_score": 22,
+        "away_score": 3,
+        "result": "W"
+      },
+      {
+        "game_id": "61",
+        "date": "2025-05-29 18:30:00",
+        "home_team": "CDA 18U Girls",
+        "away_team": "Hillsboro 18U Girls",
+        "home_score": 20,
+        "away_score": 4,
+        "result": "W"
+      },
+      {
+        "game_id": "62",
+        "date": "2025-05-29 18:30:00",
+        "home_team": "CDA 14U Boys",
+        "away_team": "Hillsboro 14U Boys",
+        "home_score": 14,
+        "away_score": 9,
+        "result": "W"
+      },
+      {
+        "game_id": "64",
+        "date": "2025-05-30 17:30:00",
+        "home_team": "NIWP 18u Boys",
+        "away_team": "Hillsboro 18u Boys plus",
+        "home_score": 10,
+        "away_score": 4,
+        "result": "W"
+      },
+      {
+        "game_id": "65",
+        "date": "2025-05-30 18:30:00",
+        "home_team": "NIWP 18u Girls",
+        "away_team": "HillsBoro 18u Girls",
+        "home_score": 10,
+        "away_score": 4,
+        "result": "W"
+      },
+      {
+        "game_id": "67",
+        "date": "2025-05-31 00:00:00",
+        "home_team": "NIWP 18U Boy",
+        "away_team": "",
+        "home_score": 19,
+        "away_score": 7,
+        "result": "W"
+      },
+      {
+        "game_id": "68",
+        "date": "2025-05-31 09:00:00",
+        "home_team": "NIWP 18U Girls",
+        "away_team": "HB 18U Boys",
+        "home_score": 13,
+        "away_score": 10,
         "result": "W"
       }
     ]

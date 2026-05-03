@@ -8,8 +8,16 @@
  *   tournament_summary.json    — per-tournament results and team records
  *   meta.json                  — index of what was computed
  *
- * Game shape:
- *   { game_id, home_team, away_team, location, game_date, home_score, away_score }
+ * Respects:
+ *   team_normalization_map.json — maps raw home_team strings to canonical team IDs.
+ *     Run normalize-teams.js first to enrich games.json with team_id fields.
+ *   game_flags.json — per-game include_in_stats flags.
+ *     Games with include_in_stats: false are excluded from all aggregates.
+ *     Games with no entry use the default_include_in_stats value (true).
+ *
+ * Game shape (after normalize-teams.js):
+ *   { game_id, home_team, team_id, team_display_name, team_type,
+ *     away_team, location, game_date, home_score, away_score }
  *
  * Stat shape (per row in stats_<id>.json):
  *   { stat_id, game_id, player_id, player_name, cap_number,
@@ -94,7 +102,27 @@ async function main() {
     console.error("❌ No games.json found — run harvest-niwp.js first.");
     process.exit(1);
   }
-  console.log(`Loaded: ${games.length} games, ${players.length} players`);
+
+  // ── Load game flags ────────────────────────────────────────────────────
+  const flagsData = readJSON(path.join(DATA_DIR, "game_flags.json")) ?? {};
+  const gameFlags = flagsData.games ?? {};
+  const defaultInclude = flagsData.default_include_in_stats ?? true;
+
+  function isGameIncluded(gameId) {
+    const entry = gameFlags[String(gameId)];
+    if (!entry) return defaultInclude;
+    return entry.include_in_stats !== false;
+  }
+
+  const excluded = games.filter((g) => !isGameIncluded(g.game_id));
+  const included = games.filter((g) => isGameIncluded(g.game_id));
+  console.log(`Loaded: ${games.length} games (${included.length} included in stats, ${excluded.length} excluded by game_flags.json), ${players.length} players`);
+  if (excluded.length) {
+    for (const g of excluded) {
+      const flag = gameFlags[String(g.game_id)];
+      console.log(`  ✗ Excluded game ${g.game_id}: ${g.home_team} vs ${g.away_team} (${flag?.label ?? flag?.reason ?? "flagged"})`);
+    }
+  }
 
   // Collect all stats files
   const statsFiles = fs
@@ -122,9 +150,9 @@ async function main() {
   // ────────────────────────────────────────────────────────────────────────
   console.log("Computing player_season_stats.json…");
 
-  // Build game result lookup: game_id → { homeTeam, homeWon, awayWon, tied }
+  // Build game result lookup: game_id → parsed result (included games only)
   const gameResultByID = {};
-  for (const game of games) {
+  for (const game of included) {
     gameResultByID[String(game.game_id)] = parseGame(game);
   }
 
@@ -208,28 +236,32 @@ async function main() {
   console.log(`   → ${playerSeasonStats.length} players with stats\n`);
 
   // ────────────────────────────────────────────────────────────────────────
-  // 2. team_record.json  (per CDA team — home_team)
+  // 2. team_record.json  (per canonical team — uses team_id if available)
   // ────────────────────────────────────────────────────────────────────────
   console.log("Computing team_record.json…");
 
-  const teamMap = {}; // team_name → record
+  const teamMap = {}; // team key → record
 
-  function ensureTeam(name) {
-    if (!teamMap[name]) {
-      teamMap[name] = {
-        team: name,
+  function ensureTeam(teamId, displayName) {
+    if (!teamMap[teamId]) {
+      teamMap[teamId] = {
+        team_id: teamId,
+        team: displayName,
         wins: 0, losses: 0, ties: 0, games: 0,
         goals_for: 0, goals_against: 0,
         by_opponent: {},
         by_tournament: {},
       };
     }
-    return teamMap[name];
+    return teamMap[teamId];
   }
 
-  for (const game of games) {
+  for (const game of included) {
     const g = parseGame(game);
-    const tm = ensureTeam(g.homeTeam);
+    // Use normalized team_id + display_name if available, fall back to raw home_team
+    const teamId = game.team_id ?? g.homeTeam;
+    const displayName = game.team_display_name ?? g.homeTeam;
+    const tm = ensureTeam(teamId, displayName);
     const tournament = getTournament(game);
 
     tm.games++;
@@ -316,7 +348,7 @@ async function main() {
 
   const tournMap = {};
 
-  for (const game of games) {
+  for (const game of included) {
     const g = parseGame(game);
     const key = getTournament(game);
 
@@ -378,14 +410,18 @@ async function main() {
   const meta = {
     computed_at: new Date().toISOString(),
     games_total: games.length,
+    games_included_in_stats: included.length,
+    games_excluded: excluded.length,
     games_with_stats: Object.keys(statsByGame).length,
     players_total: players.length,
     players_with_stats: playerSeasonStats.length,
-    teams: teamRecord.teams.map((t) => t.team),
+    teams: teamRecord.teams.map((t) => ({ id: t.team_id, name: t.team })),
     tournaments: tournamentSummary.length,
     combined_record: teamRecord.combined.record_str,
     combined_goals_for: teamRecord.combined.goals_for,
     combined_goals_against: teamRecord.combined.goals_against,
+    normalization_applied: fs.existsSync(path.join(DATA_DIR, "team_normalization_map.json")),
+    flags_applied: Object.keys(gameFlags).length,
   };
   writeJSON(path.join(DATA_DIR, "meta.json"), meta);
 

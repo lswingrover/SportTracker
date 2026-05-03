@@ -10,7 +10,9 @@
     "steals": "0",
     "blocks": "7",
     "kickouts": "0",
-    "updated_at": "2025-07-31 13:11:56"
+    "updated_at": "2025-07-31 13:11:56",
+    "team_id": "cda-12u-coed",
+    "team_display_name": "CDA 12U Co-Ed"
   },
   {
     "stat_id": "534",
@@ -23,7 +25,9 @@
     "steals": "0",
     "blocks": "0",
     "kickouts": "0",
-    "updated_at": "2025-07-31 13:09:09"
+    "updated_at": "2025-07-31 13:09:09",
+    "team_id": "cda-12u-coed",
+    "team_display_name": "CDA 12U Co-Ed"
   },
   {
     "stat_id": "535",
@@ -36,7 +40,9 @@
     "steals": "0",
     "blocks": "0",
     "kickouts": "0",
-    "updated_at": "2025-07-31 12:57:06"
+    "updated_at": "2025-07-31 12:57:06",
+    "team_id": "cda-12u-coed",
+    "team_display_name": "CDA 12U Co-Ed"
   },
   {
     "stat_id": "536",
@@ -49,7 +55,9 @@
     "steals": "0",
     "blocks": "0",
     "kickouts": "0",
-    "updated_at": "2025-07-31 11:02:17"
+    "updated_at": "2025-07-31 11:02:17",
+    "team_id": "cda-12u-coed",
+    "team_display_name": "CDA 12U Co-Ed"
   },
   {
     "stat_id": "537",
@@ -62,7 +70,9 @@
     "steals": "0",
     "blocks": "0",
     "kickouts": "0",
-    "updated_at": "2025-07-31 12:46:00"
+    "updated_at": "2025-07-31 12:46:00",
+    "team_id": "cda-12u-coed",
+    "team_display_name": "CDA 12U Co-Ed"
   },
   {
     "stat_id": "538",
@@ -75,7 +85,9 @@
     "steals": "0",
     "blocks": "0",
     "kickouts": "0",
-    "updated_at": "2025-07-31 11:02:23"
+    "updated_at": "2025-07-31 11:02:23",
+    "team_id": "cda-12u-coed",
+    "team_display_name": "CDA 12U Co-Ed"
   },
   {
     "stat_id": "539",
@@ -88,7 +100,9 @@
     "steals": "0",
     "blocks": "0",
     "kickouts": "0",
-    "updated_at": "2025-07-31 13:09:17"
+    "updated_at": "2025-07-31 13:09:17",
+    "team_id": "cda-12u-coed",
+    "team_display_name": "CDA 12U Co-Ed"
   },
   {
     "stat_id": "540",
@@ -101,7 +115,9 @@
     "steals": "0",
     "blocks": "0",
     "kickouts": "0",
-    "updated_at": "2025-07-31 13:10:22"
+    "updated_at": "2025-07-31 13:10:22",
+    "team_id": "cda-12u-coed",
+    "team_display_name": "CDA 12U Co-Ed"
   },
   {
     "stat_id": "541",
@@ -114,7 +130,9 @@
     "steals": "0",
     "blocks": "0",
     "kickouts": "0",
-    "updated_at": "2025-07-31 13:10:17"
+    "updated_at": "2025-07-31 13:10:17",
+    "team_id": "cda-12u-coed",
+    "team_display_name": "CDA 12U Co-Ed"
   },
   {
     "stat_id": "542",
@@ -127,7 +145,9 @@
     "steals": "0",
     "blocks": "0",
     "kickouts": "0",
-    "updated_at": "2025-07-31 12:30:37"
+    "updated_at": "2025-07-31 12:30:37",
+    "team_id": "cda-12u-coed",
+    "team_display_name": "CDA 12U Co-Ed"
   },
   {
     "stat_id": "543",
@@ -140,7 +160,9 @@
     "steals": "0",
     "blocks": "0",
     "kickouts": "0",
-    "updated_at": "2025-07-31 11:02:32"
+    "updated_at": "2025-07-31 11:02:32",
+    "team_id": "cda-12u-coed",
+    "team_display_name": "CDA 12U Co-Ed"
   },
   {
     "stat_id": "544",
@@ -153,7 +175,9 @@
     "steals": "0",
     "blocks": "0",
     "kickouts": "0",
-    "updated_at": "2025-07-31 12:53:28"
+    "updated_at": "2025-07-31 12:53:28",
+    "team_id": "cda-12u-coed",
+    "team_display_name": "CDA 12U Co-Ed"
   },
   {
     "stat_id": "545",
@@ -166,6 +190,8 @@
     "steals": "0",
     "blocks": "0",
     "kickouts": "0",
-    "updated_at": "2025-07-31 11:03:32"
+    "updated_at": "2025-07-31 11:03:32",
+    "team_id": "cda-12u-coed",
+    "team_display_name": "CDA 12U Co-Ed"
   }
 ]

@@ -1,0 +1,55 @@
+{
+  "version": 1,
+  "notes": "Maps raw home_team strings from the NIWP API to canonical team IDs. Maintained manually — update when new team name variants appear in the API. Ambiguous entries are flagged; verify against game context before reassigning.",
+  "canonical_teams": [
+    { "id": "cda-18u-boys",     "display_name": "CDA 18U Boys",    "short": "18U Boys",  "type": "competitive" },
+    { "id": "cda-18u-girls",    "display_name": "CDA 18U Girls",   "short": "18U Girls", "type": "competitive" },
+    { "id": "cda-14u-coed",     "display_name": "CDA 14U Co-Ed",   "short": "14U Co-Ed", "type": "competitive" },
+    { "id": "cda-14u-boys",     "display_name": "CDA 14U Boys",    "short": "14U Boys",  "type": "competitive" },
+    { "id": "cda-12u-coed",     "display_name": "CDA 12U Co-Ed",   "short": "12U Co-Ed", "type": "competitive", "note": "Ad hoc configuration for 12U tournament bracket (Boise, Aug 2025). May be 14U players in a 12U bracket — verify." },
+    { "id": "cda-jv-boys",      "display_name": "CDA JV Boys",     "short": "JV Boys",   "type": "competitive" },
+    { "id": "cda-jv-girls",     "display_name": "CDA JV Girls",    "short": "JV Girls",  "type": "competitive" },
+    { "id": "cda-dev",          "display_name": "CDA Dev",         "short": "Dev",       "type": "competitive" },
+    { "id": "cda-18u-girls-yellow", "display_name": "CDA 18U Girls (Yellow)", "short": "18U Girls Y", "type": "competitive", "note": "One-off split squad — two NIWP girls teams entered the same tournament (Yellow vs. other). Rolls up to cda-18u-girls for season totals." },
+    { "id": "cda-exhibition",   "display_name": "Exhibition / All Stars", "short": "Exhibition", "type": "exhibition", "note": "All Stars showcases, coaches games, mixed scrimmages. Excluded from official stats by default. User-overridable via game_flags.json." }
+  ],
+  "raw_to_canonical": {
+    "CDA 18U Boys":        { "canonical": "cda-18u-boys" },
+    "CDA Boys 18U":        { "canonical": "cda-18u-boys", "note": "Entry order typo" },
+    "CDA 18U. Boys":       { "canonical": "cda-18u-boys", "note": "Punctuation typo" },
+    "CDA Boys V":          { "canonical": "cda-18u-boys", "note": "V = Varsity" },
+    "NIWP V Boys":         { "canonical": "cda-18u-boys", "note": "V = Varsity" },
+    "NIWP 18u Boys":       { "canonical": "cda-18u-boys", "note": "Case variant" },
+    "NIWP 18U Boy":        { "canonical": "cda-18u-boys", "note": "Truncation typo" },
+    "18U Boys":            { "canonical": "cda-18u-boys", "note": "Abbreviated" },
+    "18U boys":            { "canonical": "cda-18u-boys", "note": "Case typo" },
+    "18U boy":             { "canonical": "cda-18u-boys", "note": "Plural typo" },
+    "18u boy":             { "canonical": "cda-18u-boys", "note": "Lowercase + plural typo" },
+    "18U bo":              { "canonical": "cda-18u-boys", "note": "Truncation typo" },
+    "18U":                 { "canonical": "cda-18u-boys", "note": "Ambiguous — defaulting to 18U Boys. Verify if could be Girls.", "ambiguous": true },
+    "North Idaho":         { "canonical": "cda-18u-boys", "note": "Ambiguous — likely 18U Boys used as a generic club name entry. Verify individually if misassigned.", "ambiguous": true },
+
+    "CDA 18U Girls":       { "canonical": "cda-18u-girls" },
+    "CDA Girls V":         { "canonical": "cda-18u-girls", "note": "V = Varsity" },
+    "NIWP 18u Girls":      { "canonical": "cda-18u-girls", "note": "Case variant" },
+    "NIWP 18U Girls":      { "canonical": "cda-18u-girls", "note": "Case variant" },
+    "18U Girls":           { "canonical": "cda-18u-girls", "note": "Abbreviated" },
+    "NIWP Girls Yellow":   { "canonical": "cda-18u-girls-yellow", "note": "One-off split squad. Rolls up to cda-18u-girls in season totals." },
+
+    "CDA 14U Co-Ed":       { "canonical": "cda-14u-coed" },
+    "CDA 14U Boys":        { "canonical": "cda-14u-boys" },
+
+    "12U Co Ed":           { "canonical": "cda-12u-coed", "note": "Ad hoc 12U tournament config" },
+    "12U Co d":            { "canonical": "cda-12u-coed", "note": "Typo of 12U Co Ed" },
+    "12 Co Ed":            { "canonical": "cda-12u-coed", "note": "Typo of 12U Co Ed" },
+
+    "CDA Boys JV":         { "canonical": "cda-jv-boys" },
+    "CDA Girls JV":        { "canonical": "cda-jv-girls" },
+    "CDA Dev":             { "canonical": "cda-dev" },
+
+    "CDA & HB All Stars":  { "canonical": "cda-exhibition", "note": "All Stars showcase. HB = likely Hillsboro WP club (Portland area, confirmed by game 69 opponent 'HB 18U All Stars'). Excluded from official stats by default." },
+    "NIWP 18U All Stars":  { "canonical": "cda-exhibition", "note": "All Stars showcase. Excluded from official stats by default." },
+    "COACHES + 18U A":     { "canonical": "cda-exhibition", "note": "Coaches vs players scrimmage. Excluded from official stats by default." },
+    "MIX 18U Boys A":      { "canonical": "cda-exhibition", "note": "Mixed internal scrimmage (A vs B split). Excluded from official stats by default." }
+  }
+}

@@ -10,7 +10,9 @@
     "steals": "0",
     "blocks": "0",
     "kickouts": "0",
-    "updated_at": "2025-12-11 23:08:38"
+    "updated_at": "2025-12-11 23:08:38",
+    "team_id": "cda-jv-boys",
+    "team_display_name": "CDA JV Boys"
   },
   {
     "stat_id": "725",
@@ -23,7 +25,9 @@
     "steals": "0",
     "blocks": "0",
     "kickouts": "0",
-    "updated_at": "2025-12-12 18:00:09"
+    "updated_at": "2025-12-12 18:00:09",
+    "team_id": "cda-jv-boys",
+    "team_display_name": "CDA JV Boys"
   },
   {
     "stat_id": "726",
@@ -36,7 +40,9 @@
     "steals": "0",
     "blocks": "0",
     "kickouts": "2",
-    "updated_at": "2025-12-12 18:15:49"
+    "updated_at": "2025-12-12 18:15:49",
+    "team_id": "cda-jv-boys",
+    "team_display_name": "CDA JV Boys"
   },
   {
     "stat_id": "727",
@@ -49,7 +55,9 @@
     "steals": "0",
     "blocks": "0",
     "kickouts": "0",
-    "updated_at": "2025-12-11 23:08:44"
+    "updated_at": "2025-12-11 23:08:44",
+    "team_id": "cda-jv-boys",
+    "team_display_name": "CDA JV Boys"
   },
   {
     "stat_id": "728",
@@ -62,7 +70,9 @@
     "steals": "0",
     "blocks": "7",
     "kickouts": "0",
-    "updated_at": "2025-12-12 17:47:21"
+    "updated_at": "2025-12-12 17:47:21",
+    "team_id": "cda-jv-boys",
+    "team_display_name": "CDA JV Boys"
   },
   {
     "stat_id": "729",
@@ -75,7 +85,9 @@
     "steals": "0",
     "blocks": "2",
     "kickouts": "0",
-    "updated_at": "2025-12-12 18:18:13"
+    "updated_at": "2025-12-12 18:18:13",
+    "team_id": "cda-jv-boys",
+    "team_display_name": "CDA JV Boys"
   },
   {
     "stat_id": "730",
@@ -88,7 +100,9 @@
     "steals": "0",
     "blocks": "0",
     "kickouts": "0",
-    "updated_at": "2025-12-12 17:27:59"
+    "updated_at": "2025-12-12 17:27:59",
+    "team_id": "cda-jv-boys",
+    "team_display_name": "CDA JV Boys"
   },
   {
     "stat_id": "731",
@@ -101,7 +115,9 @@
     "steals": "0",
     "blocks": "0",
     "kickouts": "0",
-    "updated_at": "2025-12-12 17:51:36"
+    "updated_at": "2025-12-12 17:51:36",
+    "team_id": "cda-jv-boys",
+    "team_display_name": "CDA JV Boys"
   },
   {
     "stat_id": "732",
@@ -114,7 +130,9 @@
     "steals": "0",
     "blocks": "0",
     "kickouts": "0",
-    "updated_at": "2025-12-11 23:12:13"
+    "updated_at": "2025-12-11 23:12:13",
+    "team_id": "cda-jv-boys",
+    "team_display_name": "CDA JV Boys"
   },
   {
     "stat_id": "733",
@@ -127,7 +145,9 @@
     "steals": "0",
     "blocks": "0",
     "kickouts": "0",
-    "updated_at": "2025-12-12 17:31:51"
+    "updated_at": "2025-12-12 17:31:51",
+    "team_id": "cda-jv-boys",
+    "team_display_name": "CDA JV Boys"
   },
   {
     "stat_id": "734",
@@ -140,7 +160,9 @@
     "steals": "0",
     "blocks": "0",
     "kickouts": "0",
-    "updated_at": "2025-12-12 17:31:50"
+    "updated_at": "2025-12-12 17:31:50",
+    "team_id": "cda-jv-boys",
+    "team_display_name": "CDA JV Boys"
   },
   {
     "stat_id": "735",
@@ -153,7 +175,9 @@
     "steals": "0",
     "blocks": "0",
     "kickouts": "0",
-    "updated_at": "2025-12-12 17:37:01"
+    "updated_at": "2025-12-12 17:37:01",
+    "team_id": "cda-jv-boys",
+    "team_display_name": "CDA JV Boys"
   },
   {
     "stat_id": "736",
@@ -166,6 +190,8 @@
     "steals": "0",
     "blocks": "0",
     "kickouts": "0",
-    "updated_at": "2025-12-12 18:00:08"
+    "updated_at": "2025-12-12 18:00:08",
+    "team_id": "cda-jv-boys",
+    "team_display_name": "CDA JV Boys"
   }
 ]

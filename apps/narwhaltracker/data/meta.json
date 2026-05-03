@@ -1,44 +1,44 @@
 {
-  "computed_at": "2026-05-03T00:15:10.659Z",
+  "computed_at": "2026-05-03T01:05:30.067Z",
   "games_total": 82,
+  "games_included_in_stats": 78,
+  "games_excluded": 4,
   "games_with_stats": 82,
   "players_total": 94,
-  "players_with_stats": 90,
+  "players_with_stats": 87,
   "teams": [
-    "CDA 18U Boys",
-    "CDA Boys V",
-    "CDA 14U Co-Ed",
-    "CDA 18U Girls",
-    "12U Co Ed",
-    "CDA Girls V",
-    "CDA Girls JV",
-    "CDA Boys JV",
-    "18U Boys",
-    "North Idaho",
-    "NIWP V Boys",
-    "18U Girls",
-    "CDA 14U Boys",
-    "CDA & HB All Stars",
-    "NIWP 18u Boys",
-    "NIWP 18u Girls",
-    "MIX 18U Boys A",
-    "NIWP 18U Boy",
-    "NIWP 18U Girls",
-    "NIWP 18U All Stars",
-    "COACHES + 18U A",
-    "18U",
-    "12U Co d",
-    "18u boy",
-    "18U bo",
-    "18U boys",
-    "12 Co Ed",
-    "CDA Dev",
-    "NIWP Girls Yellow",
-    "CDA 18U. Boys",
-    "CDA Boys 18U"
+    {
+      "name": "CDA 18U Boys"
+    },
+    {
+      "name": "CDA 18U Girls"
+    },
+    {
+      "name": "CDA 12U Co-Ed"
+    },
+    {
+      "name": "CDA 14U Co-Ed"
+    },
+    {
+      "name": "CDA JV Girls"
+    },
+    {
+      "name": "CDA JV Boys"
+    },
+    {
+      "name": "CDA 14U Boys"
+    },
+    {
+      "name": "CDA Dev"
+    },
+    {
+      "name": "CDA 18U Girls (Yellow)"
+    }
   ],
   "tournaments": 10,
-  "combined_record": "46-27-9",
-  "combined_goals_for": 794,
-  "combined_goals_against": 665
+  "combined_record": "43-26-9",
+  "combined_goals_for": 739,
+  "combined_goals_against": 630,
+  "normalization_applied": true,
+  "flags_applied": 4
 }

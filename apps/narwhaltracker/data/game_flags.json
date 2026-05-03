@@ -1,0 +1,36 @@
+{
+  "version": 1,
+  "notes": "User-controlled game inclusion flags for stat aggregation. Default: all games included in stats. Exhibition/scrimmage games are pre-flagged as excluded — users can override any flag via the UI (tap the star icon on a game card). This file is committed to git and serves as the persistent source of truth for which games count.",
+  "ui_hint": "Each game card shows a star icon. Filled = included in stats. Empty = excluded. Tap to toggle. Changes write back to this file (admin mode) or to user-local storage (public mode).",
+  "default_include_in_stats": true,
+  "games": {
+    "63": {
+      "include_in_stats": false,
+      "reason": "exhibition",
+      "label": "All Stars Showcase",
+      "home_team_raw": "CDA & HB All Stars",
+      "note": "End-of-season All Stars game vs CDA Masters. Not a regular season result."
+    },
+    "66": {
+      "include_in_stats": false,
+      "reason": "exhibition",
+      "label": "Mixed Scrimmage",
+      "home_team_raw": "MIX 18U Boys A",
+      "note": "Internal A vs B split scrimmage. Not a competitive result."
+    },
+    "69": {
+      "include_in_stats": false,
+      "reason": "exhibition",
+      "label": "All Stars Showcase",
+      "home_team_raw": "NIWP 18U All Stars",
+      "note": "All Stars showcase vs HB 18U All Stars (Hillsboro). Not a regular season result."
+    },
+    "70": {
+      "include_in_stats": false,
+      "reason": "exhibition",
+      "label": "Coaches Game",
+      "home_team_raw": "COACHES + 18U A",
+      "note": "Coaches vs players scrimmage (A vs B). Not a competitive result."
+    }
+  }
+}

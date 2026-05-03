@@ -8,7 +8,13 @@
     "home_score": "15",
     "away_score": "4",
     "created_at": "2025-05-16 17:05:07",
-    "updated_at": "2025-05-18 08:03:37"
+    "updated_at": "2025-05-18 08:03:37",
+    "team_id": "cda-18u-boys",
+    "team_display_name": "CDA 18U Boys",
+    "team_short": "18U Boys",
+    "team_type": "competitive",
+    "team_ambiguous": false,
+    "team_unmapped": false
   },
   {
     "game_id": "43",
@@ -19,7 +25,13 @@
     "home_score": "2",
     "away_score": "10",
     "created_at": "2025-05-16 17:07:13",
-    "updated_at": "2025-05-16 18:28:22"
+    "updated_at": "2025-05-16 18:28:22",
+    "team_id": "cda-14u-coed",
+    "team_display_name": "CDA 14U Co-Ed",
+    "team_short": "14U Co-Ed",
+    "team_type": "competitive",
+    "team_ambiguous": false,
+    "team_unmapped": false
   },
   {
     "game_id": "44",
@@ -30,7 +42,13 @@
     "home_score": "11",
     "away_score": "10",
     "created_at": "2025-05-16 17:09:40",
-    "updated_at": "2025-05-16 19:45:55"
+    "updated_at": "2025-05-16 19:45:55",
+    "team_id": "cda-18u-girls",
+    "team_display_name": "CDA 18U Girls",
+    "team_short": "18U Girls",
+    "team_type": "competitive",
+    "team_ambiguous": false,
+    "team_unmapped": false
   },
   {
     "game_id": "45",
@@ -41,7 +59,13 @@
     "home_score": "2",
     "away_score": "18",
     "created_at": "2025-05-16 17:11:07",
-    "updated_at": "2025-05-16 21:14:40"
+    "updated_at": "2025-05-16 21:14:40",
+    "team_id": "cda-14u-coed",
+    "team_display_name": "CDA 14U Co-Ed",
+    "team_short": "14U Co-Ed",
+    "team_type": "competitive",
+    "team_ambiguous": false,
+    "team_unmapped": false
   },
   {
     "game_id": "47",
@@ -52,7 +76,13 @@
     "home_score": "6",
     "away_score": "15",
     "created_at": "2025-05-17 09:01:26",
-    "updated_at": "2025-05-17 09:54:20"
+    "updated_at": "2025-05-17 09:54:20",
+    "team_id": "cda-14u-coed",
+    "team_display_name": "CDA 14U Co-Ed",
+    "team_short": "14U Co-Ed",
+    "team_type": "competitive",
+    "team_ambiguous": false,
+    "team_unmapped": false
   },
   {
     "game_id": "48",
@@ -63,7 +93,13 @@
     "home_score": "7",
     "away_score": "5",
     "created_at": "2025-05-17 10:11:21",
-    "updated_at": "2025-05-18 08:03:02"
+    "updated_at": "2025-05-18 08:03:02",
+    "team_id": "cda-18u-boys",
+    "team_display_name": "CDA 18U Boys",
+    "team_short": "18U Boys",
+    "team_type": "competitive",
+    "team_ambiguous": false,
+    "team_unmapped": false
   },
   {
     "game_id": "49",
@@ -74,7 +110,13 @@
     "home_score": "12",
     "away_score": "15",
     "created_at": "2025-05-17 12:01:20",
-    "updated_at": "2025-05-17 14:04:37"
+    "updated_at": "2025-05-17 14:04:37",
+    "team_id": "cda-14u-coed",
+    "team_display_name": "CDA 14U Co-Ed",
+    "team_short": "14U Co-Ed",
+    "team_type": "competitive",
+    "team_ambiguous": false,
+    "team_unmapped": false
   },
   {
     "game_id": "50",
@@ -85,7 +127,13 @@
     "home_score": "0",
     "away_score": "14",
     "created_at": "2025-05-17 12:04:09",
-    "updated_at": "2025-05-17 14:04:46"
+    "updated_at": "2025-05-17 14:04:46",
+    "team_id": "cda-18u-boys",
+    "team_display_name": "CDA 18U Boys",
+    "team_short": "18U Boys",
+    "team_type": "competitive",
+    "team_ambiguous": false,
+    "team_unmapped": false
   },
   {
     "game_id": "51",
@@ -96,7 +144,13 @@
     "home_score": "14",
     "away_score": "8",
     "created_at": "2025-05-17 12:05:52",
-    "updated_at": "2025-05-17 15:48:54"
+    "updated_at": "2025-05-17 15:48:54",
+    "team_id": "cda-18u-girls",
+    "team_display_name": "CDA 18U Girls",
+    "team_short": "18U Girls",
+    "team_type": "competitive",
+    "team_ambiguous": false,
+    "team_unmapped": false
   },
   {
     "game_id": "52",
@@ -107,7 +161,13 @@
     "home_score": "13",
     "away_score": "2",
     "created_at": "2025-05-17 12:06:47",
-    "updated_at": "2025-05-17 19:48:16"
+    "updated_at": "2025-05-17 19:48:16",
+    "team_id": "cda-18u-girls",
+    "team_display_name": "CDA 18U Girls",
+    "team_short": "18U Girls",
+    "team_type": "competitive",
+    "team_ambiguous": false,
+    "team_unmapped": false
   },
   {
     "game_id": "53",
@@ -118,7 +178,13 @@
     "home_score": "6",
     "away_score": "12",
     "created_at": "2025-05-17 12:07:25",
-    "updated_at": "2025-05-19 11:09:24"
+    "updated_at": "2025-05-19 11:09:24",
+    "team_id": "cda-18u-boys",
+    "team_display_name": "CDA 18U Boys",
+    "team_short": "18U Boys",
+    "team_type": "competitive",
+    "team_ambiguous": false,
+    "team_unmapped": false
   },
   {
     "game_id": "54",
@@ -129,7 +195,13 @@
     "home_score": "5",
     "away_score": "3",
     "created_at": "2025-05-18 07:57:31",
-    "updated_at": "2025-05-18 08:58:18"
+    "updated_at": "2025-05-18 08:58:18",
+    "team_id": "cda-18u-boys",
+    "team_display_name": "CDA 18U Boys",
+    "team_short": "18U Boys",
+    "team_type": "competitive",
+    "team_ambiguous": false,
+    "team_unmapped": false
   },
   {
     "game_id": "55",
@@ -140,7 +212,13 @@
     "home_score": "17",
     "away_score": "2",
     "created_at": "2025-05-18 07:59:20",
-    "updated_at": "2025-05-27 23:28:08"
+    "updated_at": "2025-05-27 23:28:08",
+    "team_id": "cda-18u-girls",
+    "team_display_name": "CDA 18U Girls",
+    "team_short": "18U Girls",
+    "team_type": "competitive",
+    "team_ambiguous": false,
+    "team_unmapped": false
   },
   {
     "game_id": "56",
@@ -151,7 +229,13 @@
     "home_score": "8",
     "away_score": "13",
     "created_at": "2025-05-18 08:01:01",
-    "updated_at": "2025-05-18 10:52:51"
+    "updated_at": "2025-05-18 10:52:51",
+    "team_id": "cda-14u-coed",
+    "team_display_name": "CDA 14U Co-Ed",
+    "team_short": "14U Co-Ed",
+    "team_type": "competitive",
+    "team_ambiguous": false,
+    "team_unmapped": false
   },
   {
     "game_id": "57",
@@ -162,7 +246,13 @@
     "home_score": "0",
     "away_score": "9",
     "created_at": "2025-05-18 13:17:21",
-    "updated_at": "2025-05-18 13:55:31"
+    "updated_at": "2025-05-18 13:55:31",
+    "team_id": "cda-14u-coed",
+    "team_display_name": "CDA 14U Co-Ed",
+    "team_short": "14U Co-Ed",
+    "team_type": "competitive",
+    "team_ambiguous": false,
+    "team_unmapped": false
   },
   {
     "game_id": "58",
@@ -173,7 +263,13 @@
     "home_score": "8",
     "away_score": "7",
     "created_at": "2025-05-18 14:15:03",
-    "updated_at": "2025-05-18 15:11:58"
+    "updated_at": "2025-05-18 15:11:58",
+    "team_id": "cda-18u-girls",
+    "team_display_name": "CDA 18U Girls",
+    "team_short": "18U Girls",
+    "team_type": "competitive",
+    "team_ambiguous": false,
+    "team_unmapped": false
   },
   {
     "game_id": "60",
@@ -184,7 +280,13 @@
     "home_score": "22",
     "away_score": "3",
     "created_at": "2025-05-29 17:25:32",
-    "updated_at": "2025-05-29 18:09:16"
+    "updated_at": "2025-05-29 18:09:16",
+    "team_id": "cda-18u-boys",
+    "team_display_name": "CDA 18U Boys",
+    "team_short": "18U Boys",
+    "team_type": "competitive",
+    "team_ambiguous": false,
+    "team_unmapped": false
   },
   {
     "game_id": "61",
@@ -195,7 +297,13 @@
     "home_score": "20",
     "away_score": "4",
     "created_at": "2025-05-29 18:15:32",
-    "updated_at": "2025-05-29 19:16:29"
+    "updated_at": "2025-05-29 19:16:29",
+    "team_id": "cda-18u-girls",
+    "team_display_name": "CDA 18U Girls",
+    "team_short": "18U Girls",
+    "team_type": "competitive",
+    "team_ambiguous": false,
+    "team_unmapped": false
   },
   {
     "game_id": "62",
@@ -206,7 +314,13 @@
     "home_score": "14",
     "away_score": "9",
     "created_at": "2025-05-29 18:20:31",
-    "updated_at": "2025-05-29 19:21:21"
+    "updated_at": "2025-05-29 19:21:21",
+    "team_id": "cda-14u-boys",
+    "team_display_name": "CDA 14U Boys",
+    "team_short": "14U Boys",
+    "team_type": "competitive",
+    "team_ambiguous": false,
+    "team_unmapped": false
   },
   {
     "game_id": "63",
@@ -217,7 +331,13 @@
     "home_score": "18",
     "away_score": "8",
     "created_at": "2025-05-29 19:21:31",
-    "updated_at": "2025-05-29 20:14:00"
+    "updated_at": "2025-05-29 20:14:00",
+    "team_id": "cda-exhibition",
+    "team_display_name": "Exhibition / All Stars",
+    "team_short": "Exhibition",
+    "team_type": "exhibition",
+    "team_ambiguous": false,
+    "team_unmapped": false
   },
   {
     "game_id": "64",
@@ -228,7 +348,13 @@
     "home_score": "10",
     "away_score": "4",
     "created_at": "2025-05-30 17:26:55",
-    "updated_at": "2025-05-30 18:16:17"
+    "updated_at": "2025-05-30 18:16:17",
+    "team_id": "cda-18u-boys",
+    "team_display_name": "CDA 18U Boys",
+    "team_short": "18U Boys",
+    "team_type": "competitive",
+    "team_ambiguous": false,
+    "team_unmapped": false
   },
   {
     "game_id": "65",
@@ -239,7 +365,13 @@
     "home_score": "10",
     "away_score": "4",
     "created_at": "2025-05-30 18:19:35",
-    "updated_at": "2025-05-30 19:10:36"
+    "updated_at": "2025-05-30 19:10:36",
+    "team_id": "cda-18u-girls",
+    "team_display_name": "CDA 18U Girls",
+    "team_short": "18U Girls",
+    "team_type": "competitive",
+    "team_ambiguous": false,
+    "team_unmapped": false
   },
   {
     "game_id": "66",
@@ -250,7 +382,13 @@
     "home_score": "9",
     "away_score": "5",
     "created_at": "2025-05-30 19:14:04",
-    "updated_at": "2025-05-30 19:54:33"
+    "updated_at": "2025-05-30 19:54:33",
+    "team_id": "cda-exhibition",
+    "team_display_name": "Exhibition / All Stars",
+    "team_short": "Exhibition",
+    "team_type": "exhibition",
+    "team_ambiguous": false,
+    "team_unmapped": false
   },
   {
     "game_id": "67",
@@ -261,7 +399,13 @@
     "home_score": "19",
     "away_score": "7",
     "created_at": "2025-05-31 08:06:46",
-    "updated_at": "2025-05-31 09:08:48"
+    "updated_at": "2025-05-31 09:08:48",
+    "team_id": "cda-18u-boys",
+    "team_display_name": "CDA 18U Boys",
+    "team_short": "18U Boys",
+    "team_type": "competitive",
+    "team_ambiguous": false,
+    "team_unmapped": false
   },
   {
     "game_id": "68",
@@ -272,7 +416,13 @@
     "home_score": "13",
     "away_score": "10",
     "created_at": "2025-05-31 09:00:13",
-    "updated_at": "2025-05-31 09:43:41"
+    "updated_at": "2025-05-31 09:43:41",
+    "team_id": "cda-18u-girls",
+    "team_display_name": "CDA 18U Girls",
+    "team_short": "18U Girls",
+    "team_type": "competitive",
+    "team_ambiguous": false,
+    "team_unmapped": false
   },
   {
     "game_id": "69",
@@ -283,7 +433,13 @@
     "home_score": "14",
     "away_score": "7",
     "created_at": "2025-05-31 09:49:44",
-    "updated_at": "2025-05-31 10:40:32"
+    "updated_at": "2025-05-31 10:40:32",
+    "team_id": "cda-exhibition",
+    "team_display_name": "Exhibition / All Stars",
+    "team_short": "Exhibition",
+    "team_type": "exhibition",
+    "team_ambiguous": false,
+    "team_unmapped": false
   },
   {
     "game_id": "70",
@@ -294,7 +450,13 @@
     "home_score": "14",
     "away_score": "15",
     "created_at": "2025-05-31 11:49:58",
-    "updated_at": "2025-05-31 12:45:45"
+    "updated_at": "2025-05-31 12:45:45",
+    "team_id": "cda-exhibition",
+    "team_display_name": "Exhibition / All Stars",
+    "team_short": "Exhibition",
+    "team_type": "exhibition",
+    "team_ambiguous": false,
+    "team_unmapped": false
   },
   {
     "game_id": "71",
@@ -305,7 +467,13 @@
     "home_score": "4",
     "away_score": "15",
     "created_at": "2025-07-30 18:28:08",
-    "updated_at": "2025-07-31 08:01:05"
+    "updated_at": "2025-07-31 08:01:05",
+    "team_id": "cda-18u-boys",
+    "team_display_name": "CDA 18U Boys",
+    "team_short": "18U Boys",
+    "team_type": "competitive",
+    "team_ambiguous": false,
+    "team_unmapped": false
   },
   {
     "game_id": "72",
@@ -316,7 +484,13 @@
     "home_score": "18",
     "away_score": "10",
     "created_at": "2025-07-30 18:33:34",
-    "updated_at": "2025-07-31 10:42:38"
+    "updated_at": "2025-07-31 10:42:38",
+    "team_id": "cda-18u-boys",
+    "team_display_name": "CDA 18U Boys",
+    "team_short": "18U Boys",
+    "team_type": "competitive",
+    "team_ambiguous": false,
+    "team_unmapped": false
   },
   {
     "game_id": "73",
@@ -327,7 +501,13 @@
     "home_score": "0",
     "away_score": "0",
     "created_at": "2025-07-30 18:36:57",
-    "updated_at": "2025-07-30 19:10:04"
+    "updated_at": "2025-07-30 19:10:04",
+    "team_id": "cda-18u-girls",
+    "team_display_name": "CDA 18U Girls",
+    "team_short": "18U Girls",
+    "team_type": "competitive",
+    "team_ambiguous": false,
+    "team_unmapped": false
   },
   {
     "game_id": "74",
@@ -338,7 +518,13 @@
     "home_score": "14",
     "away_score": "11",
     "created_at": "2025-07-30 18:44:02",
-    "updated_at": "2025-07-31 09:45:58"
+    "updated_at": "2025-07-31 09:45:58",
+    "team_id": "cda-12u-coed",
+    "team_display_name": "CDA 12U Co-Ed",
+    "team_short": "12U Co-Ed",
+    "team_type": "competitive",
+    "team_ambiguous": false,
+    "team_unmapped": false
   },
   {
     "game_id": "75",
@@ -349,7 +535,13 @@
     "home_score": "0",
     "away_score": "0",
     "created_at": "2025-07-30 18:45:39",
-    "updated_at": "2025-07-30 19:12:30"
+    "updated_at": "2025-07-30 19:12:30",
+    "team_id": "cda-18u-girls",
+    "team_display_name": "CDA 18U Girls",
+    "team_short": "18U Girls",
+    "team_type": "competitive",
+    "team_ambiguous": false,
+    "team_unmapped": false
   },
   {
     "game_id": "76",
@@ -360,7 +552,13 @@
     "home_score": "12",
     "away_score": "3",
     "created_at": "2025-07-31 07:14:33",
-    "updated_at": "2025-07-31 21:20:41"
+    "updated_at": "2025-07-31 21:20:41",
+    "team_id": "cda-18u-boys",
+    "team_display_name": "CDA 18U Boys",
+    "team_short": "18U Boys",
+    "team_type": "competitive",
+    "team_ambiguous": true,
+    "team_unmapped": false
   },
   {
     "game_id": "78",
@@ -371,7 +569,13 @@
     "home_score": "7",
     "away_score": "22",
     "created_at": "2025-07-31 11:01:44",
-    "updated_at": "2025-07-31 13:12:31"
+    "updated_at": "2025-07-31 13:12:31",
+    "team_id": "cda-12u-coed",
+    "team_display_name": "CDA 12U Co-Ed",
+    "team_short": "12U Co-Ed",
+    "team_type": "competitive",
+    "team_ambiguous": false,
+    "team_unmapped": false
   },
   {
     "game_id": "79",
@@ -382,7 +586,13 @@
     "home_score": "10",
     "away_score": "9",
     "created_at": "2025-07-31 15:11:03",
-    "updated_at": "2025-07-31 21:25:17"
+    "updated_at": "2025-07-31 21:25:17",
+    "team_id": "cda-12u-coed",
+    "team_display_name": "CDA 12U Co-Ed",
+    "team_short": "12U Co-Ed",
+    "team_type": "competitive",
+    "team_ambiguous": false,
+    "team_unmapped": false
   },
   {
     "game_id": "81",
@@ -393,7 +603,13 @@
     "home_score": "7",
     "away_score": "16",
     "created_at": "2025-08-01 05:23:06",
-    "updated_at": "2025-08-01 20:17:17"
+    "updated_at": "2025-08-01 20:17:17",
+    "team_id": "cda-18u-boys",
+    "team_display_name": "CDA 18U Boys",
+    "team_short": "18U Boys",
+    "team_type": "competitive",
+    "team_ambiguous": false,
+    "team_unmapped": false
   },
   {
     "game_id": "83",
@@ -404,7 +620,13 @@
     "home_score": "10",
     "away_score": "4",
     "created_at": "2025-08-01 10:27:20",
-    "updated_at": "2025-08-02 06:23:56"
+    "updated_at": "2025-08-02 06:23:56",
+    "team_id": "cda-18u-boys",
+    "team_display_name": "CDA 18U Boys",
+    "team_short": "18U Boys",
+    "team_type": "competitive",
+    "team_ambiguous": false,
+    "team_unmapped": false
   },
   {
     "game_id": "85",
@@ -415,7 +637,13 @@
     "home_score": "1",
     "away_score": "25",
     "created_at": "2025-08-01 13:05:53",
-    "updated_at": "2025-08-01 20:16:13"
+    "updated_at": "2025-08-01 20:16:13",
+    "team_id": "cda-12u-coed",
+    "team_display_name": "CDA 12U Co-Ed",
+    "team_short": "12U Co-Ed",
+    "team_type": "competitive",
+    "team_ambiguous": false,
+    "team_unmapped": false
   },
   {
     "game_id": "86",
@@ -426,7 +654,13 @@
     "home_score": "4",
     "away_score": "19",
     "created_at": "2025-08-01 16:24:00",
-    "updated_at": "2025-08-01 20:15:20"
+    "updated_at": "2025-08-01 20:15:20",
+    "team_id": "cda-12u-coed",
+    "team_display_name": "CDA 12U Co-Ed",
+    "team_short": "12U Co-Ed",
+    "team_type": "competitive",
+    "team_ambiguous": false,
+    "team_unmapped": false
   },
   {
     "game_id": "88",
@@ -437,7 +671,13 @@
     "home_score": "2",
     "away_score": "2",
     "created_at": "2025-08-02 06:24:20",
-    "updated_at": "2025-08-03 09:54:39"
+    "updated_at": "2025-08-03 09:54:39",
+    "team_id": "cda-18u-boys",
+    "team_display_name": "CDA 18U Boys",
+    "team_ambiguous": false,
+    "team_unmapped": false,
+    "team_short": "18U Boys",
+    "team_type": "competitive"
   },
   {
     "game_id": "89",
@@ -448,7 +688,13 @@
     "home_score": "7",
     "away_score": "19",
     "created_at": "2025-08-02 07:11:23",
-    "updated_at": "2025-08-02 08:20:28"
+    "updated_at": "2025-08-02 08:20:28",
+    "team_id": "cda-12u-coed",
+    "team_display_name": "CDA 12U Co-Ed",
+    "team_short": "12U Co-Ed",
+    "team_type": "competitive",
+    "team_ambiguous": false,
+    "team_unmapped": false
   },
   {
     "game_id": "90",
@@ -459,7 +705,13 @@
     "home_score": "5",
     "away_score": "12",
     "created_at": "2025-08-02 11:32:57",
-    "updated_at": "2025-08-03 09:56:17"
+    "updated_at": "2025-08-03 09:56:17",
+    "team_id": "cda-18u-boys",
+    "team_display_name": "CDA 18U Boys",
+    "team_short": "18U Boys",
+    "team_type": "competitive",
+    "team_ambiguous": false,
+    "team_unmapped": false
   },
   {
     "game_id": "92",
@@ -470,7 +722,13 @@
     "home_score": "7",
     "away_score": "17",
     "created_at": "2025-08-02 14:00:30",
-    "updated_at": "2025-08-02 15:28:16"
+    "updated_at": "2025-08-02 15:28:16",
+    "team_id": "cda-12u-coed",
+    "team_display_name": "CDA 12U Co-Ed",
+    "team_short": "12U Co-Ed",
+    "team_type": "competitive",
+    "team_ambiguous": false,
+    "team_unmapped": false
   },
   {
     "game_id": "93",
@@ -481,7 +739,13 @@
     "home_score": "9",
     "away_score": "13",
     "created_at": "2025-08-03 09:09:43",
-    "updated_at": "2025-08-03 11:26:01"
+    "updated_at": "2025-08-03 11:26:01",
+    "team_id": "cda-18u-boys",
+    "team_display_name": "CDA 18U Boys",
+    "team_short": "18U Boys",
+    "team_type": "competitive",
+    "team_ambiguous": false,
+    "team_unmapped": false
   },
   {
     "game_id": "94",
@@ -492,7 +756,13 @@
     "home_score": "13",
     "away_score": "7",
     "created_at": "2025-08-03 09:11:18",
-    "updated_at": "2025-08-03 10:21:14"
+    "updated_at": "2025-08-03 10:21:14",
+    "team_id": "cda-12u-coed",
+    "team_display_name": "CDA 12U Co-Ed",
+    "team_short": "12U Co-Ed",
+    "team_type": "competitive",
+    "team_ambiguous": false,
+    "team_unmapped": false
   },
   {
     "game_id": "97",
@@ -503,7 +773,13 @@
     "home_score": "15",
     "away_score": "8",
     "created_at": "2025-12-11 22:37:29",
-    "updated_at": "2025-12-12 17:16:59"
+    "updated_at": "2025-12-12 17:16:59",
+    "team_id": "cda-18u-boys",
+    "team_display_name": "CDA 18U Boys",
+    "team_short": "18U Boys",
+    "team_type": "competitive",
+    "team_ambiguous": false,
+    "team_unmapped": false
   },
   {
     "game_id": "98",
@@ -514,7 +790,13 @@
     "home_score": "14",
     "away_score": "18",
     "created_at": "2025-12-11 22:53:49",
-    "updated_at": "2025-12-12 19:58:56"
+    "updated_at": "2025-12-12 19:58:56",
+    "team_id": "cda-18u-boys",
+    "team_display_name": "CDA 18U Boys",
+    "team_short": "18U Boys",
+    "team_type": "competitive",
+    "team_ambiguous": false,
+    "team_unmapped": false
   },
   {
     "game_id": "99",
@@ -525,7 +807,13 @@
     "home_score": "12",
     "away_score": "11",
     "created_at": "2025-12-11 22:55:26",
-    "updated_at": "2025-12-12 18:15:46"
+    "updated_at": "2025-12-12 18:15:46",
+    "team_id": "cda-jv-boys",
+    "team_display_name": "CDA JV Boys",
+    "team_short": "JV Boys",
+    "team_type": "competitive",
+    "team_ambiguous": false,
+    "team_unmapped": false
   },
   {
     "game_id": "100",
@@ -536,7 +824,13 @@
     "home_score": "0",
     "away_score": "0",
     "created_at": "2025-12-11 23:34:08",
-    "updated_at": "2025-12-11 23:35:46"
+    "updated_at": "2025-12-11 23:35:46",
+    "team_id": "cda-18u-girls",
+    "team_display_name": "CDA 18U Girls",
+    "team_short": "18U Girls",
+    "team_type": "competitive",
+    "team_ambiguous": false,
+    "team_unmapped": false
   },
   {
     "game_id": "101",
@@ -547,7 +841,13 @@
     "home_score": "18",
     "away_score": "0",
     "created_at": "2025-12-11 23:40:46",
-    "updated_at": "2025-12-12 18:00:34"
+    "updated_at": "2025-12-12 18:00:34",
+    "team_id": "cda-18u-girls",
+    "team_display_name": "CDA 18U Girls",
+    "team_short": "18U Girls",
+    "team_type": "competitive",
+    "team_ambiguous": false,
+    "team_unmapped": false
   },
   {
     "game_id": "102",
@@ -558,7 +858,13 @@
     "home_score": "0",
     "away_score": "0",
     "created_at": "2025-12-11 23:42:09",
-    "updated_at": "2025-12-11 23:42:51"
+    "updated_at": "2025-12-11 23:42:51",
+    "team_id": "cda-18u-girls",
+    "team_display_name": "CDA 18U Girls",
+    "team_short": "18U Girls",
+    "team_type": "competitive",
+    "team_ambiguous": false,
+    "team_unmapped": false
   },
   {
     "game_id": "103",
@@ -569,7 +875,13 @@
     "home_score": "0",
     "away_score": "0",
     "created_at": "2025-12-11 23:43:48",
-    "updated_at": "2025-12-11 23:44:30"
+    "updated_at": "2025-12-11 23:44:30",
+    "team_id": "cda-jv-girls",
+    "team_display_name": "CDA JV Girls",
+    "team_short": "JV Girls",
+    "team_type": "competitive",
+    "team_ambiguous": false,
+    "team_unmapped": false
   },
   {
     "game_id": "104",
@@ -580,7 +892,13 @@
     "home_score": "9",
     "away_score": "5",
     "created_at": "2025-12-11 23:47:30",
-    "updated_at": "2025-12-12 18:53:41"
+    "updated_at": "2025-12-12 18:53:41",
+    "team_id": "cda-jv-girls",
+    "team_display_name": "CDA JV Girls",
+    "team_short": "JV Girls",
+    "team_type": "competitive",
+    "team_ambiguous": false,
+    "team_unmapped": false
   },
   {
     "game_id": "105",
@@ -591,7 +909,13 @@
     "home_score": "0",
     "away_score": "0",
     "created_at": "2025-12-11 23:48:47",
-    "updated_at": "2025-12-11 23:49:19"
+    "updated_at": "2025-12-11 23:49:19",
+    "team_id": "cda-jv-girls",
+    "team_display_name": "CDA JV Girls",
+    "team_short": "JV Girls",
+    "team_type": "competitive",
+    "team_ambiguous": false,
+    "team_unmapped": false
   },
   {
     "game_id": "106",
@@ -602,7 +926,13 @@
     "home_score": "13",
     "away_score": "4",
     "created_at": "2025-12-12 17:26:16",
-    "updated_at": "2025-12-13 07:57:22"
+    "updated_at": "2025-12-13 07:57:22",
+    "team_id": "cda-18u-boys",
+    "team_display_name": "CDA 18U Boys",
+    "team_short": "18U Boys",
+    "team_type": "competitive",
+    "team_ambiguous": false,
+    "team_unmapped": false
   },
   {
     "game_id": "107",
@@ -613,7 +943,13 @@
     "home_score": "15",
     "away_score": "4",
     "created_at": "2025-12-12 23:04:19",
-    "updated_at": "2025-12-13 09:33:55"
+    "updated_at": "2025-12-13 09:33:55",
+    "team_id": "cda-18u-boys",
+    "team_display_name": "CDA 18U Boys",
+    "team_short": "18U Boys",
+    "team_type": "competitive",
+    "team_ambiguous": false,
+    "team_unmapped": false
   },
   {
     "game_id": "108",
@@ -624,7 +960,13 @@
     "home_score": "6",
     "away_score": "21",
     "created_at": "2025-12-12 23:05:34",
-    "updated_at": "2025-12-13 08:52:50"
+    "updated_at": "2025-12-13 08:52:50",
+    "team_id": "cda-jv-boys",
+    "team_display_name": "CDA JV Boys",
+    "team_short": "JV Boys",
+    "team_type": "competitive",
+    "team_ambiguous": false,
+    "team_unmapped": false
   },
   {
     "game_id": "109",
@@ -635,7 +977,13 @@
     "home_score": "7",
     "away_score": "14",
     "created_at": "2025-12-12 23:06:57",
-    "updated_at": "2025-12-13 10:33:14"
+    "updated_at": "2025-12-13 10:33:14",
+    "team_id": "cda-jv-boys",
+    "team_display_name": "CDA JV Boys",
+    "team_short": "JV Boys",
+    "team_type": "competitive",
+    "team_ambiguous": false,
+    "team_unmapped": false
   },
   {
     "game_id": "110",
@@ -646,7 +994,13 @@
     "home_score": "0",
     "away_score": "0",
     "created_at": "2025-12-12 23:07:46",
-    "updated_at": "2025-12-12 23:08:18"
+    "updated_at": "2025-12-12 23:08:18",
+    "team_id": "cda-18u-girls",
+    "team_display_name": "CDA 18U Girls",
+    "team_short": "18U Girls",
+    "team_type": "competitive",
+    "team_ambiguous": false,
+    "team_unmapped": false
   },
   {
     "game_id": "111",
@@ -657,7 +1011,13 @@
     "home_score": "15",
     "away_score": "6",
     "created_at": "2025-12-12 23:08:48",
-    "updated_at": "2025-12-13 08:54:05"
+    "updated_at": "2025-12-13 08:54:05",
+    "team_id": "cda-jv-girls",
+    "team_display_name": "CDA JV Girls",
+    "team_short": "JV Girls",
+    "team_type": "competitive",
+    "team_ambiguous": false,
+    "team_unmapped": false
   },
   {
     "game_id": "112",
@@ -668,7 +1028,13 @@
     "home_score": "9",
     "away_score": "4",
     "created_at": "2026-01-09 15:30:28",
-    "updated_at": "2026-01-09 16:43:01"
+    "updated_at": "2026-01-09 16:43:01",
+    "team_id": "cda-18u-boys",
+    "team_display_name": "CDA 18U Boys",
+    "team_short": "18U Boys",
+    "team_type": "competitive",
+    "team_ambiguous": false,
+    "team_unmapped": false
   },
   {
     "game_id": "113",
@@ -679,7 +1045,13 @@
     "home_score": "15",
     "away_score": "1",
     "created_at": "2026-01-09 15:32:24",
-    "updated_at": "2026-01-09 17:36:41"
+    "updated_at": "2026-01-09 17:36:41",
+    "team_id": "cda-18u-girls",
+    "team_display_name": "CDA 18U Girls",
+    "team_short": "18U Girls",
+    "team_type": "competitive",
+    "team_ambiguous": false,
+    "team_unmapped": false
   },
   {
     "game_id": "114",
@@ -690,7 +1062,13 @@
     "home_score": "4",
     "away_score": "19",
     "created_at": "2026-01-09 15:34:05",
-    "updated_at": "2026-01-09 19:26:18"
+    "updated_at": "2026-01-09 19:26:18",
+    "team_id": "cda-jv-girls",
+    "team_display_name": "CDA JV Girls",
+    "team_short": "JV Girls",
+    "team_type": "competitive",
+    "team_ambiguous": false,
+    "team_unmapped": false
   },
   {
     "game_id": "115",
@@ -701,7 +1079,13 @@
     "home_score": "0",
     "away_score": "0",
     "created_at": "2026-01-09 15:35:47",
-    "updated_at": "2026-01-09 17:37:41"
+    "updated_at": "2026-01-09 17:37:41",
+    "team_id": "cda-jv-boys",
+    "team_display_name": "CDA JV Boys",
+    "team_short": "JV Boys",
+    "team_type": "competitive",
+    "team_ambiguous": false,
+    "team_unmapped": false
   },
   {
     "game_id": "116",
@@ -712,7 +1096,13 @@
     "home_score": "10",
     "away_score": "1",
     "created_at": "2026-01-09 16:47:23",
-    "updated_at": "2026-01-10 10:59:23"
+    "updated_at": "2026-01-10 10:59:23",
+    "team_id": "cda-18u-boys",
+    "team_display_name": "CDA 18U Boys",
+    "team_short": "18U Boys",
+    "team_type": "competitive",
+    "team_ambiguous": false,
+    "team_unmapped": false
   },
   {
     "game_id": "117",
@@ -723,7 +1113,13 @@
     "home_score": "14",
     "away_score": "11",
     "created_at": "2026-01-10 08:16:22",
-    "updated_at": "2026-01-10 09:10:33"
+    "updated_at": "2026-01-10 09:10:33",
+    "team_id": "cda-dev",
+    "team_display_name": "CDA Dev",
+    "team_short": "Dev",
+    "team_type": "competitive",
+    "team_ambiguous": false,
+    "team_unmapped": false
   },
   {
     "game_id": "118",
@@ -734,7 +1130,13 @@
     "home_score": "4",
     "away_score": "12",
     "created_at": "2026-01-10 09:16:51",
-    "updated_at": "2026-01-10 10:05:39"
+    "updated_at": "2026-01-10 10:05:39",
+    "team_id": "cda-18u-girls",
+    "team_display_name": "CDA 18U Girls",
+    "team_short": "18U Girls",
+    "team_type": "competitive",
+    "team_ambiguous": false,
+    "team_unmapped": false
   },
   {
     "game_id": "120",
@@ -745,7 +1147,13 @@
     "home_score": "0",
     "away_score": "2",
     "created_at": "2026-01-10 10:11:51",
-    "updated_at": "2026-01-10 10:13:33"
+    "updated_at": "2026-01-10 10:13:33",
+    "team_id": "cda-jv-boys",
+    "team_display_name": "CDA JV Boys",
+    "team_short": "JV Boys",
+    "team_type": "competitive",
+    "team_ambiguous": false,
+    "team_unmapped": false
   },
   {
     "game_id": "121",
@@ -756,7 +1164,13 @@
     "home_score": "11",
     "away_score": "9",
     "created_at": "2026-01-10 10:57:00",
-    "updated_at": "2026-01-10 11:46:18"
+    "updated_at": "2026-01-10 11:46:18",
+    "team_id": "cda-jv-girls",
+    "team_display_name": "CDA JV Girls",
+    "team_short": "JV Girls",
+    "team_type": "competitive",
+    "team_ambiguous": false,
+    "team_unmapped": false
   },
   {
     "game_id": "122",
@@ -767,7 +1181,13 @@
     "home_score": "15",
     "away_score": "1",
     "created_at": "2026-01-10 11:51:18",
-    "updated_at": "2026-01-10 12:33:56"
+    "updated_at": "2026-01-10 12:33:56",
+    "team_id": "cda-18u-boys",
+    "team_display_name": "CDA 18U Boys",
+    "team_short": "18U Boys",
+    "team_type": "competitive",
+    "team_ambiguous": false,
+    "team_unmapped": false
   },
   {
     "game_id": "123",
@@ -778,7 +1198,13 @@
     "home_score": "18",
     "away_score": "4",
     "created_at": "2026-01-31 14:32:07",
-    "updated_at": "2026-01-31 16:05:13"
+    "updated_at": "2026-01-31 16:05:13",
+    "team_id": "cda-18u-boys",
+    "team_display_name": "CDA 18U Boys",
+    "team_short": "18U Boys",
+    "team_type": "competitive",
+    "team_ambiguous": true,
+    "team_unmapped": false
   },
   {
     "game_id": "124",
@@ -789,7 +1215,13 @@
     "home_score": "17",
     "away_score": "18",
     "created_at": "2026-01-31 15:09:18",
-    "updated_at": "2026-01-31 18:31:13"
+    "updated_at": "2026-01-31 18:31:13",
+    "team_id": "cda-18u-boys",
+    "team_display_name": "CDA 18U Boys",
+    "team_short": "18U Boys",
+    "team_type": "competitive",
+    "team_ambiguous": true,
+    "team_unmapped": false
   },
   {
     "game_id": "125",
@@ -800,7 +1232,13 @@
     "home_score": "11",
     "away_score": "12",
     "created_at": "2026-01-31 17:45:36",
-    "updated_at": "2026-02-01 08:48:15"
+    "updated_at": "2026-02-01 08:48:15",
+    "team_id": "cda-18u-boys",
+    "team_display_name": "CDA 18U Boys",
+    "team_short": "18U Boys",
+    "team_type": "competitive",
+    "team_ambiguous": true,
+    "team_unmapped": false
   },
   {
     "game_id": "126",
@@ -811,7 +1249,13 @@
     "home_score": "17",
     "away_score": "20",
     "created_at": "2026-01-31 22:12:00",
-    "updated_at": "2026-02-01 11:17:15"
+    "updated_at": "2026-02-01 11:17:15",
+    "team_id": "cda-18u-boys",
+    "team_display_name": "CDA 18U Boys",
+    "team_short": "18U Boys",
+    "team_type": "competitive",
+    "team_ambiguous": true,
+    "team_unmapped": false
   },
   {
     "game_id": "127",
@@ -822,7 +1266,13 @@
     "home_score": "20",
     "away_score": "4",
     "created_at": "2026-02-06 16:08:16",
-    "updated_at": "2026-02-06 16:52:45"
+    "updated_at": "2026-02-06 16:52:45",
+    "team_id": "cda-18u-girls-yellow",
+    "team_display_name": "CDA 18U Girls (Yellow)",
+    "team_short": "18U Girls Y",
+    "team_type": "competitive",
+    "team_ambiguous": false,
+    "team_unmapped": false
   },
   {
     "game_id": "128",
@@ -833,7 +1283,13 @@
     "home_score": "15",
     "away_score": "0",
     "created_at": "2026-02-06 16:55:51",
-    "updated_at": "2026-02-06 17:45:30"
+    "updated_at": "2026-02-06 17:45:30",
+    "team_id": "cda-18u-boys",
+    "team_display_name": "CDA 18U Boys",
+    "team_short": "18U Boys",
+    "team_type": "competitive",
+    "team_ambiguous": false,
+    "team_unmapped": false
   },
   {
     "game_id": "130",
@@ -844,7 +1300,13 @@
     "home_score": "13",
     "away_score": "3",
     "created_at": "2026-02-07 08:07:17",
-    "updated_at": "2026-02-07 08:43:44"
+    "updated_at": "2026-02-07 08:43:44",
+    "team_id": "cda-18u-boys",
+    "team_display_name": "CDA 18U Boys",
+    "team_short": "18U Boys",
+    "team_type": "competitive",
+    "team_ambiguous": false,
+    "team_unmapped": false
   },
   {
     "game_id": "131",
@@ -855,7 +1317,13 @@
     "home_score": "16",
     "away_score": "4",
     "created_at": "2026-02-07 13:50:03",
-    "updated_at": "2026-02-07 14:35:44"
+    "updated_at": "2026-02-07 14:35:44",
+    "team_id": "cda-18u-boys",
+    "team_display_name": "CDA 18U Boys",
+    "team_short": "18U Boys",
+    "team_type": "competitive",
+    "team_ambiguous": false,
+    "team_unmapped": false
   },
   {
     "game_id": "132",
@@ -866,7 +1334,13 @@
     "home_score": "13",
     "away_score": "3",
     "created_at": "2026-04-17 16:18:36",
-    "updated_at": "2026-04-17 19:17:50"
+    "updated_at": "2026-04-17 19:17:50",
+    "team_id": "cda-18u-boys",
+    "team_display_name": "CDA 18U Boys",
+    "team_short": "18U Boys",
+    "team_type": "competitive",
+    "team_ambiguous": false,
+    "team_unmapped": false
   },
   {
     "game_id": "133",
@@ -877,7 +1351,13 @@
     "home_score": "8",
     "away_score": "7",
     "created_at": "2026-04-18 10:15:45",
-    "updated_at": "2026-04-18 11:00:55"
+    "updated_at": "2026-04-18 11:00:55",
+    "team_id": "cda-18u-boys",
+    "team_display_name": "CDA 18U Boys",
+    "team_short": "18U Boys",
+    "team_type": "competitive",
+    "team_ambiguous": false,
+    "team_unmapped": false
   },
   {
     "game_id": "134",
@@ -888,7 +1368,13 @@
     "home_score": "11",
     "away_score": "3",
     "created_at": "2026-04-18 11:52:22",
-    "updated_at": "2026-04-18 12:38:40"
+    "updated_at": "2026-04-18 12:38:40",
+    "team_id": "cda-18u-boys",
+    "team_display_name": "CDA 18U Boys",
+    "team_short": "18U Boys",
+    "team_type": "competitive",
+    "team_ambiguous": false,
+    "team_unmapped": false
   },
   {
     "game_id": "135",
@@ -899,6 +1385,12 @@
     "home_score": "10",
     "away_score": "9",
     "created_at": "2026-04-19 07:49:52",
-    "updated_at": "2026-04-19 08:35:57"
+    "updated_at": "2026-04-19 08:35:57",
+    "team_id": "cda-18u-boys",
+    "team_display_name": "CDA 18U Boys",
+    "team_short": "18U Boys",
+    "team_type": "competitive",
+    "team_ambiguous": false,
+    "team_unmapped": false
   }
 ]

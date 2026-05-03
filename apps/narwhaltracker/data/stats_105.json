@@ -10,7 +10,9 @@
     "steals": "0",
     "blocks": "0",
     "kickouts": "0",
-    "updated_at": "2025-12-11 23:49:32"
+    "updated_at": "2025-12-11 23:49:32",
+    "team_id": "cda-jv-girls",
+    "team_display_name": "CDA JV Girls"
   },
   {
     "stat_id": "787",
@@ -23,7 +25,9 @@
     "steals": "0",
     "blocks": "0",
     "kickouts": "0",
-    "updated_at": "2025-12-11 23:49:34"
+    "updated_at": "2025-12-11 23:49:34",
+    "team_id": "cda-jv-girls",
+    "team_display_name": "CDA JV Girls"
   },
   {
     "stat_id": "788",
@@ -36,7 +40,9 @@
     "steals": "0",
     "blocks": "0",
     "kickouts": "0",
-    "updated_at": "2025-12-11 23:49:35"
+    "updated_at": "2025-12-11 23:49:35",
+    "team_id": "cda-jv-girls",
+    "team_display_name": "CDA JV Girls"
   },
   {
     "stat_id": "789",
@@ -49,7 +55,9 @@
     "steals": "0",
     "blocks": "0",
     "kickouts": "0",
-    "updated_at": "2025-12-11 23:49:36"
+    "updated_at": "2025-12-11 23:49:36",
+    "team_id": "cda-jv-girls",
+    "team_display_name": "CDA JV Girls"
   },
   {
     "stat_id": "790",
@@ -62,7 +70,9 @@
     "steals": "0",
     "blocks": "0",
     "kickouts": "0",
-    "updated_at": "2025-12-11 23:49:39"
+    "updated_at": "2025-12-11 23:49:39",
+    "team_id": "cda-jv-girls",
+    "team_display_name": "CDA JV Girls"
   },
   {
     "stat_id": "791",
@@ -75,7 +85,9 @@
     "steals": "0",
     "blocks": "0",
     "kickouts": "0",
-    "updated_at": "2025-12-11 23:49:40"
+    "updated_at": "2025-12-11 23:49:40",
+    "team_id": "cda-jv-girls",
+    "team_display_name": "CDA JV Girls"
   },
   {
     "stat_id": "792",
@@ -88,7 +100,9 @@
     "steals": "0",
     "blocks": "0",
     "kickouts": "0",
-    "updated_at": "2025-12-11 23:49:40"
+    "updated_at": "2025-12-11 23:49:40",
+    "team_id": "cda-jv-girls",
+    "team_display_name": "CDA JV Girls"
   },
   {
     "stat_id": "793",
@@ -101,7 +115,9 @@
     "steals": "0",
     "blocks": "0",
     "kickouts": "0",
-    "updated_at": "2025-12-11 23:49:42"
+    "updated_at": "2025-12-11 23:49:42",
+    "team_id": "cda-jv-girls",
+    "team_display_name": "CDA JV Girls"
   },
   {
     "stat_id": "794",
@@ -114,6 +130,8 @@
     "steals": "0",
     "blocks": "0",
     "kickouts": "0",
-    "updated_at": "2025-12-11 23:49:43"
+    "updated_at": "2025-12-11 23:49:43",
+    "team_id": "cda-jv-girls",
+    "team_display_name": "CDA JV Girls"
   }
 ]

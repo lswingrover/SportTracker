@@ -10,7 +10,9 @@
     "steals": "0",
     "blocks": "4",
     "kickouts": "0",
-    "updated_at": "2025-05-30 19:55:05"
+    "updated_at": "2025-05-30 19:55:05",
+    "team_id": "cda-exhibition",
+    "team_display_name": "Exhibition / All Stars"
   },
   {
     "stat_id": "396",
@@ -23,7 +25,9 @@
     "steals": "0",
     "blocks": "0",
     "kickouts": "0",
-    "updated_at": "2025-05-30 19:39:32"
+    "updated_at": "2025-05-30 19:39:32",
+    "team_id": "cda-exhibition",
+    "team_display_name": "Exhibition / All Stars"
   },
   {
     "stat_id": "397",
@@ -36,7 +40,9 @@
     "steals": "0",
     "blocks": "0",
     "kickouts": "0",
-    "updated_at": "2025-05-30 19:19:32"
+    "updated_at": "2025-05-30 19:19:32",
+    "team_id": "cda-exhibition",
+    "team_display_name": "Exhibition / All Stars"
   },
   {
     "stat_id": "398",
@@ -49,7 +55,9 @@
     "steals": "0",
     "blocks": "0",
     "kickouts": "0",
-    "updated_at": "2025-05-30 19:19:13"
+    "updated_at": "2025-05-30 19:19:13",
+    "team_id": "cda-exhibition",
+    "team_display_name": "Exhibition / All Stars"
   },
   {
     "stat_id": "401",
@@ -62,7 +70,9 @@
     "steals": "0",
     "blocks": "0",
     "kickouts": "2",
-    "updated_at": "2025-05-30 19:54:30"
+    "updated_at": "2025-05-30 19:54:30",
+    "team_id": "cda-exhibition",
+    "team_display_name": "Exhibition / All Stars"
   },
   {
     "stat_id": "403",
@@ -75,7 +85,9 @@
     "steals": "0",
     "blocks": "0",
     "kickouts": "0",
-    "updated_at": "2025-05-30 19:18:36"
+    "updated_at": "2025-05-30 19:18:36",
+    "team_id": "cda-exhibition",
+    "team_display_name": "Exhibition / All Stars"
   },
   {
     "stat_id": "405",
@@ -88,7 +100,9 @@
     "steals": "0",
     "blocks": "0",
     "kickouts": "0",
-    "updated_at": "2025-05-30 19:52:55"
+    "updated_at": "2025-05-30 19:52:55",
+    "team_id": "cda-exhibition",
+    "team_display_name": "Exhibition / All Stars"
   },
   {
     "stat_id": "406",
@@ -101,7 +115,9 @@
     "steals": "0",
     "blocks": "0",
     "kickouts": "0",
-    "updated_at": "2025-05-30 19:52:57"
+    "updated_at": "2025-05-30 19:52:57",
+    "team_id": "cda-exhibition",
+    "team_display_name": "Exhibition / All Stars"
   },
   {
     "stat_id": "407",
@@ -114,7 +130,9 @@
     "steals": "0",
     "blocks": "0",
     "kickouts": "0",
-    "updated_at": "2025-05-30 19:19:05"
+    "updated_at": "2025-05-30 19:19:05",
+    "team_id": "cda-exhibition",
+    "team_display_name": "Exhibition / All Stars"
   },
   {
     "stat_id": "408",
@@ -127,6 +145,8 @@
     "steals": "0",
     "blocks": "0",
     "kickouts": "0",
-    "updated_at": "2025-05-30 19:20:53"
+    "updated_at": "2025-05-30 19:20:53",
+    "team_id": "cda-exhibition",
+    "team_display_name": "Exhibition / All Stars"
   }
 ]
