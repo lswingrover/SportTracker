@@ -3173,8 +3173,10 @@ export default function Home() {
 
         <div className="chip-row" role="tablist" aria-label="Tournaments">
           {niwpWeeks
-            ? /* NIWP mode: one chip per calendar week, newest rightmost */
-              niwpWeeks.map((w) => {
+            ? /* NIWP mode: one chip per calendar week, newest leftmost.
+                 Underlying array stays oldest→newest (default-selection
+                 logic relies on [length-1]); only render order is flipped. */
+              niwpWeeks.slice().reverse().map((w) => {
                 const isActive = w.weekKey === (niwpWeekKey ?? niwpWeeks[niwpWeeks.length - 1]?.weekKey);
                 return (
                   <button
