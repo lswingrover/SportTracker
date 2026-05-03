@@ -8,7 +8,13 @@ self.addEventListener("install", (event) => {
 });
 
 self.addEventListener("activate", (event) => {
-  event.waitUntil(self.clients.claim());
+  event.waitUntil(
+    self.clients.claim().then(() =>
+      self.clients.matchAll({ type: "window", includeUncontrolled: true }).then((clients) => {
+        for (const c of clients) c.postMessage({ type: "SW_UPDATED" });
+      })
+    )
+  );
 });
 
 // Network-first for page navigation. Falls back to cache only if offline.

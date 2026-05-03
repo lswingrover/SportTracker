@@ -2487,6 +2487,17 @@ export default function Home() {
     if (typeof window !== "undefined") setOrigin(window.location.origin);
   }, []);
 
+  // Auto-reload when a new service worker activates, so users immediately
+  // get the fresh HTML shell and JS bundle without a manual refresh.
+  useEffect(() => {
+    if (typeof navigator === "undefined" || !navigator.serviceWorker) return;
+    function onSwMessage(evt) {
+      if (evt.data?.type === "SW_UPDATED") window.location.reload();
+    }
+    navigator.serviceWorker.addEventListener("message", onSwMessage);
+    return () => navigator.serviceWorker.removeEventListener("message", onSwMessage);
+  }, []);
+
   useEffect(() => {
     if (typeof document === "undefined") return;
     if (themeId === "default") document.documentElement.removeAttribute("data-theme");
