@@ -18,7 +18,7 @@ const TOURNAMENTS = [
     venue: {
       name: "Billings Metra Park",
       address: "Billings, MT",
-      tz: "America/Los_Angeles",
+      tz: "America/Denver",
     },
     date: "May 2, 2026",
   },
@@ -2176,7 +2176,7 @@ export default function Home() {
     await Promise.all(
       todo.map(async (t) => {
         try {
-          const url = `/api/tournament?eventId=${encodeURIComponent(t.eventId)}&divId=${encodeURIComponent(t.divId)}&teamId=${encodeURIComponent(t.teamId)}&teamName=${encodeURIComponent(t.teamName)}`;
+          const url = `/api/tournament?eventId=${encodeURIComponent(t.eventId)}&divId=${encodeURIComponent(t.divId)}&teamId=${encodeURIComponent(t.teamId)}&teamName=${encodeURIComponent(t.teamName)}${t.venue?.tz ? `&tz=${encodeURIComponent(t.venue.tz)}` : ""}`;
           const res = await fetch(url);
           if (!res.ok) return;
           const json = await res.json();
@@ -2352,7 +2352,7 @@ export default function Home() {
       }
       try {
         setLoading(true);
-        const url = `/api/tournament?eventId=${encodeURIComponent(tournament.eventId)}&divId=${encodeURIComponent(tournament.divId)}&teamId=${encodeURIComponent(teamId)}&teamName=${encodeURIComponent(teamName)}${force ? "&force=1" : ""}`;
+        const url = `/api/tournament?eventId=${encodeURIComponent(tournament.eventId)}&divId=${encodeURIComponent(tournament.divId)}&teamId=${encodeURIComponent(teamId)}&teamName=${encodeURIComponent(teamName)}${tournament.venue?.tz ? `&tz=${encodeURIComponent(tournament.venue.tz)}` : ""}${force ? "&force=1" : ""}`;
         const res = await fetch(url);
         if (!res.ok) throw new Error(`API ${res.status}`);
         const next = await res.json();

@@ -38,11 +38,45 @@ function pickFirst(obj, keys) {
   return null;
 }
 
-function parseTime(value) {
+// AES returns match datetimes as venue-local wall-clock with NO timezone
+// offset (e.g. "2026-05-03T08:00:00"). On Vercel's UTC server, new Date()
+// would treat that as UTC and shift the displayed time by 6–8 hours.
+// Same fix pattern as parseDateAsPT() in apps/narwatch/pages/api/niwp.js:
+// attach the venue's DST offset, verify with Intl, fall back to standard.
+const TZ_OFFSETS = {
+  "America/Los_Angeles": { dst: "-07:00", std: "-08:00", dstAbbr: "PDT" },
+  "America/Denver":      { dst: "-06:00", std: "-07:00", dstAbbr: "MDT" },
+};
+
+function parseTimeInTz(value, tz) {
   if (!value) return { iso: null, ms: null };
-  const d = new Date(value);
-  if (Number.isNaN(d.getTime())) return { iso: null, ms: null };
-  return { iso: d.toISOString(), ms: d.getTime() };
+  const s = String(value).trim();
+  // Already has explicit TZ info (Z or ±hh:mm) — trust it.
+  if (/[Zz]$/.test(s) || /[+-]\d{1,2}:?\d{2}$/.test(s)) {
+    const d = new Date(s);
+    return Number.isNaN(d.getTime()) ? { iso: null, ms: null } : { iso: d.toISOString(), ms: d.getTime() };
+  }
+  const offsets = TZ_OFFSETS[tz];
+  if (!offsets) {
+    const d = new Date(s);
+    return Number.isNaN(d.getTime()) ? { iso: null, ms: null } : { iso: d.toISOString(), ms: d.getTime() };
+  }
+  const iso = s.replace(" ", "T");
+  let attempt = new Date(iso + offsets.dst);
+  if (Number.isNaN(attempt.getTime())) return { iso: null, ms: null };
+  const tzLabel = new Intl.DateTimeFormat("en-US", {
+    timeZone: tz,
+    timeZoneName: "short",
+  }).formatToParts(attempt).find((p) => p.type === "timeZoneName")?.value || "";
+  if (!tzLabel.includes(offsets.dstAbbr)) {
+    attempt = new Date(iso + offsets.std);
+    if (Number.isNaN(attempt.getTime())) return { iso: null, ms: null };
+  }
+  return { iso: attempt.toISOString(), ms: attempt.getTime() };
+}
+
+function parseTime(value, tz) {
+  return parseTimeInTz(value, tz);
 }
 
 function setsFromMatch(m) {
@@ -138,7 +172,7 @@ function liveScoreShape(m, opponentName) {
   };
 }
 
-function detectLive(m, opponentName) {
+function detectLive(m, opponentName, tz) {
   const start = pickFirst(m, [
     "MatchDate",
     "ScheduledStartDateTime",
@@ -147,7 +181,7 @@ function detectLive(m, opponentName) {
     "ScheduledStart",
     "StartTime",
   ]);
-  const { ms } = parseTime(start);
+  const { ms } = parseTime(start, tz);
   if (ms == null) return null;
   const now = Date.now();
   if (ms > now) return null;
@@ -181,7 +215,7 @@ function formatLocalTime(iso) {
   }
 }
 
-function normalizeMatch(m, { done, idx = 0, kind = "match", teamId = null }) {
+function normalizeMatch(m, { done, idx = 0, kind = "match", teamId = null, tz = null }) {
   const start = pickFirst(m, [
     "MatchDate",
     "ScheduledStartDateTime",
@@ -190,7 +224,7 @@ function normalizeMatch(m, { done, idx = 0, kind = "match", teamId = null }) {
     "ScheduledStart",
     "StartTime",
   ]);
-  const { iso, ms } = parseTime(start);
+  const { iso, ms } = parseTime(start, tz);
   const _firstId = String(m?.FirstTeamId ?? "");
   const _isFirst = teamId && _firstId === String(teamId);
   const opponent =
@@ -250,11 +284,11 @@ function normalizeMatch(m, { done, idx = 0, kind = "match", teamId = null }) {
   }
 
   const endRaw = pickFirst(m, ["ScheduledEndDateTime", "EndDateTime", "MatchEndDateTime"]);
-  const { iso: endISO } = parseTime(endRaw);
+  const { iso: endISO } = parseTime(endRaw, tz);
 
   const courtStay = !done ? courtStayHints(m) : null;
 
-  const live = !done ? detectLive(m, opponent) : null;
+  const live = !done ? detectLive(m, opponent, tz) : null;
   const videoLink =
     pickFirst(m?.CourtInfo || {}, ["VideoLink"]) ||
     pickFirst(m?.Court || {}, ["VideoLink"]) ||
@@ -281,14 +315,14 @@ function normalizeMatch(m, { done, idx = 0, kind = "match", teamId = null }) {
   };
 }
 
-function normalizeWork(w, idx = 0) {
+function normalizeWork(w, idx = 0, tz = null) {
   const start = pickFirst(w, [
     "MatchDate",
     "ScheduledStartDateTime",
     "StartDateTime",
     "WorkStartDateTime",
   ]);
-  const { iso, ms } = parseTime(start);
+  const { iso, ms } = parseTime(start, tz);
   return {
     id:
       pickFirst(w, ["MatchId", "WorkAssignmentId", "Id"])?.toString() ||
@@ -496,7 +530,7 @@ function extractBracketsForTeam(brackets, teamIdStr) {
   return out;
 }
 
-function bracketMatchToGame(m, teamIdStr) {
+function bracketMatchToGame(m, teamIdStr, tz = null) {
   const teamId = Number(teamIdStr);
   const ourSide = m.FirstTeam?.TeamId === teamId ? "first" : "second";
   const won =
@@ -522,7 +556,7 @@ function bracketMatchToGame(m, teamIdStr) {
     })
     .filter(Boolean);
   const start = m.ScheduledStartDateTime || null;
-  const { iso, ms } = parseTime(start);
+  const { iso, ms } = parseTime(start, tz);
   const score = sets.length ? sets.map((s) => `${s.us}–${s.them}`).join(", ") : null;
   const courtName =
     m.Court?.Name ||
@@ -603,8 +637,8 @@ function buildResponse({ eventMeta, team, current, future, work, standings, next
   const playedRaw = flattenPlayGroups(current);
   const upcomingRaw = flattenPlayGroups(future);
 
-  const played = playedRaw.map((m, i) => normalizeMatch(m, { done: true, idx: i, kind: "past", teamId: ctx.teamId }));
-  const upcoming = upcomingRaw.map((m, i) => normalizeMatch(m, { done: false, idx: i, kind: "next", teamId: ctx.teamId }));
+  const played = playedRaw.map((m, i) => normalizeMatch(m, { done: true, idx: i, kind: "past", teamId: ctx.teamId, tz: ctx.tz }));
+  const upcoming = upcomingRaw.map((m, i) => normalizeMatch(m, { done: false, idx: i, kind: "next", teamId: ctx.teamId, tz: ctx.tz }));
 
   const games = [...played, ...upcoming]
     .filter((g) => g.timeMs != null || g.timeISO != null)
@@ -622,7 +656,7 @@ function buildResponse({ eventMeta, team, current, future, work, standings, next
   if (Array.isArray(brackets) && brackets.length > 0) {
     const have = new Set(games.map((g) => String(g.id)));
     const bracketGames = extractTeamMatchesFromBrackets(brackets, ctx.teamId)
-      .map((m) => bracketMatchToGame(m, ctx.teamId))
+      .map((m) => bracketMatchToGame(m, ctx.teamId, ctx.tz))
       .filter((g) => !have.has(String(g.id)));
     if (bracketGames.length > 0) {
       games.push(...bracketGames);
@@ -644,7 +678,7 @@ function buildResponse({ eventMeta, team, current, future, work, standings, next
   const us = standingsRows.find((s) => s.isUs);
   const poolPosition = us ? us.rankText || (us.rank ? String(us.rank) : null) : null;
 
-  const workAssignments = (Array.isArray(work) ? work : []).map((w, i) => normalizeWork(w, i));
+  const workAssignments = (Array.isArray(work) ? work : []).map((w, i) => normalizeWork(w, i, ctx.tz));
 
   const nextGameObj = games.find((g) => !g.done && g.timeISO);
   const nextWorkObj = workAssignments
@@ -833,8 +867,9 @@ export default async function handler(req, res) {
     divisionId: String(req.query?.divId || req.query?.divisionId || DEFAULT_DIVISION_ID),
     teamId: String(req.query?.teamId || DEFAULT_TEAM_ID),
     teamName: String(req.query?.teamName || DEFAULT_TEAM_NAME),
+    tz: req.query?.tz ? String(req.query.tz) : "America/Los_Angeles",
   };
-  const cacheKey = `${ctx.eventId}|${ctx.divisionId}|${ctx.teamId}`;
+  const cacheKey = `${ctx.eventId}|${ctx.divisionId}|${ctx.teamId}|${ctx.tz}`;
 
   const force = req.query?.force === "1";
   const now = Date.now();
