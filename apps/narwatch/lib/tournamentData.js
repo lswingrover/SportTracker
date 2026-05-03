@@ -6,7 +6,7 @@
 export const TOURNAMENTS = [
   {
     id: "bend-2026",
-    label: "Bend Tournament",
+    label: "Cascade Classic",
     chipLabel: "Bend",
     shortLabel: "Bend",
     teamId: "narwhals",
@@ -16,13 +16,10 @@ export const TOURNAMENTS = [
       address: "Bend, OR",
       tz: "America/Los_Angeles",
     },
-    date: "Apr 19, 2026",
+    date: "Apr 17–19, 2026",
     static: true,
-    dataSource: "static",
-    games: [],
-    standings: [],
-    record: { wins: 0, losses: 0 },
-    goalDiff: 0,
+    dataSource: "niwp",
+    weekKey: "2026-W16",
   },
 ];
 

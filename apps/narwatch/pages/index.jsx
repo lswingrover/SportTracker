@@ -24,33 +24,6 @@ const DEFAULT_REFRESH_MS = 2 * 60 * 1000;
 const CLIENT_DATA_CACHE = new Map(); // url → { payload, fetchedAt }
 const CLIENT_CACHE_TTL_MS = 60 * 1000; // 1 minute — matches server-side TTL
 
-// ─── Client-side stats cache ──────────────────────────────────────────────────
-// Module-level so stats survive component unmounts (collapsing a game card).
-// Re-expanding an already-loaded card is instant. Prefetch populates this in
-// the background as soon as game data arrives so the first tap feels instant.
-const STATS_CACHE = new Map();    // gameId (string) → stats array
-const STATS_INFLIGHT = new Map(); // gameId (string) → Promise<stats[]>
-
-// Warm the stats cache for every NIWP game in the current data payload.
-// Fire-and-forget — called after setData(). Skips games already cached.
-function prefetchGameStats(games) {
-  if (!Array.isArray(games)) return;
-  for (const g of games) {
-    if (!g._gameId || g._source !== "niwp") continue;
-    const id = String(g._gameId);
-    if (STATS_CACHE.has(id) || STATS_INFLIGHT.has(id)) continue;
-    const promise = fetch(`/api/stats?game_id=${encodeURIComponent(id)}`)
-      .then((r) => (r.ok ? r.json() : Promise.reject(new Error(`HTTP ${r.status}`))))
-      .then((data) => {
-        STATS_CACHE.set(id, data.stats || []);
-        return STATS_CACHE.get(id);
-      })
-      .catch(() => null)
-      .finally(() => STATS_INFLIGHT.delete(id));
-    STATS_INFLIGHT.set(id, promise);
-  }
-}
-
 // NIWP schedule team filter options (mirrors LB_TEAM_FILTERS in the Leaderboard).
 const NIWP_TEAM_FILTERS = [
   { key: "all",  label: "All teams" },
@@ -715,7 +688,7 @@ function StaticTournamentCard({ tournament }) {
       )}
       <div className="static-divider" />
       <div className="static-note">
-        No data available for this tournament yet. Check back closer to game time.
+        No game data available for this tournament yet. Check back closer to game time.
       </div>
     </section>
   );
@@ -1068,58 +1041,27 @@ function UpcomingGameCard({ game, expanded, onToggle, venue, tz, teamWatchNowLin
 // Only rendered when expanded and game._source === "niwp".
 
 function StatsPanel({ gameId }) {
-  const id = gameId ? String(gameId) : null;
-  // Check module-level cache first — if already fetched, skip network entirely.
-  const cached = id ? STATS_CACHE.get(id) : undefined;
-  const [status, setStatus] = useState(cached !== undefined ? "ready" : "idle");
-  const [stats, setStats]   = useState(cached !== undefined ? cached : null);
+  const [status, setStatus] = useState("idle"); // idle | loading | ready | error
+  const [stats, setStats]   = useState(null);
   const [errorMsg, setErrorMsg] = useState(null);
 
   useEffect(() => {
-    if (!id) return;
-    // Already in cache — nothing to do.
-    if (STATS_CACHE.has(id)) {
-      setStats(STATS_CACHE.get(id));
-      setStatus("ready");
-      return;
-    }
-    // Piggyback on an in-flight prefetch request if one is already running.
-    const inflight = STATS_INFLIGHT.get(id);
-    if (inflight) {
-      setStatus("loading");
-      inflight.then((result) => {
-        setStats(result || []);
-        setStatus(result !== null ? "ready" : "error");
-        if (result === null) setErrorMsg("Stats unavailable");
-      });
-      return;
-    }
-    // Cache miss and no prefetch in flight — fetch directly.
+    if (!gameId) return;
     setStatus("loading");
-    const promise = fetch(`/api/stats?game_id=${encodeURIComponent(id)}`)
+    fetch(`/api/stats?game_id=${encodeURIComponent(gameId)}`)
       .then((r) => {
         if (!r.ok) throw new Error(`HTTP ${r.status}`);
         return r.json();
       })
       .then((data) => {
-        const result = data.stats || [];
-        STATS_CACHE.set(id, result);
-        return result;
+        setStats(data.stats || []);
+        setStatus("ready");
       })
       .catch((err) => {
         setErrorMsg(err.message);
         setStatus("error");
-        return null;
-      })
-      .finally(() => STATS_INFLIGHT.delete(id));
-    STATS_INFLIGHT.set(id, promise);
-    promise.then((result) => {
-      if (result !== null) {
-        setStats(result);
-        setStatus("ready");
-      }
-    });
-  }, [id]);
+      });
+  }, [gameId]);
 
   if (status === "idle" || status === "loading") {
     return <div className="stats-panel-loading">Loading player stats…</div>;
@@ -1319,7 +1261,7 @@ const TOUR_STEPS = [
   { selector: ".chip-row", title: "Tournaments", body: "Tap any chip to switch tournaments. Past events show final records; future ones show countdowns." },
   { selector: ".stats", title: "Tournament record", body: "Tap Wins or Losses to see a game-by-game breakdown." },
   { selector: ".card.upcoming", setupTab: "schedule", title: "Upcoming game", body: "Court number is the hero — tap it for venue details. Tap the opponent name for head-to-head history." },
-  { title: "Live score banner", body: "When a game is live, this banner appears with real-time scores pulled from AES every 30 seconds." },
+  { title: "Live score banner", body: "When a game is live, this banner appears with real-time scores updated every 30 seconds." },
   { sideEffect: "confetti", title: "🎉 Wins!", body: "Win a game and the app celebrates with confetti." },
   { selector: ".card.past", setupTab: "schedule", title: "Past games", body: "Tap any past game to expand. See set-by-set scores and share the result as an image." },
   { selector: ".tabs button:nth-child(2)", setupTab: "standings", title: "Standings", body: "Tap any team row to see their record and your head-to-head history. The Narwhals row pinned at the top opens a season summary." },
@@ -1511,7 +1453,7 @@ function PoolGrid({ pool, onTeamTap }) {
         </tbody>
       </table>
       <div className="pool-grid-footnote">
-        Round-robin match results not available from AES
+        Round-robin match results not available
       </div>
     </section>
   );
@@ -1601,10 +1543,10 @@ function StatsAccordion({ mode, games, tz, onClose, record }) {
   const filtered = (games || []).filter(
     (g) => g.done && (mode === "wins" ? g.result === "W" : g.result === "L")
   );
-  // The standings-derived record (4-1 for ERVA) counts pool play matches
-  // that AES doesn't expose on public endpoints. games[] only has the
-  // bracket-derived matches we can pull. When the gap is non-zero, surface
-  // a footnote so users aren't confused why the count differs.
+  // The standings-derived record may count pool play matches that the
+  // upstream data source doesn't expose individually. games[] only has the
+  // matches we can pull. When the gap is non-zero, surface a footnote so
+  // users aren't confused why the count differs.
   const totalForMode = mode === "wins" ? record?.wins ?? 0 : record?.losses ?? 0;
   const missing = Math.max(0, totalForMode - filtered.length);
   const tzLabel = tzShortLabel(tz);
@@ -1619,7 +1561,7 @@ function StatsAccordion({ mode, games, tz, onClose, record }) {
       {filtered.length === 0 ? (
         <div className="meta" style={{ padding: "10px 14px" }}>
           {missing > 0
-            ? `${missing} ${mode === "wins" ? "win" : "loss"}${missing === 1 ? "" : "es"} in pool play — match details not available from AES.`
+            ? `${missing} ${mode === "wins" ? "win" : "loss"}${missing === 1 ? "" : "es"} in pool play — match details not available.`
             : `No ${mode === "wins" ? "wins" : "losses"} yet this tournament.`}
         </div>
       ) : (
@@ -1648,7 +1590,7 @@ function StatsAccordion({ mode, games, tz, onClose, record }) {
       {filtered.length > 0 && missing > 0 && (
         <div className="stats-accordion-footnote">
           + {missing} pool play {mode === "wins" ? "win" : "loss"}
-          {missing === 1 ? "" : mode === "wins" ? "s" : "es"} — match details not available from AES
+          {missing === 1 ? "" : mode === "wins" ? "s" : "es"} — match details not available
         </div>
       )}
     </section>
@@ -1665,7 +1607,7 @@ function OpponentHistoryPage({ opponentName, tournaments, dataByTournament, load
   const [sortDesc, setSortDesc] = useState(true);
 
   // Flatten games from every tournament where the opponent appears.
-  // AES opponent names sometimes carry trailing club tags ("Foo (EV)") or
+  // Opponent names sometimes carry trailing club tags ("Foo (EV)") or
   // case differences vs. the standings teamName, so normalize before
   // comparing — case-insensitive, trimmed, ignore trailing parens.
   const norm = (s) =>
@@ -2112,7 +2054,6 @@ function LeaderboardTab({ players, loading, onPlayerTap }) {
           </thead>
           <tbody>
             {filtered.map((p, i) => {
-              const isSoren = p.player_name?.includes("Soren");
               return (
                 <tr
                   key={p.player_id}
@@ -2120,7 +2061,6 @@ function LeaderboardTab({ players, loading, onPlayerTap }) {
                   style={{
                     borderBottom: "1px solid var(--line)",
                     cursor: "pointer",
-                    background: isSoren ? "var(--accent-soft)" : "transparent",
                   }}
                 >
                   <td style={{ padding: "10px 16px", color: "var(--muted)", fontSize: 12 }}>{i + 1}</td>
@@ -2807,6 +2747,11 @@ export default function Home() {
         setData(null);
         setError(null);
         setLoading(false);
+        if (force) {
+          setUserRefreshing(false);
+          setRefreshDone(true);
+          setTimeout(() => setRefreshDone(false), 2000);
+        }
         return;
       }
 
@@ -2891,11 +2836,6 @@ export default function Home() {
         firstLoadRef.current = false;
         setData(next);
         setError(null);
-
-        // Warm the stats cache in the background for every NIWP game.
-        // By the time the user taps a game card to expand stats, the fetch
-        // will have already completed (or be nearly done).
-        prefetchGameStats(next.games);
 
         if (typeof navigator !== "undefined" && navigator.vibrate && force) {
           navigator.vibrate(40);
@@ -3087,7 +3027,7 @@ export default function Home() {
               onClick={() => { if (!userRefreshing) load(true); }}
               aria-label="Refresh"
               title="Refresh data"
-              disabled={userRefreshing || !tournament.eventId}
+              disabled={userRefreshing}
             >
               {refreshDone ? "✓" : "↺"}
             </button>
@@ -3131,8 +3071,10 @@ export default function Home() {
 
         <div className="chip-row" role="tablist" aria-label="Tournaments">
           {niwpWeeks
-            ? /* NIWP mode: one chip per calendar week, newest leftmost */
-              [...niwpWeeks].reverse().map((w) => {
+            ? /* NIWP mode: one chip per calendar week, newest leftmost.
+                 Underlying array stays oldest→newest (default-selection
+                 logic relies on [length-1]); only render order is flipped. */
+              niwpWeeks.slice().reverse().map((w) => {
                 const isActive = w.weekKey === (niwpWeekKey ?? niwpWeeks[niwpWeeks.length - 1]?.weekKey);
                 return (
                   <button
@@ -3399,7 +3341,7 @@ export default function Home() {
             )}
             {pastGames.length === 0 && upcomingGames.length === 0 && (
               <div className="empty">
-                No games returned by AES yet for this team.
+                No games scheduled yet for this team.
                 <br />
                 Check back when the tournament starts.
               </div>
