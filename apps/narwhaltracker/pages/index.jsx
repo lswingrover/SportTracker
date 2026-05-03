@@ -662,8 +662,7 @@ function StaticTournamentCard({ tournament }) {
       )}
       <div className="static-divider" />
       <div className="static-note">
-        No live data available for this tournament — it isn't published on the
-        AES system. Check the team's SportsEngine page for schedule details.
+        No data available for this tournament yet. Check back closer to game time.
       </div>
     </section>
   );
