@@ -1,14 +1,30 @@
 // Service worker for NarWatch Web Push.
 // Receives `push` events from the browser's push service and surfaces them
 // as native OS notifications. Click → focus or open the app.
+//
+// FETCH STRATEGY: network-first for HTML navigation (fixes iOS PWA caching
+// the app shell at the OS level and serving stale bundles after deploys).
+// All other requests (JS chunks, API calls, fonts) pass through untouched —
+// the browser's normal HTTP cache handles them.
 
 self.addEventListener("install", (event) => {
-  // Take control on first install without forcing a reload.
+  // Take control immediately — don't wait for old SW to idle.
   self.skipWaiting();
 });
 
 self.addEventListener("activate", (event) => {
   event.waitUntil(self.clients.claim());
+});
+
+// Network-first for page navigation. Falls back to cache only if offline.
+// This prevents iOS from serving a stale app shell after a Vercel deploy.
+self.addEventListener("fetch", (event) => {
+  if (event.request.mode === "navigate") {
+    event.respondWith(
+      fetch(event.request).catch(() => caches.match(event.request))
+    );
+  }
+  // Non-navigation requests (JS, CSS, API, fonts): browser handles normally.
 });
 
 self.addEventListener("push", (event) => {
