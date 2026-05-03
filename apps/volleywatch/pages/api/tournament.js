@@ -796,6 +796,8 @@ function buildResponse({ eventMeta, team, current, future, work, standings, next
   const pool = extractPoolForTeam(pools, ctx.teamId);
 
   return {
+    _debug_slug: tournamentSlug,
+    _debug_broadcasts_count: typeof findBroadcast === "function" ? "fn-ok" : "fn-missing",
     teamName: team?.TeamName || ctx.teamName,
     teamId: ctx.teamId,
     eventId: ctx.eventId,
