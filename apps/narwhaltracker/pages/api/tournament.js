@@ -1,14 +1,18 @@
 // NarWatch tournament API.
 //
 // DATA SOURCE PRIORITY:
-//   1. Google Sheets (live)  — if GOOGLE_SHEETS_ID env var is set, all
+//   1. NIWP WordPress API (live) — if NIWP_API_ENABLED=true env var is set,
+//      traffic is delegated to /api/niwp.js. This is the primary live source
+//      for North Idaho Water Polo tournament data. No auth required.
+//      Optional: NIWP_TEAM_PREFIX=B|G|BJV|GJV (default: B = Boys Varsity)
+//   2. Google Sheets (live)      — if GOOGLE_SHEETS_ID env var is set, all
 //      traffic is delegated to /api/sheets.js. The sheet is authoritative
 //      and the frontend receives the same JSON shape either way.
-//   2. Static data           — falls back to lib/tournamentData.js (the
-//      v1 default) when GOOGLE_SHEETS_ID is not configured.
+//   3. Static data               — falls back to lib/tournamentData.js (the
+//      v1 default) when neither live source is configured.
 //
 // This design lets a team parent enable live data for a specific tournament
-// by simply setting two env vars — no frontend changes required.
+// by simply setting env vars — no frontend changes required.
 
 import { findTournament, computeGoalDiff, TOURNAMENTS } from "../../lib/tournamentData.js";
 
@@ -64,6 +68,19 @@ export default async function handler(req, res) {
   if (req.method === "OPTIONS") {
     res.status(204).end();
     return;
+  }
+
+  // ── NIWP WordPress API branch ───────────────────────────────────────────
+  // When NIWP_API_ENABLED=true, delegate to niwp.js. This is the primary
+  // live source for North Idaho Water Polo data.
+  // Pass ?team= or use NIWP_TEAM_PREFIX env var to filter by squad.
+  if (process.env.NIWP_API_ENABLED === "true") {
+    // Forward ?team= from caller, or fall back to env var, or default "B"
+    if (!req.query.team && process.env.NIWP_TEAM_PREFIX) {
+      req = { ...req, query: { ...req.query, team: process.env.NIWP_TEAM_PREFIX } };
+    }
+    const { default: niwpHandler } = await import("./niwp.js");
+    return niwpHandler(req, res);
   }
 
   // ── Live Sheets branch ──────────────────────────────────────────────────

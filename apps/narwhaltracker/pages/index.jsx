@@ -1006,6 +1006,77 @@ function UpcomingGameCard({ game, expanded, onToggle, venue, tz, teamWatchNowLin
   );
 }
 
+// ─── StatsPanel ───────────────────────────────────────────────────────────────
+// Lazily fetches and renders per-player stats for a NIWP game.
+// Only rendered when expanded and game._source === "niwp".
+
+function StatsPanel({ gameId }) {
+  const [status, setStatus] = useState("idle"); // idle | loading | ready | error
+  const [stats, setStats]   = useState(null);
+  const [errorMsg, setErrorMsg] = useState(null);
+
+  useEffect(() => {
+    if (!gameId) return;
+    setStatus("loading");
+    fetch(`/api/stats?game_id=${encodeURIComponent(gameId)}`)
+      .then((r) => {
+        if (!r.ok) throw new Error(`HTTP ${r.status}`);
+        return r.json();
+      })
+      .then((data) => {
+        setStats(data.stats || []);
+        setStatus("ready");
+      })
+      .catch((err) => {
+        setErrorMsg(err.message);
+        setStatus("error");
+      });
+  }, [gameId]);
+
+  if (status === "idle" || status === "loading") {
+    return <div className="stats-panel-loading">Loading player stats…</div>;
+  }
+  if (status === "error") {
+    return <div className="stats-panel-error">Stats unavailable ({errorMsg})</div>;
+  }
+  if (!stats || stats.length === 0) {
+    return <div className="meta">No player stats recorded for this game.</div>;
+  }
+
+  return (
+    <div className="stats-panel">
+      <div className="stats-panel-title">Player Stats</div>
+      <table className="stats-panel-table">
+        <thead>
+          <tr>
+            <th className="sp-name">Player</th>
+            <th title="Goals">G</th>
+            <th title="Assists">A</th>
+            <th title="Steals">St</th>
+            <th title="Blocks">Bl</th>
+            <th title="Kickouts">KO</th>
+          </tr>
+        </thead>
+        <tbody>
+          {stats.map((s, i) => (
+            <tr key={s.stat_id ?? i} className={i === 0 && s.goals > 0 ? "sp-top" : ""}>
+              <td className="sp-name">
+                {s.cap_number ? <span className="sp-cap">#{s.cap_number}</span> : null}
+                {s.player_name}
+              </td>
+              <td className={s.goals > 0 ? "sp-hi" : ""}>{s.goals}</td>
+              <td>{s.assists}</td>
+              <td>{s.steals}</td>
+              <td>{s.blocks}</td>
+              <td>{s.kickouts}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
 function PastGameCard({ game, expanded, onToggle, venue, tz, opponentInfo, onShare, justWon, onOpenOpponent, teamName, onCourtTap, onResultBadgeTap }) {
   const tzLabel = tzShortLabel(tz);
   const localized = game.timeISO
@@ -1125,6 +1196,9 @@ function PastGameCard({ game, expanded, onToggle, venue, tz, opponentInfo, onSha
               {opponentInfo.rank ? ` · #${opponentInfo.rank} in pool` : ""}
             </div>
           )}
+          {game._source === "niwp" && game._gameId && (
+            <StatsPanel gameId={game._gameId} />
+          )}
           <div className="card-actions">
             {game.result && (
               <button className="btn-mini" onClick={() => onShare(game)}>
@@ -1162,7 +1236,7 @@ const TOUR_STEPS = [
   { selector: ".notif-card", setupTab: "schedule", title: "Notifications", body: "Subscribe to push alerts. Each alert type has its own timing — set how early you want the heads-up." },
   { selector: ".calendar-section", title: "Calendar", body: "Subscribe to the team calendar so every tournament auto-appears in your phone's calendar app." },
   { title: "Add to Home Screen", body: "Add this app to your home screen for a native app experience — Safari → Share → Add to Home Screen. No App Store required." },
-  { sideEffect: "confetti", title: "You're all set. Go Narwhals! 🌊", body: "" },
+  { sideEffect: "confetti", title: <span style={{ display: "inline-flex", alignItems: "center", gap: 8 }}><img src="/narwhal-logo.png" alt="Narwhals" style={{ height: 32, width: "auto", verticalAlign: "middle" }} /> You&rsquo;re all set. Go Narwhals!</span>, body: "" },
 ];
 
 function Tour({ step, onNext, onPrev, onSkip, onSetupTab, onConfetti }) {
