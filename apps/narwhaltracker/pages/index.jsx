@@ -2820,7 +2820,7 @@ export default function Home() {
           </div>
         )}
 
-        {tournament.static ? (
+        {tournament.static && !niwpWeeks ? (
           <StaticTournamentCard tournament={tournament} />
         ) : (
           <>
