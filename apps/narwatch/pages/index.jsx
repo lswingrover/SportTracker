@@ -2838,6 +2838,11 @@ export default function Home() {
         setData(null);
         setError(null);
         setLoading(false);
+        if (force) {
+          setUserRefreshing(false);
+          setRefreshDone(true);
+          setTimeout(() => setRefreshDone(false), 2000);
+        }
         return;
       }
 
@@ -3129,7 +3134,7 @@ export default function Home() {
               onClick={() => { if (!userRefreshing) load(true); }}
               aria-label="Refresh"
               title="Refresh data"
-              disabled={userRefreshing || !tournament.eventId}
+              disabled={userRefreshing}
             >
               {refreshDone ? "✓" : "↺"}
             </button>
