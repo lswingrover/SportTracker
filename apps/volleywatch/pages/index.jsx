@@ -44,6 +44,14 @@ const TOURNAMENTS = [
       tz: "America/Denver",
     },
     date: "May 2, 2026",
+    // Pool play games aren't available from AES post-tournament. These static
+    // entries carry Hudl watchUrls so they surface in PastGameCard even when
+    // the blob has no data. Deduped by opponent at render time.
+    staticPoolPlay: [
+      { id: "static-bsky26-pool-bigsky143",   opponent: "Big Sky 14-3",       watchUrl: "https://www.hudl.com/team/v2/921788/fan/watch?b=QnJvYWRjYXN0NDAwNDY2Mw%3D%3D" },
+      { id: "static-bsky26-pool-avalanche14w", opponent: "Avalanche 14 White", watchUrl: "https://www.hudl.com/team/v2/921788/fan/watch?b=QnJvYWRjYXN0NDAwNDY3Mg%3D%3D" },
+      { id: "static-bsky26-pool-aces14u",     opponent: "Aces 14U",           watchUrl: "https://www.hudl.com/team/v2/921788/fan/watch?b=QnJvYWRjYXN0NDAwNDY3Nw%3D%3D" },
+    ],
   },
   {
     id: "erva-regional-2026",
@@ -2527,7 +2535,19 @@ export default function Home() {
   useInterval(() => load(), REFRESH_MS);
 
   const games = data?.games || [];
-  const pastGames = games.filter((g) => g.done);
+  // Merge static pool play entries for tournaments where AES drops data post-event.
+  // Deduped by opponent name — if the API/blob already has a game for that opponent
+  // (from future tournaments where persistence fires correctly) it takes precedence.
+  const pastGames = (() => {
+    const done = games.filter((g) => g.done);
+    const statics = tournament.staticPoolPlay || [];
+    if (!statics.length) return done;
+    const oppsPresent = new Set(done.map((g) => (g.opponent || "").toLowerCase()));
+    const novel = statics
+      .filter((sp) => !oppsPresent.has((sp.opponent || "").toLowerCase()))
+      .map((sp) => ({ ...sp, done: true }));
+    return novel.length ? [...done, ...novel] : done;
+  })();
   const upcomingGames = games.filter((g) => !g.done);
   const standings = data?.standings || [];
   const standingsById = useMemo(() => {
