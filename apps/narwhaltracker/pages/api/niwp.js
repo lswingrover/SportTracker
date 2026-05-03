@@ -101,12 +101,17 @@ async function fetchFromNIWP(teamPrefix) {
   ]);
 
   if (!gamesRes.ok) throw new Error(`NIWP games API ${gamesRes.status}`);
-  const allGames = await gamesRes.json();
+  const gamesJson = await gamesRes.json();
+  // API returns {success, data:[...]} envelope
+  const allGames = Array.isArray(gamesJson) ? gamesJson : (gamesJson.data || []);
 
   // Players are optional — don't fail if unavailable
   let allPlayers = [];
   if (playersRes.ok) {
-    try { allPlayers = await playersRes.json(); } catch {}
+    try {
+      const playersJson = await playersRes.json();
+      allPlayers = Array.isArray(playersJson) ? playersJson : (playersJson.data || []);
+    } catch {}
   }
 
   // Build player-prefix lookup: player_id → prefix

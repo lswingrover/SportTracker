@@ -37,11 +37,9 @@ async function fetchStats(gameId) {
     signal: AbortSignal.timeout ? AbortSignal.timeout(10000) : undefined,
   });
   if (!res.ok) throw new Error(`NIWP stats API ${res.status} for game ${gameId}`);
-  const raw = await res.json();
-
-  if (!Array.isArray(raw)) {
-    throw new Error(`Unexpected stats response shape for game ${gameId}`);
-  }
+  const json = await res.json();
+  // API returns {success, data:[...]} envelope
+  const raw = Array.isArray(json) ? json : (json.data || []);
 
   const stats = raw
     .map((s) => ({
