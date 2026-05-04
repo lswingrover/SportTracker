@@ -10,7 +10,7 @@ All external data sources used by the sport-tracker monorepo.
 
 **Auth:** None. All endpoints are public.
 
-**Used by:** `apps/volleywatch/pages/api/tournament.js` and `bracket.js`
+**Used by:** `apps/VolleyWatch/pages/api/tournament.js` and `bracket.js`
 
 **Rate limits:** Undocumented. The server-side 2-minute cache keeps request volume low. Do not poll faster than every 60 seconds.
 
@@ -49,7 +49,7 @@ AES uses URL-safe base64 strings as event IDs (e.g., `PTAwMDAwNDI2MDU90`). To fi
 
 **Auth:** None. Fully public.
 
-**Used by:** `apps/narwatch/pages/api/niwp.js`, `stats.js`, `niwp-weeks.js`, and `scripts/harvest-niwp.js`
+**Used by:** `apps/NarWatch/pages/api/niwp.js`, `stats.js`, `niwp-weeks.js`, and `scripts/harvest-niwp.js`
 
 **Rate limits:** Undocumented. Server-side 60s cache is sufficient.
 
@@ -125,7 +125,7 @@ The player name carries a team prefix (`B - `, `G - `, `BJV - `, `GJV - `) that 
 
 **Auth:** Bearer token in `Authorization` header (live) / `Authentication` header (scheduling). The key `ZbD09T1jkeF6aSD3719xnJAsoa83iSIFA` is reverse-engineered from tormatch.com's client bundle. It is public/shared and may change.
 
-**Used by:** `apps/narwatch/pages/api/tormatch.js`
+**Used by:** `apps/NarWatch/pages/api/tormatch.js`
 
 ### Endpoints Used
 
@@ -157,7 +157,7 @@ Find the tournament on `https://tormatch.com`, navigate to the tournament page, 
 
 **Auth:** None. Fully public API.
 
-**Used by:** `apps/narwatch/pages/api/sixeight.js`
+**Used by:** `apps/NarWatch/pages/api/sixeight.js`
 
 ### Endpoints
 
@@ -201,7 +201,7 @@ The probe (`probeNarwhalsGames()`) is called on every `/api/tournament` request 
 
 **Auth:** API key (public sheet — no OAuth required). Restrict the key to Sheets API only in Google Cloud Console.
 
-**Used by:** `apps/narwatch/pages/api/sheets.js`
+**Used by:** `apps/NarWatch/pages/api/sheets.js`
 
 ### Setup (5 minutes)
 
@@ -230,7 +230,7 @@ The `Games` tab parser accepts many header name variants per column. For example
 
 **Auth:** None. HTML scrape.
 
-**Used by:** `apps/narwatch/pages/api/sportsengine.js`
+**Used by:** `apps/NarWatch/pages/api/sportsengine.js`
 
 ### Tournament ID Discovery
 

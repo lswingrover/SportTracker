@@ -8,10 +8,10 @@
 
 | App | Vercel project | Project ID | rootDirectory | Canonical URL |
 |-----|---------------|-----------|---------------|---------------|
-| VolleyWatch | `volleywatch-app` | `prj_GaPD5q1DE04YcedAqq9kZyZcRSKH` | `apps/volleywatch` | volleywatch-app.vercel.app |
-| NarWatch | `narwatch` | `prj_RTZprqmEXqD9DhmyrPOgR2e1P1ym` | `apps/narwatch` | **narwatch.vercel.app** |
+| VolleyWatch | `volleywatch-app` | `prj_GaPD5q1DE04YcedAqq9kZyZcRSKH` | `apps/VolleyWatch` | volleywatch-app.vercel.app |
+| NarWatch | `narwatch` | `prj_RTZprqmEXqD9DhmyrPOgR2e1P1ym` | `apps/NarWatch` | **narwatch.vercel.app** |
 
-Both are git-connected to the `sport-tracker` repo (team: `team_WrIwMG3myKXS5kxfk4uRMTvl`) and auto-deploy on push to `main`.
+Both are git-connected to the SportTracker repo (team: `team_WrIwMG3myKXS5kxfk4uRMTvl`) and auto-deploy on push to `main`.
 
 ### Redirect-only projects
 
@@ -26,16 +26,16 @@ In addition, the narwatch app's `next.config.js` contains a `redirects()` rule t
 
 ### Critical: rootDirectory and the doubling trap
 
-Vercel stores `rootDirectory` in the project settings (e.g. `apps/narwatch`). When you run `vercel deploy`, it appends that value to whatever directory you're currently in. **If you run from inside `apps/narwatch/`, Vercel combines the cwd with rootDirectory and looks for `apps/narwatch/apps/narwatch/` — which doesn't exist and the build fails with a path error.**
+Vercel stores `rootDirectory` in the project settings (e.g. `apps/NarWatch`). When you run `vercel deploy`, it appends that value to whatever directory you're currently in. **If you run from inside `apps/NarWatch/`, Vercel combines the cwd with rootDirectory and looks for `apps/NarWatch/apps/NarWatch/` — which doesn't exist and the build fails with a path error.**
 
-Always deploy from the **repo root** (`~/Developer/sport-tracker`), not from inside an app directory.
+Always deploy from the **repo root** (`~/Developer/SportTracker`), not from inside an app directory.
 
 ---
 
 ## Standard Deployment
 
 ```bash
-cd ~/Developer/sport-tracker
+cd ~/Developer/SportTracker
 git add -A
 git commit -m "your message"
 git push origin main
@@ -51,7 +51,7 @@ That's it. Both Vercel projects are git-connected and deploy automatically on pu
 If git integration breaks or you need to force a specific app, use the `VERCEL_PROJECT_ID` env var override. This tells the Vercel CLI which project to target regardless of what `.vercel/project.json` says at the repo root. Always run from the repo root.
 
 ```bash
-cd ~/Developer/sport-tracker
+cd ~/Developer/SportTracker
 
 # Deploy narwatch
 VERCEL_PROJECT_ID=prj_RTZprqmEXqD9DhmyrPOgR2e1P1ym \
@@ -123,7 +123,7 @@ GOOGLE_SHEETS_API_KEY=AIza...
 
 ### VolleyWatch (AES tournament)
 
-1. Open `apps/volleywatch/.env.local` (local) or Vercel env vars (production).
+1. Open `apps/VolleyWatch/.env.local` (local) or Vercel env vars (production).
 2. Update `EVENT_ID`, `DIVISION_ID`, and optionally `TEAM_ID`.
 3. To find the IDs: open the AES results page for the tournament, open DevTools Network tab, and read the IDs from any API request URL.
 4. Redeploy (or push to trigger auto-deploy).
@@ -187,9 +187,9 @@ Both apps can share the same Blob store — state keys are namespaced by `teamId
 
 The workspace package isn't being resolved. Check that `next.config.js` has `transpilePackages: ['@sport-tracker/core']`. Also verify that `packages/core/package.json` has `"name": "@sport-tracker/core"`.
 
-### Vercel error: "The provided path .../apps/narwatch/apps/narwatch does not exist"
+### Vercel error: "The provided path .../apps/NarWatch/apps/NarWatch does not exist"
 
-You ran `vercel deploy` from inside `apps/narwatch/` (or `apps/volleywatch/`). Vercel appends its stored `rootDirectory` to your current working directory, so running from inside the app dir doubles the path. Always run from the **repo root** (`~/Developer/sport-tracker`) using the `VERCEL_PROJECT_ID` override — see Manual Deploy Fallback above.
+You ran `vercel deploy` from inside `apps/NarWatch/` (or `apps/VolleyWatch/`). Vercel appends its stored `rootDirectory` to your current working directory, so running from inside the app dir doubles the path. Always run from the **repo root** (`~/Developer/SportTracker`) using the `VERCEL_PROJECT_ID` override — see Manual Deploy Fallback above.
 
 ### AES data not updating
 

@@ -7,7 +7,7 @@ A monorepo housing two independent Next.js PWAs that track live sports tournamen
 ## Directory Structure
 
 ```
-sport-tracker/
+SportTracker/
 ├── apps/
 │   ├── volleywatch/              # AES volleyball tracker (208 U14 Red)
 │   │   ├── pages/
@@ -151,8 +151,8 @@ All six sources normalize to an **identical JSON payload shape**. The frontend i
 
 | App directory | Vercel project | Project ID | rootDirectory |
 |---------------|---------------|------------|---------------|
-| `apps/volleywatch` | `volleywatch` | `prj_MvCekYapFB1Dog5r8qCyGPwAGLun` | `apps/volleywatch` |
-| `apps/narwatch` | `narwatch` | `prj_RTZprqmEXqD9DhmyrPOgR2e1P1ym` | `apps/narwatch` |
+| `apps/VolleyWatch` | `volleywatch` | `prj_MvCekYapFB1Dog5r8qCyGPwAGLun` | `apps/VolleyWatch` |
+| `apps/NarWatch` | `narwatch` | `prj_RTZprqmEXqD9DhmyrPOgR2e1P1ym` | `apps/NarWatch` |
 | *(repo root)* | `sport-tracker` | `prj_rdepbE14qRVfGvZoxaogBVt4RUdR` | *(root)* |
 
 **Critical:** `rootDirectory` is evaluated relative to the repo root. Never run `vercel --prod` from inside an app subdirectory — the path doubles and the build fails. Always deploy from the repo root, or rely on git-triggered builds.
@@ -165,12 +165,12 @@ All six sources normalize to an **identical JSON payload shape**. The frontend i
 git push origin main
         |
         +-> Vercel: volleywatch project
-        |       rootDirectory: apps/volleywatch
+        |       rootDirectory: apps/VolleyWatch
         |       runs: npm install && next build
         |       deploys to: volleywatch-app.vercel.app
         |
         +-> Vercel: narwatch project
-                rootDirectory: apps/narwatch
+                rootDirectory: apps/NarWatch
                 runs: npm install && next build
                 deploys to: narwhaltracker.vercel.app
 ```
@@ -181,7 +181,7 @@ Both builds are independent — a failure in one does not block the other. Both 
 
 ## Environment Variables
 
-### VolleyWatch (`apps/volleywatch`)
+### VolleyWatch (`apps/VolleyWatch`)
 
 | Variable | Description |
 |----------|-------------|
@@ -194,7 +194,7 @@ Both builds are independent — a failure in one does not block the other. Both 
 | `VAPID_SUBJECT` | `mailto:` URI for VAPID |
 | `BLOB_READ_WRITE_TOKEN` | Vercel Blob token (auto-injected when Blob store linked) |
 
-### NarWatch (`apps/narwatch`)
+### NarWatch (`apps/NarWatch`)
 
 | Variable | Description |
 |----------|-------------|

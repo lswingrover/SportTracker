@@ -52,21 +52,21 @@ parsing still lives in each adapter — niwp.js, sheets.js, tournament.js).
 **The correct way to deploy narwatch** (`git push origin main` now triggers it automatically):
 
 ```bash
-cd ~/Developer/sport-tracker
+cd ~/Developer/SportTracker
 git add -A && git commit -m "your message"
 git push origin main
-# Vercel auto-deploys narwatch from apps/narwatch
-# Vercel auto-deploys volleywatch-app from apps/volleywatch
+# Vercel auto-deploys narwatch from apps/NarWatch
+# Vercel auto-deploys volleywatch-app from apps/VolleyWatch
 ```
 
 **Manual deploy fallback** (if git integration breaks or you need to force):
 
 ```bash
-cd ~/Developer/sport-tracker
+cd ~/Developer/SportTracker
 
 # 1. Swap root project.json to narwatch
 cp .vercel/project.json .vercel/project.json.bak
-cp apps/narwatch/.vercel/project.json .vercel/project.json
+cp apps/NarWatch/.vercel/project.json .vercel/project.json
 
 # 2. Deploy
 vercel --prod
@@ -75,8 +75,8 @@ vercel --prod
 mv .vercel/project.json.bak .vercel/project.json
 ```
 
-**Never** run `vercel --prod` from inside `apps/narwatch/` — Vercel's
-rootDirectory setting (`apps/narwatch`) is relative to the repo root,
+**Never** run `vercel --prod` from inside `apps/NarWatch/` — Vercel's
+rootDirectory setting (`apps/NarWatch`) is relative to the repo root,
 so running from inside that dir doubles the path and errors out.
 
 **Git commits** cannot be written from the sandbox (permission error on
@@ -107,7 +107,7 @@ real terminal. The sandbox `git add` works fine; only `git commit` fails.
   gitCredentialId=`cred_c569f8a164f20bea332b9c139a1196e8f080bde9`.
   Verified: push d910e8a triggered dpl_8MBqP3UsxHoe1MR4a6oJVXr8Bemb (READY).
 - **volleywatch-app rootDirectory** was `null`, causing every push to fail
-  in ~3s. Fixed to `apps/volleywatch` via `PATCH /v9/projects/volleywatch-app`.
+  in ~3s. Fixed to `apps/VolleyWatch` via `PATCH /v9/projects/volleywatch-app`.
   Verified: next push built READY (dpl_fBDWiL3KNLipd1RCzNh88wjSZqcQ).
 - **208tracker project** (old dead project) is separate from volleywatch-app
   — ignore it. The live 208tracker app is `volleywatch-app`.
@@ -222,7 +222,7 @@ and 208tracker (67c9aca).
   → click the result → extract `IDTournament=` param from URL.
 - **Toggle**: `SPORTSENGINE_TOURNAMENT_ID=<hash>` in narwatch Vercel project.
 - **Team filter**: `SPORTSENGINE_TEAM_NAME=Narwhal` (default).
-- **Cheerio dep**: added to `apps/narwatch` package.json in commit e8f1614.
+- **Cheerio dep**: added to `apps/NarWatch` package.json in commit e8f1614.
 
 ### Orphan repo cleanup (2026-05-02, session 2)
 
@@ -296,7 +296,7 @@ Escape hatches: `SIXEIGHT_DISABLED=true` (suppress), `SIXEIGHT_ENABLED=true` (fo
 narwatch and volleywatch-app both now auto-deploy on `git push origin main`.
 
 ### ~~2. Audit 208tracker deployment~~ ✓ DONE (2026-05-02)
-208tracker live app = volleywatch-app (rootDirectory now fixed to apps/volleywatch).
+208tracker live app = volleywatch-app (rootDirectory now fixed to apps/VolleyWatch).
 
 ---
 

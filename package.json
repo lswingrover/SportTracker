@@ -6,7 +6,7 @@
     "apps/*"
   ],
   "scripts": {
-    "dev:volleyball": "npm run dev --workspace=apps/volleywatch",
-    "dev:waterpolo":  "npm run dev --workspace=apps/narwatch"
+    "dev:volleyball": "npm run dev --workspace=apps/VolleyWatch",
+    "dev:waterpolo":  "npm run dev --workspace=apps/NarWatch"
   }
 }
