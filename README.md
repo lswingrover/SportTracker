@@ -1,1 +1,1 @@
-# sport-tracker
+# SportTracker
