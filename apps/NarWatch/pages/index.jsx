@@ -90,6 +90,39 @@ function writeCache(url, payload) {
 // No-op on the server (guarded inside hydrateCacheFromLocalStorage).
 hydrateCacheFromLocalStorage();
 
+// ─── niwp-weeks localStorage cache ───────────────────────────────────────────
+// Persists the /api/niwp-weeks response so returning users get instant weekKey
+// resolution on mount — eliminating the fetch waterfall that previously blocked
+// every tournament data load. Refs GH#10, GH#13.
+//
+// Max age: 7 days. niwpWeeks changes only when NIWP adds/removes tournament
+// weeks, which happens at most once per week. Stale data is fine here — the
+// background fetch always runs to refresh, SWR semantics.
+const LS_NIWP_WEEKS_KEY = "narwatch:niwpweeks:v1";
+const LS_NIWP_WEEKS_MAX_AGE_MS = 7 * 24 * 60 * 60 * 1000;
+
+function readCachedNiwpWeeks() {
+  if (typeof window === "undefined") return null;
+  try {
+    const raw = window.localStorage.getItem(LS_NIWP_WEEKS_KEY);
+    if (!raw) return null;
+    const entry = JSON.parse(raw);
+    if (!entry || !Array.isArray(entry.weeks) || !entry.fetchedAt) return null;
+    if (Date.now() - entry.fetchedAt > LS_NIWP_WEEKS_MAX_AGE_MS) {
+      window.localStorage.removeItem(LS_NIWP_WEEKS_KEY);
+      return null;
+    }
+    return entry.weeks;
+  } catch { return null; }
+}
+
+function persistNiwpWeeks(weeks) {
+  if (typeof window === "undefined" || !Array.isArray(weeks)) return;
+  try {
+    window.localStorage.setItem(LS_NIWP_WEEKS_KEY, JSON.stringify({ weeks, fetchedAt: Date.now() }));
+  } catch {} // quota — non-critical, weeks list is tiny
+}
+
 function slugifyHashValue(s) {
   return String(s || "")
     .toLowerCase()
@@ -3157,6 +3190,30 @@ export default function Home() {
     load();
   }, [load, niwpFetchSettled]);
 
+  // Hydrate niwpWeeks from localStorage on mount so the niwpFetchSettled gate
+  // fires immediately for returning users — eliminating the fetch waterfall.
+  // The background fetch below always runs to refresh (SWR semantics). GH#10.
+  useEffect(() => {
+    const cached = readCachedNiwpWeeks();
+    if (!Array.isArray(cached) || cached.length === 0) return;
+    const niwpKeys = new Set(cached.map((w) => w.weekKey));
+    const hashTour = readHashParams().tournament;
+    const matchedWeek = hashTour && cached.find((w) => w.weekKey === hashTour);
+    const matchedStatic = hashTour && TOURNAMENTS.find((t) => t.id === hashTour);
+    const persistedStatic = !hashTour && TOURNAMENTS.find(
+      (t) => t.id === tournamentIdRef.current && t.static && t.weekKey && !niwpKeys.has(t.weekKey) && isWeekKeyRecent(t.weekKey)
+    );
+    setNiwpWeeks(cached);
+    setNiwpWeekKey(
+      matchedWeek
+        ? matchedWeek.weekKey
+        : (matchedStatic || persistedStatic)
+          ? null
+          : cached[cached.length - 1].weekKey
+    );
+    setNiwpFetchSettled(true);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
   // Fetch available NIWP tournament weeks once on mount (and if force-refresh).
   // When the server has NIWP_API_ENABLED=true, this populates the dynamic chip
   // row. If the endpoint returns [] (NIWP disabled) or errors, niwpWeeks stays
@@ -3167,6 +3224,7 @@ export default function Home() {
       .then((r) => r.ok ? r.json() : null)
       .then((weeks) => {
         if (!cancelled && Array.isArray(weeks) && weeks.length > 0) {
+          persistNiwpWeeks(weeks);
           setNiwpWeeks(weeks);
           // Honor #tournament=<weekKey | staticId> if present; otherwise
           // consult the LS-restored tournamentId for a static-only fallback
@@ -3229,7 +3287,7 @@ export default function Home() {
       }
     };
 
-    const timer = setTimeout(prefetch, 1500);
+    const timer = setTimeout(prefetch, 500);
     return () => { cancelled = true; clearTimeout(timer); };
   }, [niwpWeeks]); // eslint-disable-line react-hooks/exhaustive-deps
 
