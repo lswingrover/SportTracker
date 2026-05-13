@@ -2331,6 +2331,7 @@ export default function Home() {
 
   // H2H sheet — lazily loads all games once and caches them
   const [h2hSheet, setH2hSheet]             = useState(null); // null | opponent name string
+  const [h2hHasOpened, setH2hHasOpened]     = useState(false); // true once sheet first opened; keeps component mounted for exit animation (GH#18)
   const [allGamesCache, setAllGamesCache]   = useState(null); // null | game[]
   const [h2hGamesLoading, setH2hGamesLoading] = useState(false);
 
@@ -2505,6 +2506,7 @@ export default function Home() {
   // /api/historical?view=games on first call and caches the full game list.
   async function openH2H(opponentName) {
     if (!opponentName) return;
+    setH2hHasOpened(true);
     setH2hSheet(opponentName);
     if (!allGamesCache && !h2hGamesLoading) {
       setH2hGamesLoading(true);
@@ -3487,7 +3489,7 @@ export default function Home() {
         <PlayerSheet player={playerSheet} onClose={() => setPlayerSheet(null)} />
       )}
 
-      {h2hSheet && (
+      {h2hHasOpened && (
         <H2HSheet
           opponentName={h2hSheet}
           games={h2hGames}
