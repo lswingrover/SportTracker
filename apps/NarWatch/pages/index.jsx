@@ -113,6 +113,40 @@ function readHashParams() {
   return out;
 }
 
+/** Build a /api/tournament query URL, omitting eventId/divId when undefined.
+ *  Prevents literal "eventId=undefined" from appearing in fetch URLs and
+ *  calendar links when a static tournament (dataSource:"niwp") is active (GH#4). */
+function buildTournamentUrl({ eventId, divId, teamId, teamName, weekKey } = {}) {
+  let q = "/api/tournament?";
+  if (eventId != null) q += `eventId=${encodeURIComponent(String(eventId))}&`;
+  if (divId   != null) q += `divId=${encodeURIComponent(String(divId))}&`;
+  q += `teamId=${encodeURIComponent(String(teamId))}&teamName=${encodeURIComponent(String(teamName))}`;
+  if (weekKey != null) q += `&weekKey=${encodeURIComponent(String(weekKey))}`;
+  return q;
+}
+
+/** Return true if the ISO weekKey ("YYYY-WNN") ends no more than weeksBack
+ *  weeks in the past (or is still upcoming).  Prevents stale static chips
+ *  from re-surfacing once NIWP data ages past the week they were
+ *  introduced — e.g. the Bend chip reappearing months after the tournament
+ *  if NIWP no longer covers W16 (GH#7). */
+function isWeekKeyRecent(weekKey, weeksBack = 4) {
+  if (!weekKey) return true;
+  const m = weekKey.match(/^(\d{4})-W(\d{1,2})$/);
+  if (!m) return true;
+  const year = parseInt(m[1], 10);
+  const week = parseInt(m[2], 10);
+  // ISO week-1 always contains Jan 4.  Derive Monday of that week, then
+  // advance by (week - 1) * 7 days to reach the target week's Monday.
+  const jan4 = new Date(year, 0, 4);
+  const monday = new Date(jan4);
+  monday.setDate(jan4.getDate() - ((jan4.getDay() + 6) % 7) + (week - 1) * 7);
+  // Sunday of that ISO week = monday + 6 days.
+  const sunday = new Date(monday);
+  sunday.setDate(monday.getDate() + 6);
+  return Date.now() <= sunday.getTime() + weeksBack * 7 * 24 * 60 * 60 * 1000;
+}
+
 // NIWP schedule team filter options (mirrors LB_TEAM_FILTERS in the Leaderboard).
 const NIWP_TEAM_FILTERS = [
   { key: "all",  label: "All teams" },
@@ -715,7 +749,13 @@ function NotificationsCard({ teamId, onShowA2HS }) {
 }
 
 function CalendarCard({ origin, eventId, divId, teamId, teamName, gameCount }) {
-  const url = `${origin}/api/calendar.ics?eventId=${eventId}&divId=${divId}&teamId=${teamId}&teamName=${encodeURIComponent(teamName)}`;
+  // Guard: static tournaments lack eventId/divId — omit those params entirely
+  // rather than writing literal "eventId=undefined" into the calendar URL (GH#4).
+  let _calUrl = `${origin}/api/calendar.ics?`;
+  if (eventId != null) _calUrl += `eventId=${encodeURIComponent(String(eventId))}&`;
+  if (divId   != null) _calUrl += `divId=${encodeURIComponent(String(divId))}&`;
+  _calUrl += `teamId=${teamId}&teamName=${encodeURIComponent(teamName)}`;
+  const url = _calUrl;
   const webcal = url.replace(/^https?:/, "webcal:");
 
   async function copy() {
@@ -2630,7 +2670,7 @@ export default function Home() {
     await Promise.all(
       todo.map(async (t) => {
         try {
-          const url = `/api/tournament?eventId=${encodeURIComponent(t.eventId)}&divId=${encodeURIComponent(t.divId)}&teamId=${encodeURIComponent(t.teamId)}&teamName=${encodeURIComponent(t.teamName)}`;
+          const url = buildTournamentUrl({ eventId: t.eventId, divId: t.divId, teamId: t.teamId, teamName: t.teamName });
           const res = await fetch(url);
           if (!res.ok) return;
           const json = await res.json();
@@ -2923,10 +2963,15 @@ export default function Home() {
       }
 
       // Build fetch URL (without force flag — we key the cache on the clean URL).
-      const weekParam = niwpWeeks && niwpWeekKey
-        ? `&weekKey=${encodeURIComponent(niwpWeekKey)}`
-        : "";
-      const url = `/api/tournament?eventId=${encodeURIComponent(tournament.eventId)}&divId=${encodeURIComponent(tournament.divId)}&teamId=${encodeURIComponent(teamId)}&teamName=${encodeURIComponent(teamName)}${weekParam}`;
+      // buildTournamentUrl omits eventId/divId when undefined (static tournaments
+      // use NIWP via weekKey and don't carry these fields — GH#4).
+      const url = buildTournamentUrl({
+        eventId:  tournament.eventId,
+        divId:    tournament.divId,
+        teamId,
+        teamName,
+        weekKey:  niwpWeeks && niwpWeekKey ? niwpWeekKey : undefined,
+      });
 
       // ── Client-side cache check ─────────────────────────────────────────────
       if (!force) {
@@ -3050,7 +3095,9 @@ export default function Home() {
           const matchedWeek = hashTour && weeks.find((w) => w.weekKey === hashTour);
           const matchedStatic = hashTour && TOURNAMENTS.find((t) => t.id === hashTour);
           const persistedStatic = !hashTour && TOURNAMENTS.find(
-            (t) => t.id === tournamentIdRef.current && t.static && t.weekKey && !niwpKeys.has(t.weekKey)
+            // Also require isWeekKeyRecent so a persisted static chip whose
+            // weekKey is long past (>4 weeks) doesn't silently restore (GH#7).
+            (t) => t.id === tournamentIdRef.current && t.static && t.weekKey && !niwpKeys.has(t.weekKey) && isWeekKeyRecent(t.weekKey)
           );
           setNiwpWeekKey(
             matchedWeek
@@ -3079,8 +3126,13 @@ export default function Home() {
     const prefetch = async () => {
       for (const week of others) {
         if (cancelled) break;
-        const wParam = `&weekKey=${encodeURIComponent(week.weekKey)}`;
-        const wUrl = `/api/tournament?eventId=${encodeURIComponent(tournament.eventId)}&divId=${encodeURIComponent(tournament.divId)}&teamId=${encodeURIComponent(teamId)}&teamName=${encodeURIComponent(teamName)}${wParam}`;
+        const wUrl = buildTournamentUrl({
+          eventId:  tournament.eventId,
+          divId:    tournament.divId,
+          teamId,
+          teamName,
+          weekKey:  week.weekKey,
+        });
         if (CLIENT_DATA_CACHE.has(wUrl)) continue; // already warm
         try {
           const res = await fetch(wUrl);
@@ -3280,7 +3332,10 @@ export default function Home() {
               (() => {
                 const niwpKeys = new Set(niwpWeeks.map((w) => w.weekKey));
                 const staticOnly = TOURNAMENTS.filter(
-                  (t) => t.static && t.weekKey && !niwpKeys.has(t.weekKey)
+                  // isWeekKeyRecent: hide chips whose tournament ended >4 weeks
+                  // ago so stale static entries don't re-surface when NIWP
+                  // data no longer covers that week (GH#7).
+                  (t) => t.static && t.weekKey && !niwpKeys.has(t.weekKey) && isWeekKeyRecent(t.weekKey)
                 );
                 return (
                   <>
