@@ -37,7 +37,7 @@ const VENUE_TZ_MAP = [
   [/dallas|lewisville|houston|austin|texas|\btx\b/i,               "America/Chicago"],
   [/denver|colorado|utah/i,                                         "America/Denver"],
   [/phoenix|arizona/i,                                              "America/Phoenix"],
-  [/florida|georgia|carolina|virginia/i,                            "America/New_York"],
+  [/florida|orlando|tampa|miami|jacksonville|\bfl\b|georgia|atlanta|carolina|virginia/i, "America/New_York"],
 ];
 
 // Module-level cache keyed by team prefix ("B", "G", etc.)
