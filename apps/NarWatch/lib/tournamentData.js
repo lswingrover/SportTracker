@@ -21,6 +21,23 @@ export const TOURNAMENTS = [
     dataSource: "niwp",
     weekKey: "2026-W16",
   },
+  {
+    id: "trident-cup-2026",
+    label: "Trident Cup Invitational",
+    chipLabel: "Orlando",
+    shortLabel: "Orlando",
+    teamId: "narwhals",
+    teamName: "North Idaho Narwhals",
+    venue: {
+      name: "Rosen Aquatic Center",
+      address: "8422 International Dr, Orlando, FL 32819",
+      tz: "America/New_York",
+    },
+    date: "May 15–17, 2026",
+    static: true,
+    dataSource: "niwp",
+    weekKey: "2026-W20",
+  },
 ];
 
 export function findTournament(tournamentId) {
