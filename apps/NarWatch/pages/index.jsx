@@ -12,7 +12,8 @@ const THEMES = [
 const DEFAULT_REFRESH_MS = 2 * 60 * 1000;
 
 // ─── Client-side data cache ───────────────────────────────────────────────────
-// Module-level Map: persists across re-renders, resets on page reload.
+// Module-level Map: persists across re-renders, hydrated from localStorage on
+// first access so revisits render instantly from disk.
 // Key: fetch URL (without &force=1 suffix). Value: { payload, fetchedAt }.
 //
 // Strategy: stale-while-revalidate.
@@ -23,6 +24,66 @@ const DEFAULT_REFRESH_MS = 2 * 60 * 1000;
 //   • force=true          → bypass cache, re-fetch, overwrite cache entry.
 const CLIENT_DATA_CACHE = new Map(); // url → { payload, fetchedAt }
 const CLIENT_CACHE_TTL_MS = 60 * 1000; // 1 minute — matches server-side TTL
+
+// localStorage persistence: stale entries up to 24h are served instantly on
+// revisit (then refreshed in background via SWR). Older than that, we discard.
+const LS_CACHE_PREFIX = "narwatch:cache:v1:";
+const LS_CACHE_MAX_AGE_MS = 24 * 60 * 60 * 1000;
+let _cacheHydrated = false;
+
+function hydrateCacheFromLocalStorage() {
+  if (_cacheHydrated || typeof window === "undefined") return;
+  _cacheHydrated = true;
+  try {
+    const now = Date.now();
+    const toDelete = [];
+    for (let i = 0; i < window.localStorage.length; i++) {
+      const key = window.localStorage.key(i);
+      if (!key || !key.startsWith(LS_CACHE_PREFIX)) continue;
+      try {
+        const entry = JSON.parse(window.localStorage.getItem(key));
+        if (!entry || !entry.payload || !entry.fetchedAt) { toDelete.push(key); continue; }
+        if (now - entry.fetchedAt > LS_CACHE_MAX_AGE_MS) { toDelete.push(key); continue; }
+        const url = key.slice(LS_CACHE_PREFIX.length);
+        CLIENT_DATA_CACHE.set(url, entry);
+      } catch { toDelete.push(key); }
+    }
+    for (const k of toDelete) window.localStorage.removeItem(k);
+  } catch {} // localStorage blocked (Safari private mode etc) — fall back to memory only
+}
+
+function persistCacheEntry(url, entry) {
+  if (typeof window === "undefined") return;
+  try {
+    window.localStorage.setItem(LS_CACHE_PREFIX + url, JSON.stringify(entry));
+  } catch {
+    // Quota exceeded — drop the oldest half and retry once.
+    pruneOldestLocalStorageEntries();
+    try { window.localStorage.setItem(LS_CACHE_PREFIX + url, JSON.stringify(entry)); } catch {}
+  }
+}
+
+function pruneOldestLocalStorageEntries() {
+  if (typeof window === "undefined") return;
+  const all = [];
+  for (let i = 0; i < window.localStorage.length; i++) {
+    const key = window.localStorage.key(i);
+    if (!key || !key.startsWith(LS_CACHE_PREFIX)) continue;
+    try {
+      const entry = JSON.parse(window.localStorage.getItem(key));
+      all.push({ key, fetchedAt: entry?.fetchedAt || 0 });
+    } catch { window.localStorage.removeItem(key); }
+  }
+  all.sort((a, b) => a.fetchedAt - b.fetchedAt);
+  const toRemove = Math.max(1, Math.floor(all.length / 2));
+  for (let i = 0; i < toRemove; i++) window.localStorage.removeItem(all[i].key);
+}
+
+function writeCache(url, payload) {
+  const entry = { payload, fetchedAt: Date.now() };
+  CLIENT_DATA_CACHE.set(url, entry);
+  persistCacheEntry(url, entry);
+}
 
 function slugifyHashValue(s) {
   return String(s || "")
@@ -2829,6 +2890,7 @@ export default function Home() {
   const load = useCallback(
     async (force = false) => {
       if (force) setUserRefreshing(true);
+      hydrateCacheFromLocalStorage();
 
       // Static-tournament early bail: only applies when NOT in NIWP mode.
       if (tournament.static && !niwpWeeks) {
@@ -2881,8 +2943,8 @@ export default function Home() {
         if (!res.ok) throw new Error(`API ${res.status}`);
         const next = await res.json();
 
-        // Populate / overwrite client cache.
-        CLIENT_DATA_CACHE.set(url, { payload: next, fetchedAt: Date.now() });
+        // Populate / overwrite client cache (memory + localStorage).
+        writeCache(url, next);
 
         const changed = detectChangedIds(prevDataRef.current, next);
         if (changed.size) setChangedIds(changed);
@@ -2942,11 +3004,15 @@ export default function Home() {
     [tournament.eventId, tournament.divId, teamId, teamName, themeId, niwpWeeks, niwpWeekKey]
   );
 
+  // Gate the first fetch on niwpFetchSettled so we don't fire twice:
+  // once with no weekKey, then again ~1.5s later when /api/niwp-weeks resolves
+  // and changes the URL. Once settled, niwpWeekKey is stable and load() runs once.
   useEffect(() => {
+    if (!niwpFetchSettled) return;
     firstLoadRef.current = true;
     prevDataRef.current = null;
     load();
-  }, [load]);
+  }, [load, niwpFetchSettled]);
 
   // Fetch available NIWP tournament weeks once on mount (and if force-refresh).
   // When the server has NIWP_API_ENABLED=true, this populates the dynamic chip
