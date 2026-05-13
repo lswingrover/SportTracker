@@ -149,6 +149,11 @@ export default async function handler(req, res) {
   const now      = Date.now();
   const entry    = cacheByKey.get(cacheKey);
 
+  // Allow browser + edge to cache the static fallback. Live branches (NIWP,
+  // TorMatch, 6-8, Sheets) set their own headers above. Static data doesn't
+  // change frequently, so a generous TTL is fine here.
+  res.setHeader("Cache-Control", "public, max-age=60, stale-while-revalidate=300");
+
   if (!force && entry && now - entry.fetchedAt < CACHE_TTL_MS) {
     res.status(200).json({ ...entry.payload, cached: true });
     return;
