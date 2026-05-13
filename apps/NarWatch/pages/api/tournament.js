@@ -149,9 +149,9 @@ export default async function handler(req, res) {
   const now      = Date.now();
   const entry    = cacheByKey.get(cacheKey);
 
-  // Allow browser + edge to cache the static payload. 60s fresh, then SWR for 5
-  // min so revisits and back-button navigations render instantly while the CDN
-  // refreshes in the background.
+  // Allow browser + edge to cache the static fallback. Live branches (NIWP,
+  // TorMatch, 6-8, Sheets) set their own headers above. Static data doesn't
+  // change frequently, so a generous TTL is fine here.
   res.setHeader("Cache-Control", "public, max-age=60, stale-while-revalidate=300");
 
   if (!force && entry && now - entry.fetchedAt < CACHE_TTL_MS) {

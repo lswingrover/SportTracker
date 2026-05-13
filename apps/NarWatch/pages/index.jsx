@@ -85,6 +85,11 @@ function writeCache(url, payload) {
   persistCacheEntry(url, entry);
 }
 
+// Hydrate at module load so every consumer (load(), prefetch effect) sees
+// the disk cache without each one having to remember to hydrate first.
+// No-op on the server (guarded inside hydrateCacheFromLocalStorage).
+hydrateCacheFromLocalStorage();
+
 function slugifyHashValue(s) {
   return String(s || "")
     .toLowerCase()
@@ -3057,7 +3062,7 @@ export default function Home() {
           const res = await fetch(wUrl);
           if (!cancelled && res.ok) {
             const payload = await res.json();
-            CLIENT_DATA_CACHE.set(wUrl, { payload, fetchedAt: Date.now() });
+            writeCache(wUrl, payload); // persist prefetched weeks to disk too
           }
         } catch {} // silently skip failed prefetches
         if (!cancelled) await new Promise((r) => setTimeout(r, 300));
