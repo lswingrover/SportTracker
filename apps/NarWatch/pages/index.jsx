@@ -2455,6 +2455,12 @@ export default function Home() {
   const [tournamentId, setTournamentId] = usePersistentState("tournamentId", TOURNAMENTS[0].id);
   const [themeId, setThemeId] = usePersistentState("themeId", "narwhal");
   const tournament = TOURNAMENTS.find((t) => t.id === tournamentId) || TOURNAMENTS[0];
+  // Latest tournamentId, readable from async effect closures that captured an
+  // initial-render value. usePersistentState rehydrates from localStorage after
+  // mount, so the niwp-weeks resolver needs this to honor PWA cold-load
+  // selections that have no #tournament hash to fall back on.
+  const tournamentIdRef = useRef(tournamentId);
+  useEffect(() => { tournamentIdRef.current = tournamentId; }, [tournamentId]);
   const [teamId, setTeamId] = usePersistentState(
     `teamId-${tournament.id}`,
     tournament.teamId
@@ -2824,11 +2830,12 @@ export default function Home() {
     if (typeof window === "undefined") return;
     if (!hashHydrated || !niwpFetchSettled) return;
     const parts = [];
-    const tournamentValue = niwpWeeks && niwpWeekKey
-      ? niwpWeekKey
-      : !niwpWeeks
-        ? tournamentId
-        : null;
+    // niwp mode + niwpWeekKey set → write weekKey
+    // niwp mode + niwpWeekKey null  → static tournament selected, write tournamentId
+    // no niwp mode                  → write tournamentId
+    const tournamentValue = niwpWeeks
+      ? (niwpWeekKey ?? tournamentId)
+      : tournamentId;
     if (tournamentValue) parts.push(`tournament=${encodeURIComponent(tournamentValue)}`);
     if (h2hSheet) parts.push(`h2h=${encodeURIComponent(slugifyHashValue(h2hSheet))}`);
     const newHash = parts.length ? `#${parts.join("&")}` : "";
@@ -2897,8 +2904,10 @@ export default function Home() {
       if (force) setUserRefreshing(true);
       hydrateCacheFromLocalStorage();
 
-      // Static-tournament early bail: only applies when NOT in NIWP mode.
-      if (tournament.static && !niwpWeeks) {
+      // Static-tournament early bail: applies when NIWP is absent, OR when a
+      // static-only tournament is selected in NIWP mode (niwpWeekKey === null
+      // sentinel — set by clicking a static chip whose weekKey isn't in NIWP).
+      if (tournament.static && (!niwpWeeks || niwpWeekKey === null)) {
         prevDataRef.current = null;
         prevLiveRef.current = null;
         firstLoadRef.current = true;
@@ -3030,11 +3039,26 @@ export default function Home() {
       .then((weeks) => {
         if (!cancelled && Array.isArray(weeks) && weeks.length > 0) {
           setNiwpWeeks(weeks);
-          // Honor #tournament=<weekKey> if present and valid; otherwise
-          // default to the most recent week (last in sorted list).
+          // Honor #tournament=<weekKey | staticId> if present; otherwise
+          // consult the LS-restored tournamentId for a static-only fallback
+          // (PWA cold loads have no hash); otherwise default to the most
+          // recent week (last in sorted list). niwpWeekKey === null sentinel
+          // = a static-only tournament is selected in NIWP mode (e.g. Orlando
+          // before NIWP has W20 data).
+          const niwpKeys = new Set(weeks.map((w) => w.weekKey));
           const hashTour = readHashParams().tournament;
-          const matched = hashTour && weeks.find((w) => w.weekKey === hashTour);
-          setNiwpWeekKey(matched ? matched.weekKey : weeks[weeks.length - 1].weekKey);
+          const matchedWeek = hashTour && weeks.find((w) => w.weekKey === hashTour);
+          const matchedStatic = hashTour && TOURNAMENTS.find((t) => t.id === hashTour);
+          const persistedStatic = !hashTour && TOURNAMENTS.find(
+            (t) => t.id === tournamentIdRef.current && t.static && t.weekKey && !niwpKeys.has(t.weekKey)
+          );
+          setNiwpWeekKey(
+            matchedWeek
+              ? matchedWeek.weekKey
+              : (matchedStatic || persistedStatic)
+                ? null
+                : weeks[weeks.length - 1].weekKey
+          );
         }
       })
       .catch(() => {})
@@ -3207,7 +3231,7 @@ export default function Home() {
               title="Refresh data"
               disabled={userRefreshing}
             >
-              {refreshDone ? "✓" : "↺"}
+              {refreshDone ? "✓" : "↻"}
             </button>
             <button
               className={`icon-only-btn${isStandalone ? " installed" : ""}`}
@@ -3249,26 +3273,57 @@ export default function Home() {
 
         <div className="chip-row" role="tablist" aria-label="Tournaments">
           {niwpWeeks
-            ? /* NIWP mode: one chip per calendar week, newest leftmost.
-                 Underlying array stays oldest→newest (default-selection
-                 logic relies on [length-1]); only render order is flipped. */
-              niwpWeeks.slice().reverse().map((w) => {
-                const isActive = w.weekKey === (niwpWeekKey ?? niwpWeeks[niwpWeeks.length - 1]?.weekKey);
-                return (
-                  <button
-                    key={w.weekKey}
-                    id={`chip-niwp-${w.weekKey}`}
-                    className={`chip${isActive ? " active" : ""}`}
-                    onClick={() => setNiwpWeekKey(w.weekKey)}
-                    role="tab"
-                    aria-selected={isActive ? "true" : "false"}
-                    aria-controls="tournament-panel"
-                    tabIndex={isActive ? 0 : -1}
-                  >
-                    {w.chipLabel}
-                  </button>
+            ? /* NIWP mode: render static-only tournaments (whose weekKey is
+                 not yet covered by NIWP) leftmost as forward-looking
+                 placeholders, then NIWP weeks newest-leftmost. niwpWeekKey
+                 null = a static-only chip is active. */
+              (() => {
+                const niwpKeys = new Set(niwpWeeks.map((w) => w.weekKey));
+                const staticOnly = TOURNAMENTS.filter(
+                  (t) => t.static && t.weekKey && !niwpKeys.has(t.weekKey)
                 );
-              })
+                return (
+                  <>
+                    {staticOnly.map((t) => {
+                      const isActive = niwpWeekKey === null && tournamentId === t.id;
+                      return (
+                        <button
+                          key={t.id}
+                          id={`chip-${t.id}`}
+                          className={`chip${isActive ? " active" : ""}`}
+                          onClick={() => {
+                            setTournamentId(t.id);
+                            setNiwpWeekKey(null);
+                          }}
+                          role="tab"
+                          aria-selected={isActive ? "true" : "false"}
+                          aria-controls="tournament-panel"
+                          tabIndex={isActive ? 0 : -1}
+                        >
+                          {t.chipLabel || t.label}
+                        </button>
+                      );
+                    })}
+                    {niwpWeeks.slice().reverse().map((w) => {
+                      const isActive = w.weekKey === niwpWeekKey;
+                      return (
+                        <button
+                          key={w.weekKey}
+                          id={`chip-niwp-${w.weekKey}`}
+                          className={`chip${isActive ? " active" : ""}`}
+                          onClick={() => setNiwpWeekKey(w.weekKey)}
+                          role="tab"
+                          aria-selected={isActive ? "true" : "false"}
+                          aria-controls="tournament-panel"
+                          tabIndex={isActive ? 0 : -1}
+                        >
+                          {w.chipLabel}
+                        </button>
+                      );
+                    })}
+                  </>
+                );
+              })()
             : /* Fallback: static TOURNAMENTS list (used when NIWP disabled) */
               TOURNAMENTS.map((t) => (
                 <button
@@ -3309,7 +3364,7 @@ export default function Home() {
           </div>
         )}
 
-        {tournament.static && !niwpWeeks ? (
+        {tournament.static && (!niwpWeeks || niwpWeekKey === null) ? (
           <StaticTournamentCard tournament={tournament} />
         ) : (
           <>
