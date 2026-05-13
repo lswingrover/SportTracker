@@ -2455,6 +2455,12 @@ export default function Home() {
   const [tournamentId, setTournamentId] = usePersistentState("tournamentId", TOURNAMENTS[0].id);
   const [themeId, setThemeId] = usePersistentState("themeId", "narwhal");
   const tournament = TOURNAMENTS.find((t) => t.id === tournamentId) || TOURNAMENTS[0];
+  // Latest tournamentId, readable from async effect closures that captured an
+  // initial-render value. usePersistentState rehydrates from localStorage after
+  // mount, so the niwp-weeks resolver needs this to honor PWA cold-load
+  // selections that have no #tournament hash to fall back on.
+  const tournamentIdRef = useRef(tournamentId);
+  useEffect(() => { tournamentIdRef.current = tournamentId; }, [tournamentId]);
   const [teamId, setTeamId] = usePersistentState(
     `teamId-${tournament.id}`,
     tournament.teamId
@@ -3034,16 +3040,22 @@ export default function Home() {
         if (!cancelled && Array.isArray(weeks) && weeks.length > 0) {
           setNiwpWeeks(weeks);
           // Honor #tournament=<weekKey | staticId> if present; otherwise
-          // default to the most recent week (last in sorted list).
-          // niwpWeekKey === null sentinel = a static-only tournament is selected
-          // in NIWP mode (e.g. Orlando before NIWP has W20 data).
+          // consult the LS-restored tournamentId for a static-only fallback
+          // (PWA cold loads have no hash); otherwise default to the most
+          // recent week (last in sorted list). niwpWeekKey === null sentinel
+          // = a static-only tournament is selected in NIWP mode (e.g. Orlando
+          // before NIWP has W20 data).
+          const niwpKeys = new Set(weeks.map((w) => w.weekKey));
           const hashTour = readHashParams().tournament;
           const matchedWeek = hashTour && weeks.find((w) => w.weekKey === hashTour);
           const matchedStatic = hashTour && TOURNAMENTS.find((t) => t.id === hashTour);
+          const persistedStatic = !hashTour && TOURNAMENTS.find(
+            (t) => t.id === tournamentIdRef.current && t.static && t.weekKey && !niwpKeys.has(t.weekKey)
+          );
           setNiwpWeekKey(
             matchedWeek
               ? matchedWeek.weekKey
-              : matchedStatic
+              : (matchedStatic || persistedStatic)
                 ? null
                 : weeks[weeks.length - 1].weekKey
           );
