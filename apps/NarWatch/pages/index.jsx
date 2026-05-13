@@ -793,11 +793,39 @@ function CalendarCard({ origin, eventId, divId, teamId, teamName, gameCount }) {
   );
 }
 
+// Group static games by calendar day in the venue timezone.
+// Returns [{ dayLabel: "Friday, May 15", games: [...] }, ...]
+function groupGamesByDay(games, tz) {
+  const map = new Map();
+  for (const g of games) {
+    const dayLabel = g.timeISO
+      ? new Date(g.timeISO).toLocaleDateString("en-US", {
+          weekday: "long",
+          month: "long",
+          day: "numeric",
+          timeZone: tz || "America/Los_Angeles",
+        })
+      : "TBD";
+    if (!map.has(dayLabel)) map.set(dayLabel, []);
+    map.get(dayLabel).push(g);
+  }
+  return Array.from(map.entries()).map(([dayLabel, dayGames]) => ({ dayLabel, dayGames }));
+}
+
 function StaticTournamentCard({ tournament }) {
-  const { venue, date, label } = tournament;
+  const { venue, date, label, games: staticGames } = tournament;
+  const tz = venue?.tz || "America/Los_Angeles";
+  const tzLabel = tzShortLabel(tz);
   const mapsHref =
     venue?.address &&
     `https://maps.apple.com/?q=${encodeURIComponent(`${venue.name || ""} ${venue.address}`.trim())}`;
+
+  const hasGames = Array.isArray(staticGames) && staticGames.length > 0;
+  const grouped = hasGames ? groupGamesByDay(staticGames, tz) : [];
+  const allDone = hasGames && staticGames.every((g) => g.done);
+  const wins = hasGames ? staticGames.filter((g) => g.done && g.result === "W").length : 0;
+  const losses = hasGames ? staticGames.filter((g) => g.done && g.result === "L").length : 0;
+
   return (
     <section className="static-card">
       <div className="static-eyebrow">📅 Tournament</div>
@@ -816,9 +844,65 @@ function StaticTournamentCard({ tournament }) {
         </div>
       )}
       <div className="static-divider" />
-      <div className="static-note">
-        No data available for this tournament yet. Check back closer to game time.
-      </div>
+
+      {hasGames ? (
+        <>
+          {(wins > 0 || losses > 0) && (
+            <div className="static-record">
+              {wins > 0 && <span className="static-record-w">{wins}W</span>}
+              {losses > 0 && <span className="static-record-l">{losses}L</span>}
+            </div>
+          )}
+          <div className="static-schedule">
+            {grouped.map(({ dayLabel, dayGames }) => (
+              <div key={dayLabel} className="static-day">
+                <div className="static-day-label">{dayLabel}</div>
+                {dayGames.map((g) => {
+                  const timeStr = g.timeISO
+                    ? formatTimeOfDayInTz(g.timeISO, tz)
+                    : g.time || "TBD";
+                  const resultGlyph =
+                    g.done && g.result === "W" ? "✅" :
+                    g.done && g.result === "L" ? "❌" : null;
+                  return (
+                    <div key={g.id} className={`static-game${g.done ? " done" : ""}${g.isBracket ? " bracket" : ""}`}>
+                      <div className="static-game-time">
+                        {timeStr}{tzLabel ? <span className="static-tz">{tzLabel}</span> : null}
+                      </div>
+                      <div className="static-game-main">
+                        {resultGlyph && <span className="static-result-glyph">{resultGlyph}</span>}
+                        <span className="static-game-opp">
+                          {g.isBracket ? "Bracket" : `vs ${g.opponent}`}
+                        </span>
+                        {g.done && g.score && (
+                          <span className="static-game-score">{g.score}</span>
+                        )}
+                      </div>
+                      {g.isBracket && g.bracketCondition && (
+                        <div className="static-game-note">{g.bracketCondition}</div>
+                      )}
+                      {!g.isBracket && g.gameLabel && (
+                        <div className="static-game-note">
+                          {g.gameLabel}{g.court && g.court !== "TBD" ? ` · ${g.court}` : ""}
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            ))}
+          </div>
+          <div className="static-note" style={{ marginTop: 14 }}>
+            {allDone
+              ? "Tournament complete. Live scoring picks up automatically when NIWP covers this event."
+              : "Schedule locked. Scores updated manually until NIWP or WPC picks up the tournament."}
+          </div>
+        </>
+      ) : (
+        <div className="static-note">
+          No data available for this tournament yet. Check back closer to game time.
+        </div>
+      )}
     </section>
   );
 }

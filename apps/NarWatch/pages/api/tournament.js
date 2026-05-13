@@ -25,12 +25,33 @@ import { findTournament, computeGoalDiff, TOURNAMENTS } from "../../lib/tourname
 const CACHE_TTL_MS = 2 * 60 * 1000;
 const cacheByKey = new Map();
 
+// Derive the next upcoming game from a static games array.
+// Returns a nextEvent-shaped object or null.
+function computeNextEventFromGames(games) {
+  if (!Array.isArray(games) || games.length === 0) return null;
+  const now = Date.now();
+  const upcoming = games
+    .filter((g) => !g.done && g.timeISO && new Date(g.timeISO).getTime() > now)
+    .sort((a, b) => new Date(a.timeISO).getTime() - new Date(b.timeISO).getTime());
+  if (!upcoming.length) return null;
+  const g = upcoming[0];
+  return {
+    kind:     "game",
+    id:       g.id,
+    opponent: g.isBracket ? "TBD (bracket)" : g.opponent,
+    court:    g.court || null,
+    time:     g.time  || null,
+    timeISO:  g.timeISO,
+  };
+}
+
 function buildPayload(tournament) {
   const games    = tournament.games  || [];
   const record   = tournament.record || { wins: 0, losses: 0 };
   const goalDiff = tournament.goalDiff != null
     ? tournament.goalDiff
     : computeGoalDiff(games);
+  const nextEvent = computeNextEventFromGames(games);
 
   return {
     teamName:     tournament.teamName,
@@ -49,8 +70,8 @@ function buildPayload(tournament) {
     games,
     standings:            tournament.standings || [],
     teams:                [],
-    nextGame:             null,
-    nextEvent:            null,
+    nextGame:             nextEvent,
+    nextEvent:            nextEvent,
     liveGame:             null,
     isOver:               false,
     isLive:               false,

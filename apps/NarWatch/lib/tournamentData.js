@@ -37,6 +37,85 @@ export const TOURNAMENTS = [
     static: true,
     dataSource: "niwp",
     weekKey: "2026-W20",
+    // Pool N: Team Orlando, North Idaho Narwhals, Next Level
+    // All times America/New_York (EDT = UTC-4).
+    // Scores: update done/result/sets/score manually until NIWP/WPC picks up the tournament.
+    // When NIWP covers weekKey 2026-W20, live data takes priority automatically.
+    games: [
+      // ── Friday May 15 ──────────────────────────────────────────────────
+      {
+        id: "trident-2026-g8",
+        done: false,
+        result: null,
+        score: null,
+        sets: [],
+        opponent: "Team Orlando",
+        court: "Pool 1 / Main",
+        gameLabel: "Game 8",
+        timeISO: "2026-05-15T22:15:00Z", // 6:15 PM EDT
+        time: "Fri, May 15, 6:15 PM",
+        isBracket: false,
+      },
+      // ── Saturday May 16 ────────────────────────────────────────────────
+      {
+        id: "trident-2026-g24",
+        done: false,
+        result: null,
+        score: null,
+        sets: [],
+        opponent: "Next Level",
+        court: "Pool 1",
+        gameLabel: "Game 24",
+        timeISO: "2026-05-16T12:50:00Z", // 8:50 AM EDT
+        time: "Sat, May 16, 8:50 AM",
+        isBracket: false,
+      },
+      // ── Sunday May 17 — bracket (one slot plays, depends on pool finish) ─
+      // Pool N finish order determines which bracket game North Idaho draws.
+      // All three slots listed; the app shows them with conditional labels.
+      {
+        id: "trident-2026-bracket-3n",
+        done: false,
+        result: null,
+        score: null,
+        sets: [],
+        opponent: "TBD",
+        court: "TBD",
+        gameLabel: "Bracket",
+        bracketCondition: "If 3rd in Pool N — vs 3rd Pool O",
+        timeISO: "2026-05-17T11:00:00Z", // 7:00 AM EDT
+        time: "Sun, May 17, 7:00 AM",
+        isBracket: true,
+      },
+      {
+        id: "trident-2026-bracket-2n",
+        done: false,
+        result: null,
+        score: null,
+        sets: [],
+        opponent: "TBD",
+        court: "TBD",
+        gameLabel: "Bracket",
+        bracketCondition: "If 2nd in Pool N — vs 2nd Pool M",
+        timeISO: "2026-05-17T11:55:00Z", // 7:55 AM EDT
+        time: "Sun, May 17, 7:55 AM",
+        isBracket: true,
+      },
+      {
+        id: "trident-2026-bracket-1n",
+        done: false,
+        result: null,
+        score: null,
+        sets: [],
+        opponent: "TBD",
+        court: "TBD",
+        gameLabel: "Bracket",
+        bracketCondition: "If 1st in Pool N — vs 1st Pool M",
+        timeISO: "2026-05-17T12:50:00Z", // 8:50 AM EDT
+        time: "Sun, May 17, 8:50 AM",
+        isBracket: true,
+      },
+    ],
   },
 ];
 

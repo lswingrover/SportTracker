@@ -748,6 +748,91 @@ button.stat:hover { border-color: var(--accent); }
   line-height: 1.5;
 }
 
+/* Static schedule — game rows inside StaticTournamentCard */
+.static-record {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+.static-record-w {
+  font-weight: 700;
+  color: var(--win, #22c55e);
+  font-size: 15px;
+}
+.static-record-l {
+  font-weight: 700;
+  color: var(--loss, #ef4444);
+  font-size: 15px;
+}
+.static-schedule {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.static-day-label {
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--accent);
+  margin-bottom: 6px;
+}
+.static-game {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 8px 10px;
+  background: var(--bg, #111);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+}
+.static-game + .static-game {
+  margin-top: 6px;
+}
+.static-game.done {
+  opacity: 0.75;
+}
+.static-game.bracket {
+  border-style: dashed;
+}
+.static-game-time {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--fg);
+  display: flex;
+  align-items: baseline;
+  gap: 4px;
+}
+.static-tz {
+  font-size: 11px;
+  font-weight: 400;
+  color: var(--muted);
+}
+.static-game-main {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+.static-result-glyph {
+  font-size: 14px;
+}
+.static-game-opp {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--fg);
+}
+.static-game-score {
+  font-size: 13px;
+  color: var(--muted);
+  margin-left: 4px;
+}
+.static-game-note {
+  font-size: 12px;
+  color: var(--muted);
+  line-height: 1.4;
+}
+
 /* Season arc — compact W/L dot row above the schedule list. */
 .season-arc {
   display: flex;
