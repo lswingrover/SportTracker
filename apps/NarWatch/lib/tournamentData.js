@@ -39,6 +39,7 @@ export const TOURNAMENTS = [
         done: true,
         result: "W",
         score: "8–7",
+        sets: [{ us: 8, them: 7 }],
         opponent: "Bend Black",
         court: "Cascade Classic",
         gameLabel: "Game 2",
@@ -51,14 +52,19 @@ export const TOURNAMENTS = [
         result: "W",
         score: "11–3",
         sets: [{ us: 11, them: 3 }],
+        opponent: "TBD", // TODO: fill in actual opponent
         court: "Cascade Classic",
         gameLabel: "Game 3",
         timeISO: "2026-04-18T19:00:00.000Z",
         time: "Sat, Apr 18, 12:00 PM",
+        isBracket: false,
+      },
       {
         id: "bend-2026-g4",
         done: true,
         result: "W",
+        score: null, // TODO: fill in actual score
+        sets: [],
         opponent: "Eugene",
         court: "Cascade Classic",
         gameLabel: "Game 4",
