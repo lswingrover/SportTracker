@@ -2711,10 +2711,10 @@ export default function Home() {
       if (force) setUserRefreshing(true);
       hydrateCacheFromLocalStorage();
 
-      // Static-tournament early bail: applies when NIWP is absent, OR when a
-      // static-only tournament is selected in NIWP mode (niwpWeekKey === null
-      // sentinel — set by clicking a static chip whose weekKey isn't in NIWP).
-      if (tournament.static && (!niwpWeeks || niwpWeekKey === null)) {
+      // Static-tournament early bail: static:true means the data is manually
+      // curated in tournamentData.js. Always use buildStaticPayload — never let
+      // NIWP override, even when NIWP has the same week key (partial data).
+      if (tournament.static) {
         prevDataRef.current = null;
         prevLiveRef.current = null;
         firstLoadRef.current = true;
@@ -2858,7 +2858,7 @@ export default function Home() {
     const matchedWeek = hashTour && cached.find((w) => w.weekKey === hashTour);
     const matchedStatic = hashTour && TOURNAMENTS.find((t) => t.id === hashTour);
     const persistedStatic = !hashTour && TOURNAMENTS.find(
-      (t) => t.id === tournamentIdRef.current && t.static && t.weekKey && !niwpKeys.has(t.weekKey) && isWeekKeyRecent(t.weekKey)
+      (t) => t.id === tournamentIdRef.current && t.static && t.weekKey && isWeekKeyRecent(t.weekKey)
     );
     setNiwpWeeks(cached);
     setNiwpWeekKey(
@@ -2896,7 +2896,7 @@ export default function Home() {
           const persistedStatic = !hashTour && TOURNAMENTS.find(
             // Also require isWeekKeyRecent so a persisted static chip whose
             // weekKey is long past (>4 weeks) doesn't silently restore (GH#7).
-            (t) => t.id === tournamentIdRef.current && t.static && t.weekKey && !niwpKeys.has(t.weekKey) && isWeekKeyRecent(t.weekKey)
+            (t) => t.id === tournamentIdRef.current && t.static && t.weekKey && isWeekKeyRecent(t.weekKey)
           );
           setNiwpWeekKey(
             matchedWeek
