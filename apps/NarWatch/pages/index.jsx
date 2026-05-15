@@ -344,7 +344,7 @@ function buildSingleICS(g, teamName) {
     `DTSTART:${icsDate(start)}`,
     `DTEND:${icsDate(end)}`,
     `SUMMARY:${teamName} vs ${g.opponent}`,
-    `LOCATION:Court ${g.court}`,
+    `LOCATION:${g.court}`,
     "END:VEVENT",
     "END:VCALENDAR",
   ].join("\r\n");
@@ -483,7 +483,7 @@ function LiveScoreBanner({ live, lastChangedAt, watchUrl }) {
           <span className="live-dot" /> Live
         </span>
         <span style={{ color: "var(--muted)", fontSize: 12 }}>
-          Court {live.court}
+          {live.court}
           {ago != null && ` · updated ${ago}s ago`}
         </span>
       </div>
@@ -527,7 +527,7 @@ function LiveScoreBanner({ live, lastChangedAt, watchUrl }) {
       {watchUrl && (
         <div style={{ marginTop: 10 }}>
           <a className="btn-mini primary" href={watchUrl} target="_blank" rel="noreferrer">
-            📺 Watch this court live
+            📺 Watch live
           </a>
         </div>
       )}
@@ -570,7 +570,7 @@ function NextHero({ event, minutesUntil, projectedDone, eventOver, tz }) {
         {work ? event.role : `vs ${event.opponent}`}
       </div>
       <div className="meta">
-        {eventLocalized} · Court {event.court}
+        {eventLocalized} · {event.court}
         {work && event.teams ? ` · ${event.teams}` : ""}
       </div>
       <div className="countdown">
@@ -582,7 +582,7 @@ function NextHero({ event, minutesUntil, projectedDone, eventOver, tz }) {
             : "—"}
         </span>
         <span className="unit">
-          {minutesUntil != null && minutesUntil <= 60 ? "min until tip" : "until tip"}
+          {minutesUntil != null && minutesUntil <= 60 ? "min until game" : "until game"}
         </span>
       </div>
       {event.isRunningLate && (
@@ -1122,9 +1122,9 @@ function CourtHero({ court, venue, onTap }) {
         e.stopPropagation();
         onTap?.(courtLabel, venue);
       }}
-      aria-label={`Court ${courtLabel} info`}
+      aria-label={`${courtLabel} info`}
     >
-      <span className="court-pin">📍</span>Court {courtLabel}
+      <span className="court-pin">📍</span>{courtLabel}
     </button>
   );
 }
@@ -1165,7 +1165,7 @@ async function shareGameImage({ game, teamName, tz }) {
 
   // Big score (set count) center-left
   const setCount = setsCountForRow(game.sets);
-  const big = setCount || (game.result === "W" ? "WON" : game.result === "L" ? "LOST" : "");
+  const big = game.score || setCount || (game.result === "W" ? "WON" : game.result === "L" ? "LOST" : "");
   ctx.fillStyle = "#FFFFFF";
   ctx.font = '900 72px "Barlow Condensed", system-ui, sans-serif';
   ctx.textBaseline = "middle";
@@ -1325,13 +1325,13 @@ function UpcomingGameCard({ game, expanded, onToggle, venue, tz, teamWatchNowLin
           {game.courtStay && (
             <div className="meta" style={{ color: "var(--warn)" }}>
               {game.courtStay.stay
-                ? `↪ Stay on Court ${game.court} for the next match`
+                ? `↪ Stay on ${game.court} for the next match`
                 : game.courtStay.stayIfWin && game.courtStay.stayIfLoss
-                  ? `↪ Stay on Court ${game.court} either way`
+                  ? `↪ Stay on ${game.court} either way`
                   : game.courtStay.stayIfWin
-                    ? `↪ Stay on Court ${game.court} if you win`
+                    ? `↪ Stay on ${game.court} if you win`
                     : game.courtStay.stayIfLoss
-                      ? `↪ Stay on Court ${game.court} if you lose`
+                      ? `↪ Stay on ${game.court} if you lose`
                       : null}
             </div>
           )}
@@ -1453,7 +1453,7 @@ function PastGameCard({ game, expanded, onToggle, venue, tz, opponentInfo, onSha
         aria-expanded={expanded}
       >
         <div className="past-summary-left">
-          <div className="score-hero">{setsCount || game.score || (game.result === "W" ? "Won" : game.result === "L" ? "Lost" : "—")}</div>
+          <div className="score-hero">{game.score || setsCount || (game.result === "W" ? "Won" : game.result === "L" ? "Lost" : "—")}</div>
           <div className="score-meta">
             vs{" "}
             <span
@@ -1479,7 +1479,7 @@ function PastGameCard({ game, expanded, onToggle, venue, tz, opponentInfo, onSha
             )}
           </div>
           <div className="score-meta">
-            Court {game.court || "?"}
+            {game.court || "?"}
             {localized ? ` · ${localized}` : ""}
           </div>
         </div>
@@ -1577,7 +1577,7 @@ function PastGameCard({ game, expanded, onToggle, venue, tz, opponentInfo, onSha
 const TOUR_STEPS = [
   { selector: ".chip-row", title: "Tournaments", body: "Tap any chip to switch tournaments. Past events show final records; future ones show countdowns." },
   { selector: ".stats", title: "Tournament record", body: "Tap Wins or Losses to see a game-by-game breakdown." },
-  { selector: ".card.upcoming", setupTab: "schedule", title: "Upcoming game", body: "Court number is the hero — tap it for venue details. Tap the opponent name for head-to-head history." },
+  { selector: ".card.upcoming", setupTab: "schedule", title: "Upcoming game", body: "Pool/venue is the hero — tap it for venue details. Tap the opponent name for head-to-head history." },
   { title: "Live score banner", body: "When a game is live, this banner appears with real-time scores updated every 30 seconds." },
   { sideEffect: "confetti", title: "🎉 Wins!", body: "Win a game and the app celebrates with confetti." },
   { selector: ".card.past", setupTab: "schedule", title: "Past games", body: "Tap any past game to expand. See set-by-set scores and share the result as an image." },
@@ -1893,11 +1893,11 @@ function StatsAccordion({ mode, games, tz, onClose, record }) {
                 <div>
                   <div className="opp">vs {g.opponent}</div>
                   <div className="meta">
-                    {dateLabel} · Court {g.court || "?"}
+                    {dateLabel} · {g.court || "?"}
                   </div>
                 </div>
                 <div className="row-score">
-                  {setsLabel || (mode === "wins" ? "Won" : "Lost")}
+                  {g.score || setsLabel || (mode === "wins" ? "Won" : "Lost")}
                 </div>
               </li>
             );
@@ -2037,9 +2037,9 @@ function OpponentHistoryPage({ opponentName, tournaments, dataByTournament, load
                       <li key={g.id}>
                         <div>
                           <div>{dateLabel}</div>
-                          <div className="meta">Court {g.court || "?"}</div>
+                          <div className="meta">{g.court || "?"}</div>
                         </div>
-                        <div className={`score ${g.result === "W" ? "win" : "loss"}`}>{setsLabel || (g.result === "W" ? "W" : "L")}</div>
+                        <div className={`score ${g.result === "W" ? "win" : "loss"}`}>{g.score || setsLabel || (g.result === "W" ? "W" : "L")}</div>
                         <span className={`badge ${g.result === "W" ? "win" : "loss"}`}>{g.result === "W" ? "Won" : "Lost"}</span>
                         {Array.isArray(g.sets) && g.sets.length > 0 && (
                           <div className="sets-detail">
@@ -2104,10 +2104,10 @@ function OpponentHistoryPage({ opponentName, tournaments, dataByTournament, load
                   <div className="meta">{dateLabel}</div>
                   <div style={{ minWidth: 0 }}>
                     <div>{g._tournamentLabel}</div>
-                    <div className="meta">Court {g.court || "?"}</div>
+                    <div className="meta">{g.court || "?"}</div>
                   </div>
                   <div className={`score ${g.result === "W" ? "win" : "loss"}`}>
-                    {setsLabel || g.result}
+                    {g.score || setsLabel || g.result}
                   </div>
                 </li>
               );
@@ -2470,7 +2470,7 @@ export default function Home() {
     if (!venue?.name && !venue?.address) lines.push({ text: "Venue information not available.", muted: true });
     const mapHref = venue?.address ? mapsHrefFor(`${venue.name || ""} ${venue.address || ""}`.trim()) : null;
     setInfoSheet({
-      title: `Court ${court}`,
+      title: court,
       lines,
       actions: mapHref ? [{ label: "📍 Open in Maps", href: mapHref }] : [],
     });
@@ -3034,7 +3034,7 @@ export default function Home() {
       lines.push(`LIVE: ${data.liveGame.us}-${data.liveGame.them} (Set ${data.liveGame.setNumber})`);
     } else if (nextEvent) {
       const what = nextEvent.kind === "work" ? nextEvent.role : `vs ${nextEvent.opponent}`;
-      lines.push(`Next: ${nextEvent.time} · Court ${nextEvent.court} · ${what}`);
+      lines.push(`Next: ${nextEvent.time} · ${nextEvent.court} · ${what}`);
     }
     const text = lines.join("\n");
     try {
