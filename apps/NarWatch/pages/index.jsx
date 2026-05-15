@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState, useCallback } from "react";
 import dynamic from "next/dynamic";
 import Head from "next/head";
-import { TOURNAMENTS } from "../lib/tournamentData.js";
+import { TOURNAMENTS, computeGoalDiff, computeNextEventFromGames } from "../lib/tournamentData.js";
 
 // ─── Lazy-loaded component cluster (GH#11) ────────────────────────────────────
 // LeaderboardTab, PlayerSheet, and H2HSheet are only needed on user interaction
@@ -27,6 +27,60 @@ const THEMES = [
 // Default fallback — used before first data load and for non-NIWP sources.
 // Once the NIWP API responds, _pollSchedule overrides this dynamically.
 const DEFAULT_REFRESH_MS = 2 * 60 * 1000;
+
+// ─── Static tournament synthetic payload ─────────────────────────────────────
+// When a tournament has static:true and NIWP has no coverage, we build a
+// data payload from tournamentData.js so the live UI renders normally —
+// showing dashes / TBD for unknown values — instead of the stripped-down
+// StaticTournamentCard. Mirrors the server-side buildPayload() in api/tournament.js.
+function buildStaticPayload(tournament) {
+  const games    = tournament.games || [];
+  const allDone  = games.length > 0 && games.every((g) => g.done);
+  const record   = tournament.record || {
+    wins:   games.filter((g) => g.done && g.result === "W").length,
+    losses: games.filter((g) => g.done && g.result === "L").length,
+  };
+  const goalDiff  = computeGoalDiff(games);
+  const nextEvent = computeNextEventFromGames(games);
+  const firstGame = games.find((g) => g.timeISO);
+  return {
+    teamName:             tournament.teamName,
+    teamId:               tournament.teamId,
+    tournamentId:         tournament.id,
+    event: {
+      id:        tournament.id,
+      name:      tournament.label,
+      location:  tournament.venue?.name || null,
+      startDate: firstGame?.timeISO || null,
+      endDate:   null,
+      isOver:    allDone,
+    },
+    record,
+    goalDiff,
+    games,
+    standings:            tournament.standings || [],
+    teams:                [],
+    nextGame:             nextEvent,
+    nextEvent:            nextEvent,
+    liveGame:             null,
+    isOver:               allDone,
+    isLive:               false,
+    pool:                 null,
+    brackets:             [],
+    workAssignments:      [],
+    teamWatchNowLink:     null,
+    projectedDone:        null,
+    projectedDoneSource:  null,
+    nextAssignmentsCount: 0,
+    scrapedAt:            new Date().toISOString(),
+    remoteTimestamp:      null,
+    cached:               false,
+    _isStaticPayload:     true,
+    // Completed tournaments: poll essentially never — data won't change.
+    // In-progress static: check every 5 min in case we update tournamentData.js.
+    _pollSchedule:        { intervalMs: allDone ? 24 * 60 * 60 * 1000 : 5 * 60 * 1000 },
+  };
+}
 
 // ─── Client-side data cache ───────────────────────────────────────────────────
 // Module-level Map: persists across re-renders, hydrated from localStorage on
@@ -2664,7 +2718,7 @@ export default function Home() {
         prevDataRef.current = null;
         prevLiveRef.current = null;
         firstLoadRef.current = true;
-        setData(null);
+        setData(buildStaticPayload(tournament));
         setError(null);
         setLoading(false);
         if (force) {
@@ -2691,7 +2745,12 @@ export default function Home() {
         const entry = CLIENT_DATA_CACHE.get(url);
         if (entry) {
           const age = Date.now() - entry.fetchedAt;
-          if (age < CLIENT_CACHE_TTL_MS) {
+          // Historical / completed tournaments don't change — cache for 24h.
+          // Live tournaments use the 1-min TTL so fresh scores surface quickly.
+          const ttlMs = (entry.payload?.isOver || entry.payload?._isStaticPayload)
+            ? 24 * 60 * 60 * 1000
+            : CLIENT_CACHE_TTL_MS;
+          if (age < ttlMs) {
             // Fresh cache hit — render instantly, skip network entirely.
             setData(entry.payload);
             setLoading(false);
@@ -3159,9 +3218,8 @@ export default function Home() {
           </div>
         )}
 
-        {tournament.static && (!niwpWeeks || niwpWeekKey === null) ? (
-          <StaticTournamentCard tournament={tournament} />
-        ) : (
+        {/* Static tournaments now use buildStaticPayload() — same live UI for all. */}
+        {true && (
           <>
         {data?.liveGame && (
           <LiveScoreBanner

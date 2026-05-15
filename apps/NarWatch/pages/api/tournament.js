@@ -47,11 +47,13 @@ function computeNextEventFromGames(games) {
 
 function buildPayload(tournament) {
   const games    = tournament.games  || [];
+  const allDone  = games.length > 0 && games.every((g) => g.done);
   const record   = tournament.record || { wins: 0, losses: 0 };
   const goalDiff = tournament.goalDiff != null
     ? tournament.goalDiff
     : computeGoalDiff(games);
   const nextEvent = computeNextEventFromGames(games);
+  const firstGame = games.find((g) => g.timeISO);
 
   return {
     teamName:     tournament.teamName,
@@ -61,9 +63,9 @@ function buildPayload(tournament) {
       id:        tournament.id,
       name:      tournament.label,
       location:  tournament.venue?.name || null,
-      startDate: null,
+      startDate: firstGame?.timeISO || null,
       endDate:   null,
-      isOver:    false,
+      isOver:    allDone,
     },
     record,
     goalDiff,
@@ -73,8 +75,10 @@ function buildPayload(tournament) {
     nextGame:             nextEvent,
     nextEvent:            nextEvent,
     liveGame:             null,
-    isOver:               false,
+    isOver:               allDone,
     isLive:               false,
+    _isStaticPayload:     true,
+    _pollSchedule:        { intervalMs: allDone ? 24 * 60 * 60 * 1000 : 5 * 60 * 1000 },
     pool:                 null,
     brackets:             [],
     workAssignments:      [],
@@ -170,17 +174,19 @@ export default async function handler(req, res) {
   const now      = Date.now();
   const entry    = cacheByKey.get(cacheKey);
 
-  // Allow browser + edge to cache the static fallback. Live branches (NIWP,
-  // TorMatch, 6-8, Sheets) set their own headers above. Static data doesn't
-  // change frequently, so a generous TTL is fine here.
-  res.setHeader("Cache-Control", "public, max-age=60, stale-while-revalidate=300");
+  const payload = (!force && entry && now - entry.fetchedAt < CACHE_TTL_MS)
+    ? { ...entry.payload, cached: true }
+    : buildPayload(tournament);
 
-  if (!force && entry && now - entry.fetchedAt < CACHE_TTL_MS) {
-    res.status(200).json({ ...entry.payload, cached: true });
-    return;
+  if (!entry || force || now - entry.fetchedAt >= CACHE_TTL_MS) {
+    cacheByKey.set(cacheKey, { payload, fetchedAt: now });
   }
 
-  const payload = buildPayload(tournament);
-  cacheByKey.set(cacheKey, { payload, fetchedAt: now });
+  // Completed tournaments are immutable — tell the edge to hold them for a day.
+  // In-progress static tournaments: 5 min fresh, 30 min stale-while-revalidate.
+  const cacheHeader = payload.isOver
+    ? "public, max-age=86400, stale-while-revalidate=604800"
+    : "public, max-age=300, stale-while-revalidate=1800";
+  res.setHeader("Cache-Control", cacheHeader);
   res.status(200).json(payload);
 }

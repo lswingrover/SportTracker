@@ -175,6 +175,26 @@ export function findTournament(tournamentId) {
   return TOURNAMENTS.find((t) => t.id === tournamentId) || null;
 }
 
+// Derive the next upcoming game — shared by API route and client-side
+// buildStaticPayload so both produce the same nextEvent shape.
+export function computeNextEventFromGames(games) {
+  if (!Array.isArray(games) || games.length === 0) return null;
+  const now = Date.now();
+  const upcoming = games
+    .filter((g) => !g.done && g.timeISO && new Date(g.timeISO).getTime() > now)
+    .sort((a, b) => new Date(a.timeISO).getTime() - new Date(b.timeISO).getTime());
+  if (!upcoming.length) return null;
+  const g = upcoming[0];
+  return {
+    kind:     "game",
+    id:       g.id,
+    opponent: g.isBracket ? "TBD (bracket)" : (g.opponent || "TBD"),
+    court:    g.court || null,
+    time:     g.time  || null,
+    timeISO:  g.timeISO,
+  };
+}
+
 // Sum goal differential across all completed games in a tournament.
 // games[] uses the same shape as the live data layer would: each game
 // has { result: "W" | "L" | null, sets: [{ us, them, deciding? }, ...] }
