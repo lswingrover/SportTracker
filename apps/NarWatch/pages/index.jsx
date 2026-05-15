@@ -3130,22 +3130,11 @@ export default function Home() {
                  null = a static-only chip is active. */
               (() => {
                 const niwpKeys = new Set(niwpWeeks.map((w) => w.weekKey));
-                // Static tournaments with local game data "claim" their weekKey
-                // from niwp so they render as static chips (using local games[])
-                // rather than as niwp-fetched chips. Prevents NIWP from overriding
-                // a manually-recorded tournament (GH#7 exception).
-                const claimedByStatic = new Set(
-                  TOURNAMENTS
-                    .filter((t) => t.static && Array.isArray(t.games) && t.games.length > 0 && t.weekKey)
-                    .map((t) => t.weekKey)
-                );
                 const staticOnly = TOURNAMENTS.filter(
                   // isWeekKeyRecent: hide chips whose tournament ended >4 weeks
                   // ago so stale static entries don't re-surface when NIWP
                   // data no longer covers that week (GH#7).
-                  // Exception: claimedByStatic entries always show as static chips.
-                  (t) => t.static && isWeekKeyRecent(t.weekKey) &&
-                    (!t.weekKey || !niwpKeys.has(t.weekKey) || claimedByStatic.has(t.weekKey))
+                  (t) => t.static && t.weekKey && !niwpKeys.has(t.weekKey) && isWeekKeyRecent(t.weekKey)
                 );
                 return (
                   <>
@@ -3169,7 +3158,7 @@ export default function Home() {
                         </button>
                       );
                     })}
-                    {niwpWeeks.slice().reverse().filter((w) => !claimedByStatic.has(w.weekKey)).map((w) => {
+                    {niwpWeeks.slice().reverse().map((w) => {
                       const isActive = w.weekKey === niwpWeekKey;
                       return (
                         <button
