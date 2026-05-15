@@ -2195,7 +2195,7 @@ function OpponentSheet({ data, onClose, onOpenHistory }) {
 // ─────────────────────────────────────────────────────────────────────────────
 
 export default function Home() {
-  const [tournamentId, setTournamentId] = usePersistentState("tournamentId", TOURNAMENTS[0].id);
+  const [tournamentId, setTournamentId] = usePersistentState("tournamentId", TOURNAMENTS[TOURNAMENTS.length - 1].id);
   const [themeId, setThemeId] = usePersistentState("themeId", "narwhal");
   const tournament = TOURNAMENTS.find((t) => t.id === tournamentId) || TOURNAMENTS[0];
   // Latest tournamentId, readable from async effect closures that captured an
