@@ -32,6 +32,7 @@ export const TOURNAMENTS = [
         court: "Cascade Classic",
         gameLabel: "Game 1",
         timeISO: "2026-04-18T01:30:00.000Z",
+        time: "Fri, Apr 17, 6:30 PM",
         isBracket: false,
       },
       {
@@ -68,7 +69,7 @@ export const TOURNAMENTS = [
         opponent: "Eugene",
         court: "Cascade Classic",
         gameLabel: "Game 4",
-        time: "Sun, Apr 19, 12:00 AM",
+        time: "Sun, Apr 19, 12:00 PM",
         isBracket: false,
       },
     ],
