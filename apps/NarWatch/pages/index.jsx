@@ -2196,6 +2196,13 @@ function OpponentSheet({ data, onClose, onOpenHistory }) {
 
 export default function Home() {
   const [tournamentId, setTournamentId] = usePersistentState("tournamentId", TOURNAMENTS[TOURNAMENTS.length - 1].id);
+  // Always open on the latest tournament — override any stale localStorage value.
+  // usePersistentState hydrates from localStorage after mount; this effect fires
+  // after it (effects run in declaration order) and wins.
+  useEffect(() => {
+    setTournamentId(TOURNAMENTS[TOURNAMENTS.length - 1].id);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
   const [themeId, setThemeId] = usePersistentState("themeId", "narwhal");
   const tournament = TOURNAMENTS.find((t) => t.id === tournamentId) || TOURNAMENTS[0];
   // Latest tournamentId, readable from async effect closures that captured an
@@ -2225,7 +2232,8 @@ export default function Home() {
   const [tzOverride, setTzOverride] = usePersistentState("tzOverride", "venue");
 
   const [data, setData] = useState(null);
-  const [loading, setLoading] = useState(true);
+  // Static tournaments have no API fetch — don't start in loading state.
+  const [loading, setLoading] = useState(!tournament.static);
   const [error, setError] = useState(null);
   const [tab, setTab] = useState("schedule");
   const [changedIds, setChangedIds] = useState(new Set());
@@ -2771,12 +2779,14 @@ export default function Home() {
   // Gate the first fetch on niwpFetchSettled so we don't fire twice:
   // once with no weekKey, then again ~1.5s later when /api/niwp-weeks resolves
   // and changes the URL. Once settled, niwpWeekKey is stable and load() runs once.
+  // Static tournaments bypass the gate — they have no API fetch and shouldn't
+  // wait ~1.5s for NIWP to settle before rendering their schedule.
   useEffect(() => {
-    if (!niwpFetchSettled) return;
+    if (!niwpFetchSettled && !tournament.static) return;
     firstLoadRef.current = true;
     prevDataRef.current = null;
     load();
-  }, [load, niwpFetchSettled]);
+  }, [load, niwpFetchSettled, tournament.static]);
 
   // Hydrate niwpWeeks from localStorage on mount so the niwpFetchSettled gate
   // fires immediately for returning users — eliminating the fetch waterfall.
