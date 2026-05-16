@@ -3129,13 +3129,16 @@ export default function Home() {
                  placeholders, then NIWP weeks newest-leftmost. niwpWeekKey
                  null = a static-only chip is active. */
               (() => {
-                const niwpKeys = new Set(niwpWeeks.map((w) => w.weekKey));
+                // Static tournaments always render as static chips — even when
+                // NIWP has data for the same week — so clicking them uses the
+                // curated static payload, not partial live data (GH#chip-override).
                 const staticOnly = TOURNAMENTS.filter(
                   // isWeekKeyRecent: hide chips whose tournament ended >4 weeks
-                  // ago so stale static entries don't re-surface when NIWP
-                  // data no longer covers that week (GH#7).
-                  (t) => t.static && t.weekKey && !niwpKeys.has(t.weekKey) && isWeekKeyRecent(t.weekKey)
+                  // ago so stale static entries don't re-surface (GH#7).
+                  (t) => t.static && t.weekKey && isWeekKeyRecent(t.weekKey)
                 );
+                // Exclude weeks already covered by a static chip to avoid duplicates.
+                const staticWeekKeys = new Set(staticOnly.map((t) => t.weekKey));
                 return (
                   <>
                     {staticOnly.map((t) => {
@@ -3158,7 +3161,7 @@ export default function Home() {
                         </button>
                       );
                     })}
-                    {niwpWeeks.slice().reverse().map((w) => {
+                    {niwpWeeks.filter((w) => !staticWeekKeys.has(w.weekKey)).slice().reverse().map((w) => {
                       const isActive = w.weekKey === niwpWeekKey;
                       return (
                         <button
