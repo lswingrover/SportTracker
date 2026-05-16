@@ -137,6 +137,7 @@ export const TOURNAMENTS = [
         timeISO: "2026-05-17T11:55:00Z", // 7:55 AM EDT — 2M vs 2N
         time: "Sun, May 17, 7:55 AM",
         isBracket: true,
+        bracketSlot: "2M", // NI (2N) plays the 2nd-place seed from Pool M
       },
       {
         id: "trident-2026-bracket-2n-b",
@@ -150,6 +151,7 @@ export const TOURNAMENTS = [
         timeISO: "2026-05-17T15:35:00Z", // 11:35 AM EDT — 2N vs 2O
         time: "Sun, May 17, 11:35 AM",
         isBracket: true,
+        bracketSlot: "2O", // NI (2N) plays the 2nd-place seed from Pool O
       },
     ],
   },

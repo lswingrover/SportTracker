@@ -138,6 +138,26 @@ function mergeNiwpIntoStatic(staticPayload, niwpData) {
   };
 }
 
+// ─── Bracket slot → opponent name filler ─────────────────────────────────────
+// When trident-scores (or a future external source) returns bracketSlots like
+// { "2M": "Team Fury", "2O": "Next Level Blue" }, this fills in the opponent
+// field on any bracket game whose static entry carries a matching bracketSlot.
+// Non-bracket games and already-known opponents are left unchanged.
+function applyBracketSlots(payload, bracketSlots) {
+  if (!bracketSlots || !Object.keys(bracketSlots).length) return payload;
+  if (!payload?.games?.length) return payload;
+  const games = payload.games.map((g) => {
+    if (!g.isBracket || !g.bracketSlot) return g;
+    const teamName = bracketSlots[g.bracketSlot];
+    if (!teamName) return g;
+    // Only fill in — don't overwrite if we already have a real name
+    const opponentIsUnknown = !g.opponent || g.opponent.toLowerCase() === "tbd";
+    if (!opponentIsUnknown) return g;
+    return { ...g, opponent: teamName };
+  });
+  return { ...payload, games };
+}
+
 // ─── Client-side data cache ───────────────────────────────────────────────────
 // Module-level Map: persists across re-renders, hydrated from localStorage on
 // first access so revisits render instantly from disk.
@@ -2815,7 +2835,11 @@ export default function Home() {
             if (scoresData?.games?.length) {
               mergeBase = mergeNiwpIntoStatic(mergeBase, scoresData);
             }
-            if (niwpData || scoresData?.games?.length) {
+            // Fill in bracket opponent names from bracketSlots (e.g. 2M → "Team Fury")
+            if (scoresData?.bracketSlots) {
+              mergeBase = applyBracketSlots(mergeBase, scoresData.bracketSlots);
+            }
+            if (niwpData || scoresData?.games?.length || scoresData?.bracketSlots) {
               writeCache(staticCacheKey, mergeBase);
               setData(mergeBase);
             }
