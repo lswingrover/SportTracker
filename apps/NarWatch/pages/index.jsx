@@ -2789,17 +2789,37 @@ export default function Home() {
         setError(null);
         setLoading(false);
 
-        // Background NIWP fetch to overlay real game results (non-blocking).
-        if (tournament.weekKey) {
-          fetch(`/api/niwp?weekKey=${encodeURIComponent(tournament.weekKey)}`)
-            .then((r) => (r.ok ? r.json() : null))
-            .then((niwpData) => {
-              if (!niwpData) return;
-              const merged = mergeNiwpIntoStatic(staticBase, niwpData);
-              writeCache(staticCacheKey, merged);
-              setData(merged);
-            })
-            .catch(() => {}); // NIWP failure is non-fatal; static base already shown
+        // Background data fetches to overlay real game results (non-blocking).
+        // Fire NIWP and scoresUrl in parallel; take whichever returns non-null.
+        // If both return data, scoresUrl wins (it's more authoritative for
+        // external tournaments like Trident Cup where NIWP coverage is delayed).
+        {
+          const niwpPromise = tournament.weekKey
+            ? fetch(`/api/niwp?weekKey=${encodeURIComponent(tournament.weekKey)}`)
+                .then((r) => (r.ok ? r.json() : null))
+                .catch(() => null)
+            : Promise.resolve(null);
+
+          const scoresPromise = tournament.scoresUrl
+            ? fetch(tournament.scoresUrl)
+                .then((r) => (r.ok ? r.json() : null))
+                .catch(() => null)
+            : Promise.resolve(null);
+
+          Promise.all([niwpPromise, scoresPromise]).then(([niwpData, scoresData]) => {
+            // Start from the base; layer NIWP first, then scoresUrl on top (more authoritative).
+            let mergeBase = staticBase;
+            if (niwpData) {
+              mergeBase = mergeNiwpIntoStatic(mergeBase, niwpData);
+            }
+            if (scoresData?.games?.length) {
+              mergeBase = mergeNiwpIntoStatic(mergeBase, scoresData);
+            }
+            if (niwpData || scoresData?.games?.length) {
+              writeCache(staticCacheKey, mergeBase);
+              setData(mergeBase);
+            }
+          });
         }
 
         if (force) {

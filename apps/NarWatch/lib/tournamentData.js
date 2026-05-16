@@ -89,6 +89,7 @@ export const TOURNAMENTS = [
     static: true,
     dataSource: "niwp",
     weekKey: "2026-W20",
+    scoresUrl: "/api/trident-scores",
     // Pool N (3 teams, round-robin): Team Orlando (1st), North Idaho (2nd), Next Level (3rd)
     // Bracket: 2nd-place seeds (2M, 2N, 2O) play a 3-team round-robin on Sat/Sun.
     // All times America/New_York (EDT = UTC-4).
