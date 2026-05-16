@@ -77,8 +77,8 @@ function buildStaticPayload(tournament) {
     cached:               false,
     _isStaticPayload:     true,
     // Completed tournaments: poll essentially never — data won't change.
-    // In-progress static: check every 5 min in case we update tournamentData.js.
-    _pollSchedule:        { intervalMs: allDone ? 24 * 60 * 60 * 1000 : 5 * 60 * 1000 },
+    // In-progress static: check every 90s so live score changes surface quickly.
+    _pollSchedule:        { intervalMs: allDone ? 24 * 60 * 60 * 1000 : 90 * 1000 },
   };
 }
 
@@ -133,7 +133,7 @@ function mergeNiwpIntoStatic(staticPayload, niwpData) {
     isOver:      allDone,
     nextGame:    nextEvent,
     nextEvent:   nextEvent,
-    _pollSchedule: { intervalMs: allDone ? 24 * 60 * 60 * 1000 : 5 * 60 * 1000 },
+    _pollSchedule: { intervalMs: allDone ? 24 * 60 * 60 * 1000 : 90 * 1000 },
     _mergedFromNiwp: true,
   };
 }
@@ -1995,9 +1995,12 @@ function StatsAccordion({ mode, games, tz, onClose, record }) {
 // Pulls every loaded tournament's data from the cache, fetches missing
 // ones in the background, then renders a season summary + per-tournament
 // breakdown + a flat sortable game list.
-function OpponentHistoryPage({ opponentName, tournaments, dataByTournament, loading, onBack, tz }) {
+function OpponentHistoryPage({ opponentName, tournaments, dataByTournament, loading, onBack, tz, currentTournamentId }) {
   const [filter, setFilter] = useState("all"); // 'all' | 'wins' | 'losses'
   const [sortDesc, setSortDesc] = useState(true);
+  // Default to current-tournament scope so the view is immediately relevant.
+  // User can expand to all-time with one tap.
+  const [scope, setScope] = useState("current"); // 'current' | 'all'
 
   // Flatten games from every tournament where the opponent appears.
   // AES opponent names sometimes carry trailing club tags ("Foo (EV)") or
@@ -2011,7 +2014,7 @@ function OpponentHistoryPage({ opponentName, tournaments, dataByTournament, load
   const target = norm(opponentName);
   const allGames = [];
   for (const t of tournaments) {
-    if (t.static) continue;
+    // Include static tournaments — their games are pre-seeded in dataByTournament.
     const data = dataByTournament[t.id];
     if (!data?.games) continue;
     for (const g of data.games) {
@@ -2024,15 +2027,20 @@ function OpponentHistoryPage({ opponentName, tournaments, dataByTournament, load
     sortDesc ? (b.timeISO || "").localeCompare(a.timeISO || "") : (a.timeISO || "").localeCompare(b.timeISO || "")
   );
 
-  const filtered = allGames.filter(
+  // Scope: "current" shows only the active tournament; "all" shows everything.
+  const scopedGames = scope === "current" && currentTournamentId
+    ? allGames.filter((g) => g._tournamentId === currentTournamentId)
+    : allGames;
+
+  const filtered = scopedGames.filter(
     (g) => filter === "all" || (filter === "wins" ? g.result === "W" : g.result === "L")
   );
 
-  // Season summary
-  const wins = allGames.filter((g) => g.result === "W").length;
-  const losses = allGames.filter((g) => g.result === "L").length;
+  // Summary stats over scoped games
+  const wins = scopedGames.filter((g) => g.result === "W").length;
+  const losses = scopedGames.filter((g) => g.result === "L").length;
   let setsWon = 0, setsLost = 0, totalUs = 0, totalThem = 0, setCount = 0;
-  for (const g of allGames) {
+  for (const g of scopedGames) {
     if (!Array.isArray(g.sets)) continue;
     for (const s of g.sets) {
       if (s.us > s.them) setsWon++;
@@ -2045,9 +2053,9 @@ function OpponentHistoryPage({ opponentName, tournaments, dataByTournament, load
   const avgMargin = setCount > 0 ? (totalUs - totalThem) / setCount : null;
   const winRate = wins + losses > 0 ? Math.round((wins / (wins + losses)) * 100) : null;
 
-  // Group by tournament for the breakdown
+  // Group by tournament for the breakdown (only scoped games)
   const byTournament = new Map();
-  for (const g of allGames) {
+  for (const g of scopedGames) {
     if (!byTournament.has(g._tournamentId)) byTournament.set(g._tournamentId, []);
     byTournament.get(g._tournamentId).push(g);
   }
@@ -2062,13 +2070,25 @@ function OpponentHistoryPage({ opponentName, tournaments, dataByTournament, load
         </button>
         <div className="history-title">
           <h2>{opponentName}</h2>
-          <div className="sub">NIN vs {opponentName} · season history</div>
+          <div className="sub">NIN vs {opponentName} · {scope === "current" ? "this tournament" : "all time"}</div>
         </div>
       </div>
 
-      {allGames.length === 0 && !loading ? (
+      {/* Scope toggle */}
+      <div className="history-filter" style={{ padding: "8px 16px 0" }}>
+        <button className={scope === "current" ? "active" : ""} onClick={() => setScope("current")}>
+          This tournament
+        </button>
+        <button className={scope === "all" ? "active" : ""} onClick={() => setScope("all")}>
+          All time
+        </button>
+      </div>
+
+      {scopedGames.length === 0 && !loading ? (
         <div className="history-empty">
-          No games found against {opponentName} in this season's data.
+          {scope === "current"
+            ? `No completed games against ${opponentName} in this tournament yet.`
+            : `No games found against ${opponentName} in this season's data.`}
         </div>
       ) : (
         <>
@@ -2093,7 +2113,7 @@ function OpponentHistoryPage({ opponentName, tournaments, dataByTournament, load
             </div>
           </section>
 
-          {loading && <div className="history-loading">Loading other tournaments…</div>}
+          {loading && scope === "all" && <div className="history-loading">Loading other tournaments…</div>}
 
           {[...byTournament.entries()].map(([tid, games]) => {
             const t = tournaments.find((x) => x.id === tid);
@@ -2474,14 +2494,20 @@ export default function Home() {
   const [h2hGamesLoading, setH2hGamesLoading] = useState(false);
 
   useEffect(() => {
-    if (tab !== "stats" || leaderboardData || leaderboardLoading) return;
+    // Only fetch all-time stats when the user explicitly switches to that scope.
+    if (tab !== "stats" || statsScope !== "alltime") return;
+    if (leaderboardData || leaderboardLoading) return;
     setLeaderboardLoading(true);
     fetch("/api/historical?view=player_stats")
       .then((r) => r.json())
       .then((json) => setLeaderboardData(json?.player_season_stats ?? null))
       .catch(() => {/* silently degrade */})
       .finally(() => setLeaderboardLoading(false));
-  }, [tab, leaderboardData, leaderboardLoading]);
+  }, [tab, statsScope, leaderboardData, leaderboardLoading]);
+
+  // Stats scope: "tournament" shows current-tournament stats (fast, from data.games);
+  // "alltime" loads historical leaderboard (slow, from /api/historical).
+  const [statsScope, setStatsScope] = useState("tournament");
 
   const [statsAccordion, setStatsAccordion] = useState(null); // 'wins' | 'losses' | null
   const [toast, setToast] = useState(null);
@@ -2498,14 +2524,21 @@ export default function Home() {
   async function openOpponentHistory(name) {
     setOpponentSheet(null);
     setOpponentHistory(name);
-    // Seed cache with current tournament's data so the page renders immediately.
+    // Seed with current tournament data (static or live).
     const initial = {};
-    if (data && tournament && !tournament.static) {
+    if (data && tournament) {
       initial[tournament.id] = data;
+    }
+    // Pre-seed all other static tournaments directly from tournamentData.js —
+    // no API call needed; their games are already in the bundle.
+    for (const t of TOURNAMENTS) {
+      if (!initial[t.id] && t.static) {
+        initial[t.id] = { games: t.games || [], _isStaticPayload: true };
+      }
     }
     setHistoryData(initial);
     setHistoryLoading(true);
-    // Fetch missing tournaments in parallel.
+    // Fetch live (non-static) tournaments we don't already have.
     const todo = TOURNAMENTS.filter(
       (t) => !t.static && !initial[t.id]
     );
@@ -2840,6 +2873,7 @@ export default function Home() {
               mergeBase = applyBracketSlots(mergeBase, scoresData.bracketSlots);
             }
             if (niwpData || scoresData?.games?.length || scoresData?.bracketSlots) {
+              mergeBase = { ...mergeBase, scrapedAt: new Date().toISOString() };
               writeCache(staticCacheKey, mergeBase);
               setData(mergeBase);
             }
@@ -3186,6 +3220,7 @@ export default function Home() {
             loading={historyLoading}
             tz={activeTz}
             onBack={() => setOpponentHistory(null)}
+            currentTournamentId={tournament?.id}
           />
         ) : (
         <>
@@ -3616,11 +3651,89 @@ export default function Home() {
         )}
 
         {tab === "stats" && (
-          <LeaderboardTab
-            players={leaderboardData}
-            loading={leaderboardLoading}
-            onPlayerTap={(p) => setPlayerSheet(p)}
-          />
+          <>
+            {/* Scope toggle */}
+            <div className="history-filter" style={{ padding: "12px 16px 4px" }}>
+              <button
+                className={statsScope === "tournament" ? "active" : ""}
+                onClick={() => setStatsScope("tournament")}
+              >
+                This tournament
+              </button>
+              <button
+                className={statsScope === "alltime" ? "active" : ""}
+                onClick={() => setStatsScope("alltime")}
+              >
+                All time
+              </button>
+            </div>
+
+            {statsScope === "alltime" ? (
+              <LeaderboardTab
+                players={leaderboardData}
+                loading={leaderboardLoading}
+                onPlayerTap={(p) => setPlayerSheet(p)}
+              />
+            ) : (
+              /* Tournament-scoped stats: derived from data.games (no extra fetch) */
+              (() => {
+                const tGames = (data?.games || []).filter((g) => g.done);
+                if (!tGames.length) {
+                  return (
+                    <div style={{ padding: "32px 16px", color: "var(--muted)", textAlign: "center" }}>
+                      No completed games yet.
+                    </div>
+                  );
+                }
+                let goalsFor = 0, goalsAgainst = 0;
+                for (const g of tGames) {
+                  for (const s of (g.sets || [])) {
+                    goalsFor += s.us ?? 0;
+                    goalsAgainst += s.them ?? 0;
+                  }
+                }
+                const diff = goalsFor - goalsAgainst;
+                const wins = tGames.filter((g) => g.result === "W").length;
+                const losses = tGames.filter((g) => g.result === "L").length;
+                return (
+                  <div style={{ paddingBottom: 24 }}>
+                    <section className="stats" style={{ padding: "16px 16px 8px" }}>
+                      <div className="stat win">
+                        <div className="label">Record</div>
+                        <div className="value">{wins}–{losses}</div>
+                      </div>
+                      <div className="stat">
+                        <div className="label">Goals for</div>
+                        <div className="value">{goalsFor}</div>
+                      </div>
+                      <div className="stat">
+                        <div className="label">Goals against</div>
+                        <div className="value">{goalsAgainst}</div>
+                      </div>
+                      <div className={`stat ${diff >= 0 ? "pos" : ""}`}>
+                        <div className="label">Differential</div>
+                        <div className="value">{diff > 0 ? "+" : ""}{diff}</div>
+                      </div>
+                    </section>
+                    <div className="section-title" style={{ padding: "8px 16px 4px" }}>Game by game</div>
+                    <ul style={{ listStyle: "none", margin: 0, padding: "0 16px", display: "flex", flexDirection: "column", gap: 8 }}>
+                      {tGames.map((g) => {
+                        const gf = (g.sets || []).reduce((s, q) => s + (q.us ?? 0), 0);
+                        const ga = (g.sets || []).reduce((s, q) => s + (q.them ?? 0), 0);
+                        return (
+                          <li key={g.id} style={{ display: "flex", alignItems: "center", gap: 10, fontSize: 13, padding: "8px 10px", background: "var(--panel)", borderRadius: 8, border: "1px solid var(--line)" }}>
+                            <span className={`badge ${g.result === "W" ? "win" : "loss"}`}>{g.result}</span>
+                            <span style={{ flex: 1, minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{g.opponent || "TBD"}</span>
+                            <span style={{ fontVariantNumeric: "tabular-nums" }}>{g.score || `${gf}–${ga}`}</span>
+                          </li>
+                        );
+                      })}
+                    </ul>
+                  </div>
+                );
+              })()
+            )}
+          </>
         )}
 
         {tab === "notifications" && (

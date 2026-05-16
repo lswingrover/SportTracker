@@ -248,6 +248,60 @@ function parseBracketsHtml(html) {
   return slots;
 }
 
+// ─── Push helpers ─────────────────────────────────────────────────────────────
+
+// Fire final-result and (if applicable) bracket-advance push notifications
+// for any games that just flipped to done since the last cache snapshot.
+// Runs fire-and-forget (not awaited) so it never delays the API response.
+async function maybePushScoreChanges(prevGames, nextGames) {
+  try {
+    const { pushConfigured, pushToTeam } = await import("@sport-tracker/core/push.js");
+    if (!pushConfigured()) return;
+
+    const prevById = Object.fromEntries((prevGames || []).map((g) => [g.id, g]));
+
+    for (const g of nextGames) {
+      const prev = prevById[g.id];
+      // Notify on done→true transitions (or first time we see a completed game).
+      if (!g.done) continue;
+      if (prev && prev.done) continue; // already done before this fetch
+
+      const isBracket = g.gameLabel?.toLowerCase().includes("bracket");
+      const resultWord = g.result === "W" ? "WIN" : g.result === "L" ? "LOSS" : "FINAL";
+      const scoreStr   = g.score || "";
+      const oppStr     = g.opponent || "opponent";
+
+      // final-result notification for everyone who wants it
+      await pushToTeam(
+        "narwhals",
+        {
+          title: `Narwhals ${resultWord} ${scoreStr}`,
+          body:  `vs ${oppStr} — ${g.gameLabel || "Game"}`,
+          tag:   `game-result-${g.id}`,
+          url:   "/",
+        },
+        "final-result"
+      );
+
+      // bracket-advance notification if this was a bracket game
+      if (isBracket) {
+        await pushToTeam(
+          "narwhals",
+          {
+            title: "Bracket update — Narwhals",
+            body:  `${g.gameLabel}: ${resultWord} ${scoreStr} vs ${oppStr}`,
+            tag:   `bracket-${g.id}`,
+            url:   "/",
+          },
+          "bracket-advance"
+        );
+      }
+    }
+  } catch (err) {
+    console.error("[trident-scores] push error:", err.message);
+  }
+}
+
 // ─── API handler ──────────────────────────────────────────────────────────────
 
 export default async function handler(req, res) {
@@ -280,6 +334,10 @@ export default async function handler(req, res) {
       fetchedAt: new Date().toISOString(),
       source: "teamorlandowpc-sheets",
     };
+
+    // Fire push notifications for any newly-completed games (fire-and-forget).
+    const prevGames = cache?.payload?.games;
+    maybePushScoreChanges(prevGames, games);
 
     cache = { fetchedAt: Date.now(), payload };
 
