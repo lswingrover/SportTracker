@@ -2915,7 +2915,7 @@ export default function Home() {
         if (force) { setUserRefreshing(false); setRefreshDone(true); setTimeout(() => setRefreshDone(false), 2000); }
       }
     },
-    [tournament.eventId, tournament.divId, teamId, teamName, themeId, niwpWeeks, niwpWeekKey]
+    [tournament.id, tournament.eventId, tournament.divId, teamId, teamName, themeId, niwpWeeks, niwpWeekKey]
   );
 
   // Gate the first fetch on niwpFetchSettled so we don't fire twice:
@@ -3219,7 +3219,7 @@ export default function Home() {
                   // isWeekKeyRecent: hide chips whose tournament ended >4 weeks
                   // ago so stale static entries don't re-surface (GH#7).
                   (t) => t.static && t.weekKey && isWeekKeyRecent(t.weekKey)
-                );
+                ).sort((a, b) => (b.weekKey > a.weekKey ? 1 : -1)); // newest week leftmost
                 // Exclude weeks already covered by a static chip to avoid duplicates.
                 const staticWeekKeys = new Set(staticOnly.map((t) => t.weekKey));
                 return (
