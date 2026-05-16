@@ -2493,6 +2493,11 @@ export default function Home() {
   const [allGamesCache, setAllGamesCache]   = useState(null); // null | game[]
   const [h2hGamesLoading, setH2hGamesLoading] = useState(false);
 
+  // Stats scope: "tournament" shows current-tournament stats (fast, from data.games);
+  // "alltime" loads historical leaderboard (slow, from /api/historical).
+  // Must be declared before the useEffect that references it to avoid TDZ crash.
+  const [statsScope, setStatsScope] = useState("tournament");
+
   useEffect(() => {
     // Only fetch all-time stats when the user explicitly switches to that scope.
     if (tab !== "stats" || statsScope !== "alltime") return;
@@ -2504,10 +2509,6 @@ export default function Home() {
       .catch(() => {/* silently degrade */})
       .finally(() => setLeaderboardLoading(false));
   }, [tab, statsScope, leaderboardData, leaderboardLoading]);
-
-  // Stats scope: "tournament" shows current-tournament stats (fast, from data.games);
-  // "alltime" loads historical leaderboard (slow, from /api/historical).
-  const [statsScope, setStatsScope] = useState("tournament");
 
   const [statsAccordion, setStatsAccordion] = useState(null); // 'wins' | 'losses' | null
   const [toast, setToast] = useState(null);
