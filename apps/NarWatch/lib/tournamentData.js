@@ -89,18 +89,18 @@ export const TOURNAMENTS = [
     static: true,
     dataSource: "niwp",
     weekKey: "2026-W20",
-    // Pool N: Team Orlando, North Idaho Narwhals, Next Level
+    // Pool N (3 teams, round-robin): Team Orlando (1st), North Idaho (2nd), Next Level (3rd)
+    // Bracket: 2nd-place seeds (2M, 2N, 2O) play a 3-team round-robin on Sat/Sun.
     // All times America/New_York (EDT = UTC-4).
-    // Scores: update done/result/sets/score manually until NIWP/WPC picks up the tournament.
-    // When NIWP covers weekKey 2026-W20, live data takes priority automatically.
+    // NIWP merge overlays final scores automatically when API covers W20.
     games: [
-      // ── Friday May 15 ──────────────────────────────────────────────────
+      // ── Friday May 15 — Pool play ──────────────────────────────────────
       {
         id: "trident-2026-g8",
-        done: false,
-        result: null,
-        score: null,
-        sets: [],
+        done: true,
+        result: "L",
+        score: "8–17",
+        sets: [{ us: 8, them: 17 }],
         opponent: "Team Orlando",
         court: "Pool 1 / Main",
         gameLabel: "Game 8",
@@ -108,63 +108,46 @@ export const TOURNAMENTS = [
         time: "Fri, May 15, 6:15 PM",
         isBracket: false,
       },
-      // ── Saturday May 16 ────────────────────────────────────────────────
+      // ── Saturday May 16 — Pool play ────────────────────────────────────
       {
         id: "trident-2026-g24",
-        done: false,
-        result: null,
-        score: null,
-        sets: [],
+        done: true,
+        result: "W",
+        score: "6–5",
+        sets: [{ us: 6, them: 5 }],
         opponent: "Next Level",
         court: "Pool 1",
         gameLabel: "Game 24",
-        timeISO: "2026-05-16T12:50:00Z", // 8:50 AM EDT
-        time: "Sat, May 16, 8:50 AM",
+        timeISO: "2026-05-16T13:45:00Z", // 9:45 AM EDT
+        time: "Sat, May 16, 9:45 AM",
         isBracket: false,
       },
-      // ── Sunday May 17 — bracket (one slot plays, depends on pool finish) ─
-      // Pool N finish order determines which bracket game North Idaho draws.
-      // All three slots listed; the app shows them with conditional labels.
+      // ── Sunday May 17 — Bracket (2nd-seed round-robin, Game 62 + 74) ──
+      // NI finished 2nd in Pool N. 2N plays 2M then 2O.
       {
-        id: "trident-2026-bracket-3n",
+        id: "trident-2026-bracket-2n-a",
         done: false,
         result: null,
         score: null,
         sets: [],
         opponent: "TBD",
-        court: "TBD",
-        gameLabel: "Bracket",
-        bracketCondition: "If 3rd in Pool N — vs 3rd Pool O",
-        timeISO: "2026-05-17T11:00:00Z", // 7:00 AM EDT
-        time: "Sun, May 17, 7:00 AM",
-        isBracket: true,
-      },
-      {
-        id: "trident-2026-bracket-2n",
-        done: false,
-        result: null,
-        score: null,
-        sets: [],
-        opponent: "TBD",
-        court: "TBD",
-        gameLabel: "Bracket",
-        bracketCondition: "If 2nd in Pool N — vs 2nd Pool M",
-        timeISO: "2026-05-17T11:55:00Z", // 7:55 AM EDT
+        court: "Pool 1",
+        gameLabel: "Bracket · Game 62",
+        timeISO: "2026-05-17T11:55:00Z", // 7:55 AM EDT — 2M vs 2N
         time: "Sun, May 17, 7:55 AM",
         isBracket: true,
       },
       {
-        id: "trident-2026-bracket-1n",
+        id: "trident-2026-bracket-2n-b",
         done: false,
         result: null,
         score: null,
         sets: [],
         opponent: "TBD",
-        court: "TBD",
-        gameLabel: "Bracket",
-        bracketCondition: "If 1st in Pool N — vs 1st Pool M",
-        timeISO: "2026-05-17T12:50:00Z", // 8:50 AM EDT
-        time: "Sun, May 17, 8:50 AM",
+        court: "Pool 1",
+        gameLabel: "Bracket · Game 74",
+        timeISO: "2026-05-17T15:35:00Z", // 11:35 AM EDT — 2N vs 2O
+        time: "Sun, May 17, 11:35 AM",
         isBracket: true,
       },
     ],
