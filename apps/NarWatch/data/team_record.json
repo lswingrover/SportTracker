@@ -1,19 +1,19 @@
 {
-  "computed_at": "2026-05-03T02:29:09.863Z",
+  "computed_at": "2026-05-16T21:13:31.893Z",
   "teams": [
     {
       "team": "CDA 18U Boys",
-      "games": 34,
-      "wins": 23,
-      "losses": 10,
+      "games": 36,
+      "wins": 24,
+      "losses": 11,
       "ties": 1,
-      "win_pct": 0.676,
-      "goals_for": 391,
-      "goals_against": 250,
-      "goal_differential": 141,
-      "avg_goals_for": 11.5,
-      "avg_goals_against": 7.35,
-      "record_str": "23-10-1",
+      "win_pct": 0.667,
+      "goals_for": 405,
+      "goals_against": 272,
+      "goal_differential": 133,
+      "avg_goals_for": 11.25,
+      "avg_goals_against": 7.56,
+      "record_str": "24-11-1",
       "by_opponent": [
         {
           "opponent": "Boise Boys V",
@@ -311,6 +311,24 @@
           "games": 1,
           "goals_for": 10,
           "goals_against": 9
+        },
+        {
+          "opponent": "Team Orlando",
+          "wins": 0,
+          "losses": 1,
+          "ties": 0,
+          "games": 1,
+          "goals_for": 8,
+          "goals_against": 17
+        },
+        {
+          "opponent": "Next Level",
+          "wins": 1,
+          "losses": 0,
+          "ties": 0,
+          "games": 1,
+          "goals_for": 6,
+          "goals_against": 5
         }
       ],
       "by_tournament": [
@@ -385,6 +403,15 @@
           "games": 3,
           "goals_for": 44,
           "goals_against": 7
+        },
+        {
+          "tournament": "Orlando Trident Cup",
+          "wins": 1,
+          "losses": 1,
+          "ties": 0,
+          "games": 2,
+          "goals_for": 14,
+          "goals_against": 22
         }
       ]
     },
@@ -1038,14 +1065,14 @@
     }
   ],
   "combined": {
-    "games": 78,
-    "wins": 43,
-    "losses": 26,
+    "games": 80,
+    "wins": 44,
+    "losses": 27,
     "ties": 9,
-    "goals_for": 739,
-    "goals_against": 630,
-    "win_pct": 0.551,
-    "goal_differential": 109,
-    "record_str": "43-26-9"
+    "goals_for": 753,
+    "goals_against": 652,
+    "win_pct": 0.55,
+    "goal_differential": 101,
+    "record_str": "44-27-9"
   }
 }

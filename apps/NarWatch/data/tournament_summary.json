@@ -950,6 +950,46 @@
     ]
   },
   {
+    "tournament": "Orlando Trident Cup",
+    "games_played": 2,
+    "wins": 1,
+    "losses": 1,
+    "ties": 0,
+    "win_pct": 0.5,
+    "record_str": "1-1",
+    "goals_for": 14,
+    "goals_against": 22,
+    "goal_differential": -8,
+    "cda_teams": [
+      "CDA 18U Boys",
+      "CDA Boys 18U"
+    ],
+    "opponents": [
+      "Next Level",
+      "Team Orlando"
+    ],
+    "game_log": [
+      {
+        "game_id": "136",
+        "date": "2026-05-15 18:15:00",
+        "home_team": "CDA 18U Boys",
+        "away_team": "Team Orlando",
+        "home_score": 8,
+        "away_score": 17,
+        "result": "L"
+      },
+      {
+        "game_id": "137",
+        "date": "2026-05-16 00:00:00",
+        "home_team": "CDA Boys 18U",
+        "away_team": "Next Level",
+        "home_score": 6,
+        "away_score": 5,
+        "result": "W"
+      }
+    ]
+  },
+  {
     "tournament": "Jr Olympics Lewisville",
     "games_played": 1,
     "wins": 1,

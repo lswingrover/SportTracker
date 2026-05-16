@@ -1,9 +1,9 @@
 {
-  "computed_at": "2026-05-03T02:29:09.866Z",
-  "games_total": 82,
-  "games_included_in_stats": 78,
+  "computed_at": "2026-05-16T21:13:32.174Z",
+  "games_total": 84,
+  "games_included_in_stats": 80,
   "games_excluded": 4,
-  "games_with_stats": 82,
+  "games_with_stats": 84,
   "players_total": 94,
   "players_with_stats": 87,
   "teams": [
@@ -35,10 +35,10 @@
       "name": "CDA 18U Girls (Yellow)"
     }
   ],
-  "tournaments": 10,
-  "combined_record": "43-26-9",
-  "combined_goals_for": 739,
-  "combined_goals_against": 630,
+  "tournaments": 11,
+  "combined_record": "44-27-9",
+  "combined_goals_for": 753,
+  "combined_goals_against": 652,
   "normalization_applied": true,
   "flags_applied": 4
 }
