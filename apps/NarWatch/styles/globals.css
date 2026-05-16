@@ -1099,7 +1099,7 @@ button.stat:hover { border-color: var(--accent); }
   transition: transform 0.08s ease;
 }
 .court-hero:active { transform: scale(0.97); }
-.card.upcoming .court-hero { font-size: 64px; }
+.card.upcoming .court-hero { font-size: 36px; }
 .card.past .court-hero, .card.live-card .court-hero { font-size: 22px; }
 .court-hero .court-pin { font-size: 0.32em; opacity: 0.7; }
 .court-hero:hover { text-decoration: underline; text-underline-offset: 4px; }

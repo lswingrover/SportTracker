@@ -82,6 +82,62 @@ function buildStaticPayload(tournament) {
   };
 }
 
+// ─── Static payload NIWP merge ───────────────────────────────────────────────
+// Overlays real game results from NIWP onto a static payload built from
+// tournamentData.js. Called in the background after the static bail in load()
+// so users see the static skeleton instantly then get live results a second later.
+//
+// Matching strategy: opponent name, case-insensitive. NIWP uses the raw opponent
+// name from the WordPress API; tournamentData.js mirrors it (or TBD for unknowns).
+// TBD static slots are left unmerged — they'll update once the opponent is known.
+function mergeNiwpIntoStatic(staticPayload, niwpData) {
+  const niwpGames = niwpData?.games || [];
+
+  // Index NIWP completed games by normalized opponent name.
+  const niwpByOpponent = new Map();
+  for (const g of niwpGames) {
+    if (!g.done) continue;
+    const key = (g.opponent || "").toLowerCase().trim();
+    // Keep first match — NIWP can have duplicate opponent names across subteams;
+    // the first entry for a given opponent is the Narwhals game we care about.
+    if (!niwpByOpponent.has(key)) niwpByOpponent.set(key, g);
+  }
+
+  // Merge NIWP results into static games.
+  const mergedGames = staticPayload.games.map((g) => {
+    const key = (g.opponent || "").toLowerCase().trim();
+    if (key === "tbd" || key === "") return g; // leave placeholder slots alone
+    const match = niwpByOpponent.get(key);
+    if (!match) return g;
+    return { ...g, done: true, result: match.result, score: match.score, sets: match.sets };
+  });
+
+  // Recompute record from merged games.
+  const wins   = mergedGames.filter((g) => g.done && g.result === "W").length;
+  const losses = mergedGames.filter((g) => g.done && g.result === "L").length;
+
+  // Use server-derived NIWP standings if non-empty (they're the accurate pool
+  // standings). Fall back to whatever static had (often []).
+  const standings = niwpData?.standings?.length ? niwpData.standings : staticPayload.standings;
+
+  const goalDiff  = computeGoalDiff(mergedGames);
+  const allDone   = mergedGames.length > 0 && mergedGames.every((g) => g.done);
+  const nextEvent = computeNextEventFromGames(mergedGames);
+
+  return {
+    ...staticPayload,
+    games:       mergedGames,
+    record:      { wins, losses },
+    standings,
+    goalDiff,
+    isOver:      allDone,
+    nextGame:    nextEvent,
+    nextEvent:   nextEvent,
+    _pollSchedule: { intervalMs: allDone ? 24 * 60 * 60 * 1000 : 5 * 60 * 1000 },
+    _mergedFromNiwp: true,
+  };
+}
+
 // ─── Client-side data cache ───────────────────────────────────────────────────
 // Module-level Map: persists across re-renders, hydrated from localStorage on
 // first access so revisits render instantly from disk.
@@ -2711,16 +2767,43 @@ export default function Home() {
       if (force) setUserRefreshing(true);
       hydrateCacheFromLocalStorage();
 
-      // Static-tournament early bail: static:true means the data is manually
-      // curated in tournamentData.js. Always use buildStaticPayload — never let
-      // NIWP override, even when NIWP has the same week key (partial data).
+      // Static-tournament bail: data is curated in tournamentData.js.
+      // Phase 1: serve the static payload (or a cached merged version) immediately
+      //          so the UI renders with no spinner.
+      // Phase 2: fire a background NIWP fetch for the tournament's weekKey, merge
+      //          real game results in, update state + localStorage cache.
+      //          Standings and completed scores come from NIWP; TBD slots stay as-is.
       if (tournament.static) {
         prevDataRef.current = null;
         prevLiveRef.current = null;
         firstLoadRef.current = true;
-        setData(buildStaticPayload(tournament));
+
+        const staticBase = buildStaticPayload(tournament);
+
+        // Check for a previously cached merged payload (memory + localStorage).
+        // Key is synthetic — static tournaments have no API URL to use as key.
+        const staticCacheKey = `/static-merged:${tournament.id}`;
+        const cachedEntry = CLIENT_DATA_CACHE.get(staticCacheKey);
+        const hasFreshCache = cachedEntry && (Date.now() - cachedEntry.fetchedAt < 24 * 60 * 60 * 1000);
+
+        // Render immediately — no spinner ever for static tournaments.
+        setData(hasFreshCache ? cachedEntry.payload : staticBase);
         setError(null);
         setLoading(false);
+
+        // Background NIWP fetch to overlay real game results (non-blocking).
+        if (tournament.weekKey) {
+          fetch(`/api/niwp?weekKey=${encodeURIComponent(tournament.weekKey)}`)
+            .then((r) => (r.ok ? r.json() : null))
+            .then((niwpData) => {
+              if (!niwpData) return;
+              const merged = mergeNiwpIntoStatic(staticBase, niwpData);
+              writeCache(staticCacheKey, merged);
+              setData(merged);
+            })
+            .catch(() => {}); // NIWP failure is non-fatal; static base already shown
+        }
+
         if (force) {
           setUserRefreshing(false);
           setRefreshDone(true);
