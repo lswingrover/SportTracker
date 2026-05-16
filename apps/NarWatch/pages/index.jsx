@@ -3703,8 +3703,11 @@ export default function Home() {
                 loading={leaderboardLoading}
                 onPlayerTap={(p) => setPlayerSheet(p)}
               />
-            ) : data?.weekKey ? (
-              /* Tournament has a weekKey → fetch per-game player stats from NIWP data */
+            ) : data?.weekKey && (tournamentStatsLoading || tournamentStatsData?.length > 0) ? (
+              /* Tournament has a weekKey → fetch per-game player stats from NIWP data.
+                 Show LeaderboardTab while loading or when data came back non-empty.
+                 Fall through to simple summary if fetch returned 0 players (e.g. Trident Cup
+                 games are not yet in games.json / not tracked via NIWP). */
               <LeaderboardTab
                 players={tournamentStatsData}
                 loading={tournamentStatsLoading}
