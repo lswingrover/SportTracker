@@ -2768,12 +2768,10 @@ export default function Home() {
       hydrateCacheFromLocalStorage();
 
       // Static-tournament bail: data is curated in tournamentData.js.
-      // Phase 1: serve the static payload (or a cached merged version) immediately
-      //          so the UI renders with no spinner.
-      // Phase 2: fire a background NIWP fetch for the tournament's weekKey, merge
-      //          real game results in, update state + localStorage cache.
-      //          Standings and completed scores come from NIWP; TBD slots stay as-is.
-      if (tournament.static) {
+      // Only fires when niwpWeekKey === null (a static chip is active).
+      // When niwpWeekKey is set, the user tapped an NIWP chip — skip the bail
+      // and fall through to the normal /api/tournament?weekKey=... fetch.
+      if (tournament.static && niwpWeekKey === null) {
         prevDataRef.current = null;
         prevLiveRef.current = null;
         firstLoadRef.current = true;
