@@ -2493,22 +2493,50 @@ export default function Home() {
   const [allGamesCache, setAllGamesCache]   = useState(null); // null | game[]
   const [h2hGamesLoading, setH2hGamesLoading] = useState(false);
 
-  // Stats scope: "tournament" shows current-tournament stats (fast, from data.games);
-  // "alltime" loads historical leaderboard (slow, from /api/historical).
+  // Stats scope: "tournament" shows per-tournament player stats table;
+  // "alltime" shows all-season stats. Both use LeaderboardTab.
   // Must be declared before the useEffect that references it to avoid TDZ crash.
   const [statsScope, setStatsScope] = useState("tournament");
 
+  // Tournament-scoped player stats — fetched from /api/historical?weekKey=
+  const [tournamentStatsData, setTournamentStatsData]       = useState(null);
+  const [tournamentStatsLoading, setTournamentStatsLoading] = useState(false);
+
   useEffect(() => {
-    // Only fetch all-time stats when the user explicitly switches to that scope.
-    if (tab !== "stats" || statsScope !== "alltime") return;
-    if (leaderboardData || leaderboardLoading) return;
-    setLeaderboardLoading(true);
-    fetch("/api/historical?view=player_stats")
-      .then((r) => r.json())
-      .then((json) => setLeaderboardData(json?.player_season_stats ?? null))
-      .catch(() => {/* silently degrade */})
-      .finally(() => setLeaderboardLoading(false));
-  }, [tab, statsScope, leaderboardData, leaderboardLoading]);
+    if (tab !== "stats") return;
+
+    if (statsScope === "tournament") {
+      const weekKey = data?.weekKey;
+      if (!weekKey || tournamentStatsData || tournamentStatsLoading) return;
+      setTournamentStatsLoading(true);
+      fetch(`/api/historical?view=player_stats&weekKey=${encodeURIComponent(weekKey)}`)
+        .then((r) => r.json())
+        .then((json) => setTournamentStatsData(json?.player_season_stats ?? null))
+        .catch(() => setTournamentStatsData(null))
+        .finally(() => setTournamentStatsLoading(false));
+      return;
+    }
+
+    if (statsScope === "alltime") {
+      if (leaderboardData || leaderboardLoading) return;
+      setLeaderboardLoading(true);
+      fetch("/api/historical?view=player_stats")
+        .then((r) => r.json())
+        .then((json) => setLeaderboardData(json?.player_season_stats ?? null))
+        .catch(() => {/* silently degrade */})
+        .finally(() => setLeaderboardLoading(false));
+    }
+  }, [tab, statsScope, data?.weekKey, tournamentStatsData, tournamentStatsLoading, leaderboardData, leaderboardLoading]);
+
+  // Reset tournament stats cache when the active tournament changes.
+  const prevWeekKeyRef = useRef(null);
+  useEffect(() => {
+    const wk = data?.weekKey ?? null;
+    if (wk !== prevWeekKeyRef.current) {
+      prevWeekKeyRef.current = wk;
+      setTournamentStatsData(null);
+    }
+  }, [data?.weekKey]);
 
   const [statsAccordion, setStatsAccordion] = useState(null); // 'wins' | 'losses' | null
   const [toast, setToast] = useState(null);
@@ -3675,8 +3703,15 @@ export default function Home() {
                 loading={leaderboardLoading}
                 onPlayerTap={(p) => setPlayerSheet(p)}
               />
+            ) : data?.weekKey ? (
+              /* Tournament has a weekKey → fetch per-game player stats from NIWP data */
+              <LeaderboardTab
+                players={tournamentStatsData}
+                loading={tournamentStatsLoading}
+                onPlayerTap={(p) => setPlayerSheet(p)}
+              />
             ) : (
-              /* Tournament-scoped stats: derived from data.games (no extra fetch) */
+              /* No weekKey (external/sheets-only tournament) → simple inline summary */
               (() => {
                 const tGames = (data?.games || []).filter((g) => g.done);
                 if (!tGames.length) {
@@ -3716,20 +3751,6 @@ export default function Home() {
                         <div className="value">{diff > 0 ? "+" : ""}{diff}</div>
                       </div>
                     </section>
-                    <div className="section-title" style={{ padding: "8px 16px 4px" }}>Game by game</div>
-                    <ul style={{ listStyle: "none", margin: 0, padding: "0 16px", display: "flex", flexDirection: "column", gap: 8 }}>
-                      {tGames.map((g) => {
-                        const gf = (g.sets || []).reduce((s, q) => s + (q.us ?? 0), 0);
-                        const ga = (g.sets || []).reduce((s, q) => s + (q.them ?? 0), 0);
-                        return (
-                          <li key={g.id} style={{ display: "flex", alignItems: "center", gap: 10, fontSize: 13, padding: "8px 10px", background: "var(--panel)", borderRadius: 8, border: "1px solid var(--line)" }}>
-                            <span className={`badge ${g.result === "W" ? "win" : "loss"}`}>{g.result}</span>
-                            <span style={{ flex: 1, minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{g.opponent || "TBD"}</span>
-                            <span style={{ fontVariantNumeric: "tabular-nums" }}>{g.score || `${gf}–${ga}`}</span>
-                          </li>
-                        );
-                      })}
-                    </ul>
                   </div>
                 );
               })()
