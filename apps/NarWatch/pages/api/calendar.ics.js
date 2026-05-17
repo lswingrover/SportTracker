@@ -1,3 +1,5 @@
+import { findTournament } from "../../lib/tournamentData.js";
+
 const AES_BASE = "https://results.advancedeventsystems.com";
 
 const VENUES = {
@@ -155,7 +157,84 @@ function hashSequence(input) {
   return Math.abs(h) % 1_000_000;
 }
 
+// Build an ICS calendar from a static (NIWP) tournament's local game data.
+function buildStaticTournamentICS(tournament, teamNameOverride) {
+  const teamName = teamNameOverride || tournament.teamName || "North Idaho Narwhals";
+  const venue = tournament.venue || DEFAULT_VENUE;
+  const appUrl = "https://narwatch.vercel.app";
+  const calendarName = `${teamName} · ${tournament.label}`;
+
+  const events = [];
+  for (const g of tournament.games || []) {
+    if (!g.timeISO) continue;
+    const end = new Date(new Date(g.timeISO).getTime() + 75 * 60 * 1000).toISOString();
+
+    const oppLabel = g.isBracket
+      ? g.bracketSlot ? `Bracket vs Pool ${g.bracketSlot}` : "Bracket game"
+      : g.opponent || "TBD";
+    const summary =
+      g.result === "W" ? `WON: ${teamName} vs ${oppLabel}` :
+      g.result === "L" ? `Lost: ${teamName} vs ${oppLabel}` :
+      g.isBracket      ? `${teamName} — ${g.gameLabel || "Bracket game"}` :
+                         `${teamName} vs ${oppLabel}`;
+
+    const court = g.court || "TBD";
+    const location = venue.name
+      ? `${court !== "TBD" ? court + " · " : ""}${venue.name}, ${venue.address || ""}`.trim().replace(/,\s*$/, "")
+      : court;
+
+    const descLines = [
+      g.gameLabel ? `Game: ${g.gameLabel}` : null,
+      `Court: ${court}`,
+      g.done && g.score ? `Score: ${g.score}` : null,
+    ].filter(Boolean);
+
+    events.push(
+      buildVEvent({
+        uid: `${g.id}@narwhaltracker`,
+        start: g.timeISO,
+        end,
+        summary,
+        location,
+        description: descLines.join("\\n"),
+        url: appUrl,
+        sequence: hashSequence({ id: g.id, result: g.result, score: g.score }),
+      })
+    );
+  }
+
+  return [
+    "BEGIN:VCALENDAR",
+    "VERSION:2.0",
+    "PRODID:-//NarWatch//EN",
+    "METHOD:PUBLISH",
+    "CALSCALE:GREGORIAN",
+    `X-WR-CALNAME:${escapeText(calendarName)}`,
+    `X-WR-CALDESC:${escapeText(`${tournament.label} schedule for ${teamName}.`)}`,
+    `X-WR-TIMEZONE:${venue.tz || "America/Los_Angeles"}`,
+    ...events,
+    "END:VCALENDAR",
+  ].join("\r\n");
+}
+
 export default async function handler(req, res) {
+  // Static tournament path — serves game data from tournamentData.js (no AES fetch).
+  const tournamentIdParam = req.query?.tournamentId;
+  if (tournamentIdParam) {
+    const tournament = findTournament(String(tournamentIdParam));
+    if (!tournament) {
+      res.status(404).send("Tournament not found");
+      return;
+    }
+    const teamNameParam = req.query?.teamName ? String(req.query.teamName) : undefined;
+    const ics = buildStaticTournamentICS(tournament, teamNameParam);
+    res.setHeader("Content-Type", "text/calendar; charset=utf-8");
+    res.setHeader("Cache-Control", "public, max-age=300, s-maxage=300");
+    res.setHeader("Access-Control-Allow-Origin", "*");
+    res.status(200).send(ics);
+    return;
+  }
+
   const eventId = String(req.query?.eventId || "PTAwMDAwNDI2MDU90");
   const divId = String(req.query?.divId || "203854");
   const teamId = String(req.query?.teamId || "201772");
