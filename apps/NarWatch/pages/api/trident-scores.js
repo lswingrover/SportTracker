@@ -1,300 +1,271 @@
 // NarWatch: Team Orlando WPC Google Sheets adapter for Trident Cup 2026.
 //
-// Fetches the published Google Sheet from teamorlandowpc.com and parses:
-//   • Game_Scores tab (gid=338166134)  → North Idaho 18U Boys game results
-//   • TeamBrackets tab (gid=580382339) → bracket seedings (2M, 2N, 2O, etc.)
+// PREVIOUS: used pubhtml endpoint which returns a JS-rendered shell with no
+// table content. FIXED: uses CSV export endpoints which return raw data.
 //
-// Columns (Game_Scores): GM, Div, Day, Pool, Time, Dark caps, Dk Score,
-//                         Light caps, Lt Score, Winner
-//
-// North Idaho is identified by team name containing "north idaho" or "narwhal"
-// (case-insensitive). Provisional scores have a "?" suffix.
+// Fetches the published Google Sheet from teamorlandowpc.com:
+//   • Game_Scores tab (gid=338166134)  → all 18U Boys game results
+//   • TeamBrackets tab (gid=580382339) → pool assignments + bracket rankings
 //
 // OUTPUT:
 //   {
-//     games: [{ id, gmNum, opponent, done, result, score, sets, provisional }],
-//     bracketSlots: { "2M": "Team Name", "2N": "...", "2O": "..." },
+//     games: [{ id, gmNum, opponent, done, result, score, sets }],  ← NI games only
+//     bracketSlots: { "2M": "Team Name", ... },
+//     standings: [{ teamId, teamName, isUs, rank, pool, matchesWon,
+//                   matchesLost, goalDiff, goalsFor, setPercent }],  ← all 9 teams
 //     fetchedAt: ISO string,
-//     source: "teamorlandowpc-sheets",
+//     source: "teamorlandowpc-sheets-csv",
 //   }
-//
-// index.jsx consumes `games` via mergeNiwpIntoStatic() and `bracketSlots` via
-// applyBracketSlots() to fill in TBD opponent names on bracket games.
 //
 // CACHE: 5-minute in-memory cache per Vercel serverless instance.
 
 const SHEET_BASE =
   "https://docs.google.com/spreadsheets/d/e/2PACX-1vQteqpqxhQp_nXeLY-KgZbwX1dtIpi7rlHUy5QScz1-XK7VaWGlIB51ejGBa1HuM2_pLtkzJES-SoLt";
-const SCORES_URL   = `${SHEET_BASE}/pubhtml?gid=338166134&single=true`;
-const BRACKETS_URL = `${SHEET_BASE}/pubhtml?gid=580382339&single=true`;
+const SCORES_CSV_URL   = `${SHEET_BASE}/pub?gid=338166134&single=true&output=csv`;
+const BRACKETS_CSV_URL = `${SHEET_BASE}/pub?gid=580382339&single=true&output=csv`;
 
-const CACHE_TTL_MS = 5 * 60 * 1000; // 5 minutes
-
+const CACHE_TTL_MS = 5 * 60 * 1000;
 const NI_PATTERNS = /north\s*idaho|narwhal/i;
+const FETCH_HEADERS = { "User-Agent": "Mozilla/5.0 (compatible; NarWatch/1.0)" };
 
-// Module-level cache
 let cache = null;
 
-const FETCH_HEADERS = {
-  "User-Agent":
-    "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
-  Accept: "text/html,application/xhtml+xml",
-};
+// ─── CSV parser ───────────────────────────────────────────────────────────────
+// Handles quoted fields with embedded commas and escaped double-quotes.
 
-// ─── HTML table parser ────────────────────────────────────────────────────────
-
-function parseHtmlTable(html) {
+function parseCsv(text) {
   const rows = [];
-  const trRe = /<tr[^>]*>([\s\S]*?)<\/tr>/gi;
-  let trMatch;
-  while ((trMatch = trRe.exec(html)) !== null) {
-    const rowHtml = trMatch[1];
+  for (const line of text.split("\n")) {
+    if (!line.trim()) continue;
     const cells = [];
-    const tdRe = /<t[dh][^>]*>([\s\S]*?)<\/t[dh]>/gi;
-    let tdMatch;
-    while ((tdMatch = tdRe.exec(rowHtml)) !== null) {
-      const text = tdMatch[1]
-        .replace(/<[^>]+>/g, "")
-        .replace(/&amp;/g, "&")
-        .replace(/&lt;/g, "<")
-        .replace(/&gt;/g, ">")
-        .replace(/&nbsp;/g, " ")
-        .replace(/&#39;/g, "'")
-        .replace(/&quot;/g, '"')
-        .replace(/\s+/g, " ")
-        .trim();
-      cells.push(text);
+    let inQuote = false, cell = "";
+    for (let i = 0; i < line.length; i++) {
+      const ch = line[i];
+      if (ch === '"') {
+        if (inQuote && line[i + 1] === '"') { cell += '"'; i++; }
+        else inQuote = !inQuote;
+      } else if (ch === "," && !inQuote) {
+        cells.push(cell); cell = "";
+      } else {
+        cell += ch;
+      }
     }
-    if (cells.length > 0) rows.push(cells);
+    cells.push(cell.replace(/\r$/, ""));
+    rows.push(cells);
   }
   return rows;
 }
 
-function findHeaderRow(rows, mustHave) {
-  for (let i = 0; i < rows.length; i++) {
-    const lower = rows[i].map((c) => c.toLowerCase());
-    if (mustHave.every((kw) => lower.some((cell) => cell.includes(kw)))) {
-      return i;
-    }
-  }
-  return -1;
+function slugify(s) {
+  return s.toLowerCase().trim().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
 }
 
-function parseScore(str) {
-  if (!str) return null;
-  const n = parseInt(str.replace(/\?/g, "").trim(), 10);
-  return isNaN(n) ? null : n;
-}
+// ─── Game_Scores CSV parser ───────────────────────────────────────────────────
+// Columns: GM, Div, Day, Pool, Time, Dark caps, Dk Score, Light caps, Lt Score, Winner
 
-// ─── Game_Scores parser ───────────────────────────────────────────────────────
+function parseGameScoresCsv(csvText) {
+  const rows = parseCsv(csvText);
+  if (rows.length < 2) return [];
 
-function parseScoresHtml(html) {
-  const rows = parseHtmlTable(html);
-  const headerIdx = findHeaderRow(rows, ["gm", "dk"]);
-  if (headerIdx === -1) return [];
-
-  const header = rows[headerIdx].map((c) => c.toLowerCase().trim());
-  const col = {
-    gm:      header.indexOf("gm"),
-    div:     header.indexOf("div"),
-    dark:    header.findIndex((h) => h.includes("dark")),
-    dkScore: header.findIndex((h) => h.includes("dk") && h.includes("score")),
-    light:   header.findIndex((h) => h.includes("light") || h.includes("lt cap")),
-    ltScore: header.findIndex((h) => (h.includes("lt") || h.includes("light")) && h.includes("score")),
-    winner:  header.findIndex((h) => h.includes("winner")),
+  const hdr = rows[0].map((c) => c.trim().toLowerCase());
+  const c = {
+    gm:      hdr.indexOf("gm"),
+    div:     hdr.indexOf("div"),
+    dark:    hdr.findIndex((h) => h.includes("dark")),
+    dkScore: hdr.findIndex((h) => h.includes("dk") && h.includes("score")),
+    light:   hdr.findIndex((h) => h.includes("light") || h.includes("lt cap")),
+    ltScore: hdr.findIndex((h) => (h.includes("lt") || h.includes("light")) && h.includes("score")),
+    winner:  hdr.findIndex((h) => h.includes("winner")),
   };
 
   const games = [];
-
-  for (let i = headerIdx + 1; i < rows.length; i++) {
+  for (let i = 1; i < rows.length; i++) {
     const row = rows[i];
-    if (row.length < 6) continue;
+    const div = c.div >= 0 ? (row[c.div] || "") : "";
+    if (!/18u.*boy/i.test(div)) continue;
 
-    const div = col.div >= 0 ? (row[col.div] || "") : "";
-    if (div && !/18u?\s*b/i.test(div)) continue;
+    const dark    = (row[c.dark]    || "").trim();
+    const light   = (row[c.light]   || "").trim();
+    const dkScore = parseInt(row[c.dkScore] || "", 10);
+    const ltScore = parseInt(row[c.ltScore] || "", 10);
+    const winner  = (row[c.winner]  || "").trim();
+    const gm      = (row[c.gm]      || "").trim();
+    if (!dark || !light) continue;
 
-    const darkTeam  = col.dark  >= 0 ? (row[col.dark]  || "") : "";
-    const lightTeam = col.light >= 0 ? (row[col.light] || "") : "";
-
-    const niIsDark  = NI_PATTERNS.test(darkTeam);
-    const niIsLight = NI_PATTERNS.test(lightTeam);
-    if (!niIsDark && !niIsLight) continue;
-
-    const dkRaw    = col.dkScore >= 0 ? (row[col.dkScore] || "") : "";
-    const ltRaw    = col.ltScore >= 0 ? (row[col.ltScore] || "") : "";
-    const winnerRaw = col.winner >= 0 ? (row[col.winner] || "") : "";
-
-    const dkScore = parseScore(dkRaw);
-    const ltScore = parseScore(ltRaw);
-
-    const isProvisional = dkRaw.includes("?") || ltRaw.includes("?");
-    const done = dkScore !== null && ltScore !== null && winnerRaw.length > 0;
-
-    const niScore   = niIsDark ? dkScore : ltScore;
-    const themScore = niIsDark ? ltScore : dkScore;
-    const opponent  = niIsDark ? lightTeam : darkTeam;
-
-    let result = null;
-    if (done) result = NI_PATTERNS.test(winnerRaw) ? "W" : "L";
-
-    const scoreStr = niScore !== null && themScore !== null ? `${niScore}–${themScore}` : null;
-    const sets     = niScore !== null && themScore !== null ? [{ us: niScore, them: themScore }] : [];
-
-    const gmNum = col.gm >= 0 ? (row[col.gm] || "").trim() : "";
+    const done = !isNaN(dkScore) && !isNaN(ltScore) && winner.length > 0;
+    const niIsDark  = NI_PATTERNS.test(dark);
+    const niIsLight = NI_PATTERNS.test(light);
+    const isNiGame  = niIsDark || niIsLight;
 
     games.push({
-      id:          `trident-2026-sheets-g${gmNum || i}`,
-      gmNum,
-      opponent:    opponent.trim(),
+      gm: parseInt(gm, 10) || 0,
+      dark, light,
+      dkScore: done ? dkScore : null,
+      ltScore: done ? ltScore : null,
+      winner,
       done,
-      result,
-      score:       scoreStr,
-      sets,
-      provisional: isProvisional,
+      // NI-specific (undefined for non-NI games)
+      ...(isNiGame && done ? {
+        niGame: true,
+        opponent:  niIsDark ? light : dark,
+        result:    NI_PATTERNS.test(winner) ? "W" : "L",
+        score:     `${niIsDark ? dkScore : ltScore}–${niIsDark ? ltScore : dkScore}`,
+        sets:      [{ us: niIsDark ? dkScore : ltScore, them: niIsDark ? ltScore : dkScore }],
+      } : {}),
     });
   }
-
   return games;
 }
 
-// ─── TeamBrackets parser ──────────────────────────────────────────────────────
-//
-// We don't know the exact column layout until we see the sheet, so we use a
-// multi-strategy approach:
-//
-// Strategy A — direct slot column: look for a column whose header matches
-//   /slot|seed|place|bracket/i and a team-name column. Each row like
-//   ["2M", "Team Fury"] maps slot→team directly.
-//
-// Strategy B — pool + place columns: look for "pool" and "place" (or
-//   "finish"/"rank") columns. Combine pool letter + place number → slot key.
-//
-// Strategy C — free scan: scan every row for cells matching /^[12]\s*[A-Z]$/
-//   (e.g. "2M", "1N"). The adjacent cell is likely the team name.
-//
-// Returns { "1M": "...", "2M": "...", "1N": "...", "2N": "...", ... }
+// ─── TeamBrackets CSV parser ──────────────────────────────────────────────────
+// Bracket Status section: Division, Bracket (pool letter), Team_Name, Wins, Brk_Rank
 
-function parseBracketsHtml(html) {
-  const slots = {};
-  if (!html) return slots;
+function parseBracketsCsv(csvText) {
+  const rows = parseCsv(csvText);
 
-  const rows = parseHtmlTable(html);
-  if (!rows.length) return slots;
-
-  // Find the header row — look for any row with "pool" or "place" or "seed"
-  let headerIdx = -1;
+  // Locate the "Team_Name" header row (bracket status table starts there).
+  let hdrIdx = -1;
   for (let i = 0; i < rows.length; i++) {
-    const lower = rows[i].map((c) => c.toLowerCase());
-    if (lower.some((c) => c.includes("pool") || c.includes("place") || c.includes("seed") || c.includes("slot"))) {
-      headerIdx = i;
-      break;
-    }
+    if (rows[i].some((c) => c.trim() === "Team_Name")) { hdrIdx = i; break; }
   }
+  if (hdrIdx < 0) return { teamInfo: {}, bracketSlots: {} };
 
-  if (headerIdx >= 0) {
-    const header = rows[headerIdx].map((c) => c.toLowerCase().trim());
+  const hdr = rows[hdrIdx].map((c) => c.trim());
+  const c = {
+    div:     hdr.indexOf("Division"),
+    bracket: hdr.indexOf("Bracket"),
+    name:    hdr.indexOf("Team_Name"),
+    wins:    hdr.indexOf("Wins"),
+    brkRank: hdr.indexOf("Brk_Rank"),
+  };
 
-    // Strategy A: explicit slot/seed column + team column
-    const slotColA = header.findIndex((h) => /slot|seed|bracket/i.test(h));
-    const teamColA = header.findIndex((h) => /team|name/i.test(h));
-    if (slotColA >= 0 && teamColA >= 0) {
-      for (let i = headerIdx + 1; i < rows.length; i++) {
-        const row = rows[i];
-        const slotVal = (row[slotColA] || "").trim();
-        const teamVal = (row[teamColA] || "").trim();
-        if (/^[12][A-Z]$/i.test(slotVal) && teamVal) {
-          slots[slotVal.toUpperCase()] = teamVal;
-        }
-      }
-      if (Object.keys(slots).length) return slots;
-    }
+  const teamInfo = {};   // keyed by lowercase team name
+  const bracketSlots = {};  // e.g. "2M" → "Gladiators"
 
-    // Strategy B: pool + place/finish + team
-    const poolCol  = header.findIndex((h) => h === "pool" || h.includes("pool"));
-    const placeCol = header.findIndex((h) => /place|finish|rank|pos/i.test(h));
-    const teamCol  = header.findIndex((h) => /team|name/i.test(h));
-    if (poolCol >= 0 && placeCol >= 0 && teamCol >= 0) {
-      for (let i = headerIdx + 1; i < rows.length; i++) {
-        const row = rows[i];
-        const pool  = (row[poolCol]  || "").trim().toUpperCase();
-        const place = (row[placeCol] || "").trim();
-        const team  = (row[teamCol]  || "").trim();
-        const placeNum = parseInt(place, 10);
-        if (pool && !isNaN(placeNum) && team) {
-          slots[`${placeNum}${pool}`] = team;
-        }
-      }
-      if (Object.keys(slots).length) return slots;
-    }
-  }
+  for (let i = hdrIdx + 1; i < rows.length; i++) {
+    const row = rows[i];
+    const div     = (row[c.div]     || "").trim();
+    const pool    = (row[c.bracket] || "").trim();
+    const name    = (row[c.name]    || "").trim();
+    const wins    = parseInt(row[c.wins]    || "0", 10) || 0;
+    const brkRank = parseInt(row[c.brkRank] || "0", 10) || 0;
+    if (!name || !pool) continue;
 
-  // Strategy C: free scan for /^[12][A-Z]$/ cells
-  for (const row of rows) {
-    for (let c = 0; c < row.length; c++) {
-      const cell = row[c].trim();
-      if (/^[12][A-Z]$/i.test(cell)) {
-        // Look right for a non-empty team name (next 1-2 cells)
-        for (let offset = 1; offset <= 2; offset++) {
-          const candidate = (row[c + offset] || "").trim();
-          if (candidate && !/^\d+$/.test(candidate)) {
-            slots[cell.toUpperCase()] = candidate;
-            break;
-          }
-        }
+    if (/18u.*boy/i.test(div)) {
+      teamInfo[name.toLowerCase()] = { pool, poolRank: brkRank || 99, totalWins: wins, displayName: name };
+      // bracketSlot key = "{rank}{pool}" e.g. "2N"
+      if (brkRank >= 1 && brkRank <= 3) {
+        bracketSlots[`${brkRank}${pool}`] = name;
       }
     }
   }
 
-  return slots;
+  return { teamInfo, bracketSlots };
+}
+
+// ─── Standings builder ────────────────────────────────────────────────────────
+// Computes W/L/GF/GA from pool-play games only (same-pool matchups).
+
+function buildStandings(games, teamInfo) {
+  // Build per-team stat buckets
+  const stats = {};
+  for (const [, info] of Object.entries(teamInfo)) {
+    stats[info.displayName] = {
+      pool: info.pool,
+      poolRank: info.poolRank,
+      wins: 0, losses: 0, goalsFor: 0, goalsAgainst: 0,
+    };
+  }
+
+  // Fuzzy team-name lookup against stats keys
+  function findKey(name) {
+    const n = name.toLowerCase().trim();
+    for (const k of Object.keys(stats)) {
+      if (k.toLowerCase() === n) return k;
+    }
+    for (const k of Object.keys(stats)) {
+      const kl = k.toLowerCase();
+      if (n.startsWith(kl) || kl.startsWith(n)) return k;
+    }
+    // Partial word overlap
+    for (const k of Object.keys(stats)) {
+      const words = k.toLowerCase().split(/\s+/);
+      if (words.some((w) => w.length > 3 && n.includes(w))) return k;
+    }
+    return null;
+  }
+
+  for (const g of games) {
+    if (!g.done || g.dkScore == null || g.ltScore == null) continue;
+    const darkKey  = findKey(g.dark);
+    const lightKey = findKey(g.light);
+    // Only count same-pool matchups (pool play)
+    if (!darkKey || !lightKey) continue;
+    if (stats[darkKey].pool !== stats[lightKey].pool) continue;
+
+    const darkWon = g.dkScore > g.ltScore;
+    stats[darkKey].wins    += darkWon ? 1 : 0;
+    stats[darkKey].losses  += darkWon ? 0 : 1;
+    stats[darkKey].goalsFor     += g.dkScore;
+    stats[darkKey].goalsAgainst += g.ltScore;
+    stats[lightKey].wins    += darkWon ? 0 : 1;
+    stats[lightKey].losses  += darkWon ? 1 : 0;
+    stats[lightKey].goalsFor     += g.ltScore;
+    stats[lightKey].goalsAgainst += g.dkScore;
+  }
+
+  return Object.entries(stats)
+    .map(([name, s]) => ({
+      teamId:       slugify(name),
+      teamName:     name,
+      isUs:         NI_PATTERNS.test(name),
+      rank:         s.poolRank,
+      pool:         s.pool,
+      matchesWon:   s.wins,
+      matchesLost:  s.losses,
+      goalDiff:     s.goalsFor - s.goalsAgainst,
+      goalsFor:     s.goalsFor,
+      setPercent:   0, // water polo has no sets
+      earnedBid:    false,
+      bidAlias:     null,
+    }))
+    .sort((a, b) => a.pool !== b.pool
+      ? a.pool.localeCompare(b.pool)
+      : a.rank - b.rank);
 }
 
 // ─── Push helpers ─────────────────────────────────────────────────────────────
 
-// Fire final-result and (if applicable) bracket-advance push notifications
-// for any games that just flipped to done since the last cache snapshot.
-// Runs fire-and-forget (not awaited) so it never delays the API response.
 async function maybePushScoreChanges(prevGames, nextGames) {
   try {
     const { pushConfigured, pushToTeam } = await import("@sport-tracker/core/push.js");
     if (!pushConfigured()) return;
 
-    const prevById = Object.fromEntries((prevGames || []).map((g) => [g.id, g]));
+    const prevById = Object.fromEntries(
+      (prevGames || []).filter((g) => g.niGame).map((g) => [g.gm, g])
+    );
 
     for (const g of nextGames) {
-      const prev = prevById[g.id];
-      // Notify on done→true transitions (or first time we see a completed game).
-      if (!g.done) continue;
-      if (prev && prev.done) continue; // already done before this fetch
+      if (!g.niGame || !g.done) continue;
+      const prev = prevById[g.gm];
+      if (prev?.done) continue;
 
-      const isBracket = g.gameLabel?.toLowerCase().includes("bracket");
-      const resultWord = g.result === "W" ? "WIN" : g.result === "L" ? "LOSS" : "FINAL";
-      const scoreStr   = g.score || "";
-      const oppStr     = g.opponent || "opponent";
+      const isBracket = g.gm >= 56;
+      const resultWord = g.result === "W" ? "WIN" : "LOSS";
+      await pushToTeam("narwhals", {
+        title: `Narwhals ${resultWord} ${g.score || ""}`,
+        body:  `vs ${g.opponent} — Game ${g.gm}`,
+        tag:   `game-result-trident-${g.gm}`,
+        url:   "/",
+      }, "final-result");
 
-      // final-result notification for everyone who wants it
-      await pushToTeam(
-        "narwhals",
-        {
-          title: `Narwhals ${resultWord} ${scoreStr}`,
-          body:  `vs ${oppStr} — ${g.gameLabel || "Game"}`,
-          tag:   `game-result-${g.id}`,
-          url:   "/",
-        },
-        "final-result"
-      );
-
-      // bracket-advance notification if this was a bracket game
       if (isBracket) {
-        await pushToTeam(
-          "narwhals",
-          {
-            title: "Bracket update — Narwhals",
-            body:  `${g.gameLabel}: ${resultWord} ${scoreStr} vs ${oppStr}`,
-            tag:   `bracket-${g.id}`,
-            url:   "/",
-          },
-          "bracket-advance"
-        );
+        await pushToTeam("narwhals", {
+          title: "Bracket update — Narwhals",
+          body:  `Game ${g.gm}: ${resultWord} ${g.score || ""} vs ${g.opponent}`,
+          tag:   `bracket-trident-${g.gm}`,
+          url:   "/",
+        }, "bracket-advance");
       }
     }
   } catch (err) {
@@ -312,33 +283,45 @@ export default async function handler(req, res) {
   }
 
   try {
-    // Fetch both sheets in parallel
     const [scoresResp, bracketsResp] = await Promise.all([
-      fetch(SCORES_URL,   { headers: FETCH_HEADERS, signal: AbortSignal.timeout(8000) }),
-      fetch(BRACKETS_URL, { headers: FETCH_HEADERS, signal: AbortSignal.timeout(8000) }),
+      fetch(SCORES_CSV_URL,   { headers: FETCH_HEADERS, signal: AbortSignal.timeout(8000) }),
+      fetch(BRACKETS_CSV_URL, { headers: FETCH_HEADERS, signal: AbortSignal.timeout(8000) }),
     ]);
 
-    if (!scoresResp.ok) throw new Error(`Scores fetch failed: ${scoresResp.status}`);
+    if (!scoresResp.ok)   throw new Error(`Scores CSV fetch failed: ${scoresResp.status}`);
+    if (!bracketsResp.ok) throw new Error(`Brackets CSV fetch failed: ${bracketsResp.status}`);
 
-    const [scoresHtml, bracketsHtml] = await Promise.all([
+    const [scoresCsv, bracketsCsv] = await Promise.all([
       scoresResp.text(),
-      bracketsResp.ok ? bracketsResp.text() : Promise.resolve(""),
+      bracketsResp.text(),
     ]);
 
-    const games        = parseScoresHtml(scoresHtml);
-    const bracketSlots = parseBracketsHtml(bracketsHtml);
+    const games                      = parseGameScoresCsv(scoresCsv);
+    const { teamInfo, bracketSlots } = parseBracketsCsv(bracketsCsv);
+    const standings                  = buildStandings(games, teamInfo);
+
+    // NI-only games in the shape mergeNiwpIntoStatic expects
+    const niGames = games
+      .filter((g) => g.niGame && g.done)
+      .map((g, i) => ({
+        id:       `trident-2026-sheets-g${g.gm || i}`,
+        gmNum:    String(g.gm),
+        opponent: g.opponent,
+        done:     true,
+        result:   g.result,
+        score:    g.score,
+        sets:     g.sets,
+      }));
 
     const payload = {
-      games,
+      games:        niGames,
       bracketSlots,
-      fetchedAt: new Date().toISOString(),
-      source: "teamorlandowpc-sheets",
+      standings,
+      fetchedAt:    new Date().toISOString(),
+      source:       "teamorlandowpc-sheets-csv",
     };
 
-    // Fire push notifications for any newly-completed games (fire-and-forget).
-    const prevGames = cache?.payload?.games;
-    maybePushScoreChanges(prevGames, games);
-
+    maybePushScoreChanges(cache?.payload?.games, niGames);
     cache = { fetchedAt: Date.now(), payload };
 
     res.setHeader("Cache-Control", "public, max-age=60, stale-while-revalidate=300");
