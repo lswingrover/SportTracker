@@ -3790,18 +3790,8 @@ export default function Home() {
                 loading={leaderboardLoading}
                 onPlayerTap={(p) => setPlayerSheet(p)}
               />
-            ) : data?.weekKey && (tournamentStatsLoading || tournamentStatsData?.length > 0) ? (
-              /* Tournament has a weekKey → fetch per-game player stats from NIWP data.
-                 Show LeaderboardTab while loading or when data came back non-empty.
-                 Fall through to simple summary if fetch returned 0 players (e.g. Trident Cup
-                 games are not yet in games.json / not tracked via NIWP). */
-              <LeaderboardTab
-                players={tournamentStatsData}
-                loading={tournamentStatsLoading}
-                onPlayerTap={(p) => setPlayerSheet(p)}
-              />
             ) : (
-              /* No weekKey (external/sheets-only tournament) → simple inline summary */
+              /* "This tournament" — always show summary tiles, then player table if available. */
               (() => {
                 const tGames = (data?.games || []).filter((g) => g.done);
                 if (!tGames.length) {
@@ -3821,8 +3811,10 @@ export default function Home() {
                 const diff = goalsFor - goalsAgainst;
                 const wins = tGames.filter((g) => g.result === "W").length;
                 const losses = tGames.filter((g) => g.result === "L").length;
+                const hasPlayerStats = data?.weekKey && (tournamentStatsLoading || tournamentStatsData?.length > 0);
                 return (
                   <div style={{ paddingBottom: 24 }}>
+                    {/* Summary tiles — always visible */}
                     <section className="stats" style={{ padding: "16px 16px 8px" }}>
                       <div className="stat win">
                         <div className="label">Record</div>
@@ -3841,6 +3833,14 @@ export default function Home() {
                         <div className="value">{diff > 0 ? "+" : ""}{diff}</div>
                       </div>
                     </section>
+                    {/* Per-player table — shows for NIWP-tracked tournaments */}
+                    {hasPlayerStats && (
+                      <LeaderboardTab
+                        players={tournamentStatsData}
+                        loading={tournamentStatsLoading}
+                        onPlayerTap={(p) => setPlayerSheet(p)}
+                      />
+                    )}
                   </div>
                 );
               })()
