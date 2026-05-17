@@ -76,6 +76,10 @@ function buildStaticPayload(tournament) {
     remoteTimestamp:      null,
     cached:               false,
     _isStaticPayload:     true,
+    // weekKey enables the /api/historical?weekKey= per-player stats fetch in the
+    // Stats tab. Without it, data?.weekKey is undefined and the LeaderboardTab
+    // never renders for static tournaments even when NIWP has per-game stat files.
+    weekKey:              tournament.weekKey || null,
     // Completed tournaments: poll essentially never — data won't change.
     // In-progress static: check every 90s so live score changes surface quickly.
     _pollSchedule:        { intervalMs: allDone ? 24 * 60 * 60 * 1000 : 90 * 1000 },
