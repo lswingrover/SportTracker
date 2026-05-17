@@ -932,7 +932,7 @@ function NotificationsCard({ teamId, onShowA2HS }) {
   );
 }
 
-function CalendarCard({ origin, eventId, divId, teamId, teamName, tournamentId, gameCount, isStandalone }) {
+function CalendarCard({ origin, eventId, divId, teamId, teamName, tournamentId, gameCount }) {
   // Route to the static-tournament ICS path when there is no AES eventId.
   // Static tournaments (NIWP data) pass tournamentId instead; the API serves
   // game data from tournamentData.js rather than hitting AES (GH#4 follow-up).
@@ -947,16 +947,14 @@ function CalendarCard({ origin, eventId, divId, teamId, teamName, tournamentId, 
     _calUrl += `teamId=${teamId}&teamName=${encodeURIComponent(teamName)}`;
   }
   const url = _calUrl;
-  // webcal:// links don't hand off to Calendar.app from iOS standalone PWA mode.
-  // In standalone, we show copy-only UI with instructions.
   const webcal = url.replace(/^https?:/, "webcal:");
 
   async function copy() {
     try {
       await navigator.clipboard.writeText(url);
-      alert("Calendar URL copied!\n\nIn iOS: open Settings → Calendar → Accounts → Add Account → Other → Add Subscribed Calendar, then paste this URL.");
+      alert("Calendar URL copied. Paste it into your calendar app's 'Subscribe' option.");
     } catch {
-      window.prompt("Copy this URL and paste it into Calendar → Settings → Subscribed Calendars:", url);
+      window.prompt("Copy this URL:", url);
     }
   }
 
@@ -973,28 +971,15 @@ function CalendarCard({ origin, eventId, divId, teamId, teamName, tournamentId, 
             </div>
           </div>
         </div>
-        {isStandalone ? (
-          <button className="btn-mini primary" onClick={copy}>
-            Copy Link
-          </button>
-        ) : (
-          <a className="btn-mini primary" href={webcal}>
-            Subscribe
-          </a>
-        )}
+        <a className="btn-mini primary" href={webcal}>
+          Subscribe to Calendar
+        </a>
       </div>
-      {isStandalone && (
-        <div style={{ marginTop: 8, fontSize: 12, color: "var(--muted, #888)", lineHeight: 1.4 }}>
-          Tap Copy Link, then in iOS: Settings → Calendar → Accounts → Add Account → Other → Add Subscribed Calendar → paste.
-        </div>
-      )}
-      {!isStandalone && (
-        <div style={{ marginTop: 10, display: "flex", gap: 6, flexWrap: "wrap" }}>
-          <button className="btn-mini" onClick={copy}>
-            Copy link
-          </button>
-        </div>
-      )}
+      <div style={{ marginTop: 10, display: "flex", gap: 6, flexWrap: "wrap" }}>
+        <button className="btn-mini" onClick={copy}>
+          Copy link
+        </button>
+      </div>
     </div>
   );
 }
@@ -3539,7 +3524,6 @@ export default function Home() {
           teamName={teamName}
           tournamentId={tournament.id}
           gameCount={upcomingGames.length}
-          isStandalone={isStandalone}
         />
 
         <nav className="tabs">
