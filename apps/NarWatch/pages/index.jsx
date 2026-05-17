@@ -932,19 +932,18 @@ function NotificationsCard({ teamId, onShowA2HS }) {
   );
 }
 
-function CalendarCard({ origin, eventId, divId, teamId, teamName, tournamentId, gameCount }) {
-  // Route to the static-tournament ICS path when there is no AES eventId.
-  // Static tournaments (NIWP data) pass tournamentId instead; the API serves
-  // game data from tournamentData.js rather than hitting AES (GH#4 follow-up).
+function CalendarCard({ origin, eventId, divId, teamId, teamName, gameCount }) {
+  // For AES live tournaments (eventId set): use the live AES feed.
+  // For static NIWP tournaments: use the stable all-season URL (?teamId=narwhals)
+  // so one subscription covers every tournament — never needs re-subscribing.
   let _calUrl = `${origin}/api/calendar.ics?`;
   if (eventId != null) {
     _calUrl += `eventId=${encodeURIComponent(String(eventId))}&`;
     if (divId != null) _calUrl += `divId=${encodeURIComponent(String(divId))}&`;
     _calUrl += `teamId=${teamId}&teamName=${encodeURIComponent(teamName)}`;
-  } else if (tournamentId != null) {
-    _calUrl += `tournamentId=${encodeURIComponent(String(tournamentId))}&teamName=${encodeURIComponent(teamName)}`;
   } else {
-    _calUrl += `teamId=${teamId}&teamName=${encodeURIComponent(teamName)}`;
+    // Static season feed — stable URL regardless of which tournament is selected.
+    _calUrl += `teamId=narwhals&teamName=${encodeURIComponent(teamName)}`;
   }
   const url = _calUrl;
   const webcal = url.replace(/^https?:/, "webcal:");
@@ -3522,7 +3521,6 @@ export default function Home() {
           divId={tournament.divId}
           teamId={teamId}
           teamName={teamName}
-          tournamentId={tournament.id}
           gameCount={upcomingGames.length}
         />
 

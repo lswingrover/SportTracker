@@ -1,4 +1,4 @@
-import { findTournament } from "../../lib/tournamentData.js";
+import { findTournament, TOURNAMENTS } from "../../lib/tournamentData.js";
 
 const AES_BASE = "https://results.advancedeventsystems.com";
 
@@ -157,50 +157,62 @@ function hashSequence(input) {
   return Math.abs(h) % 1_000_000;
 }
 
-// Build an ICS calendar from a static (NIWP) tournament's local game data.
-function buildStaticTournamentICS(tournament, teamNameOverride) {
-  const teamName = teamNameOverride || tournament.teamName || "North Idaho Narwhals";
-  const venue = tournament.venue || DEFAULT_VENUE;
+// Build an ICS calendar from one or more static (NIWP) tournaments.
+// When called with an array, all games across all tournaments are merged into
+// a single persistent calendar — one subscribe URL covers the whole season.
+function buildStaticTournamentICS(tournamentOrList, teamNameOverride) {
+  const list = Array.isArray(tournamentOrList) ? tournamentOrList : [tournamentOrList];
   const appUrl = "https://narwatch.vercel.app";
-  const calendarName = `${teamName} · ${tournament.label}`;
+
+  // Use the first tournament's teamName as the calendar-level name.
+  const teamName = teamNameOverride || list[0]?.teamName || "North Idaho Narwhals";
+  const calendarName = `${teamName} · Season`;
+  const calDesc = `Full season schedule for ${teamName}. Auto-updates as scores and brackets are filled in.`;
 
   const events = [];
-  for (const g of tournament.games || []) {
-    if (!g.timeISO) continue;
-    const end = new Date(new Date(g.timeISO).getTime() + 75 * 60 * 1000).toISOString();
 
-    const oppLabel = g.isBracket
-      ? g.bracketSlot ? `Bracket vs Pool ${g.bracketSlot}` : "Bracket game"
-      : g.opponent || "TBD";
-    const summary =
-      g.result === "W" ? `WON: ${teamName} vs ${oppLabel}` :
-      g.result === "L" ? `Lost: ${teamName} vs ${oppLabel}` :
-      g.isBracket      ? `${teamName} — ${g.gameLabel || "Bracket game"}` :
-                         `${teamName} vs ${oppLabel}`;
+  for (const tournament of list) {
+    const tName = teamNameOverride || tournament.teamName || teamName;
+    const venue = tournament.venue || DEFAULT_VENUE;
 
-    const court = g.court || "TBD";
-    const location = venue.name
-      ? `${court !== "TBD" ? court + " · " : ""}${venue.name}, ${venue.address || ""}`.trim().replace(/,\s*$/, "")
-      : court;
+    for (const g of tournament.games || []) {
+      if (!g.timeISO) continue;
+      const end = new Date(new Date(g.timeISO).getTime() + 75 * 60 * 1000).toISOString();
 
-    const descLines = [
-      g.gameLabel ? `Game: ${g.gameLabel}` : null,
-      `Court: ${court}`,
-      g.done && g.score ? `Score: ${g.score}` : null,
-    ].filter(Boolean);
+      const oppLabel = g.isBracket
+        ? g.bracketSlot ? `Bracket vs Pool ${g.bracketSlot}` : "Bracket game"
+        : g.opponent || "TBD";
+      const summary =
+        g.result === "W" ? `WON: ${tName} vs ${oppLabel}` :
+        g.result === "L" ? `Lost: ${tName} vs ${oppLabel}` :
+        g.isBracket      ? `${tName} — ${g.gameLabel || "Bracket game"}` :
+                           `${tName} vs ${oppLabel}`;
 
-    events.push(
-      buildVEvent({
-        uid: `${g.id}@narwhaltracker`,
-        start: g.timeISO,
-        end,
-        summary,
-        location,
-        description: descLines.join("\\n"),
-        url: appUrl,
-        sequence: hashSequence({ id: g.id, result: g.result, score: g.score }),
-      })
-    );
+      const court = g.court || "TBD";
+      const location = venue.name
+        ? `${court !== "TBD" ? court + " · " : ""}${venue.name}, ${venue.address || ""}`.trim().replace(/,\s*$/, "")
+        : court;
+
+      const descLines = [
+        tournament.label ? `Tournament: ${tournament.label}` : null,
+        g.gameLabel ? `Game: ${g.gameLabel}` : null,
+        `Court: ${court}`,
+        g.done && g.score ? `Score: ${g.score}` : null,
+      ].filter(Boolean);
+
+      events.push(
+        buildVEvent({
+          uid: `${g.id}@narwhaltracker`,
+          start: g.timeISO,
+          end,
+          summary,
+          location,
+          description: descLines.join("\\n"),
+          url: appUrl,
+          sequence: hashSequence({ id: g.id, result: g.result, score: g.score }),
+        })
+      );
+    }
   }
 
   return [
@@ -210,15 +222,31 @@ function buildStaticTournamentICS(tournament, teamNameOverride) {
     "METHOD:PUBLISH",
     "CALSCALE:GREGORIAN",
     `X-WR-CALNAME:${escapeText(calendarName)}`,
-    `X-WR-CALDESC:${escapeText(`${tournament.label} schedule for ${teamName}.`)}`,
-    `X-WR-TIMEZONE:${venue.tz || "America/Los_Angeles"}`,
+    `X-WR-CALDESC:${escapeText(calDesc)}`,
+    "X-WR-TIMEZONE:America/Los_Angeles",
     ...events,
     "END:VCALENDAR",
   ].join("\r\n");
 }
 
 export default async function handler(req, res) {
-  // Static tournament path — serves game data from tournamentData.js (no AES fetch).
+  const teamNameParam = req.query?.teamName ? String(req.query.teamName) : undefined;
+
+  // Stable all-season path: ?teamId=narwhals (or any non-AES teamId).
+  // Aggregates every static tournament in tournamentData.js into one persistent
+  // calendar — subscribe once, covers the whole season.
+  const teamIdParam = req.query?.teamId;
+  if (teamIdParam === "narwhals") {
+    const staticTournaments = TOURNAMENTS.filter((t) => t.static);
+    const ics = buildStaticTournamentICS(staticTournaments, teamNameParam);
+    res.setHeader("Content-Type", "text/calendar; charset=utf-8");
+    res.setHeader("Cache-Control", "public, max-age=300, s-maxage=300");
+    res.setHeader("Access-Control-Allow-Origin", "*");
+    res.status(200).send(ics);
+    return;
+  }
+
+  // Single-tournament path (kept for direct links / debugging).
   const tournamentIdParam = req.query?.tournamentId;
   if (tournamentIdParam) {
     const tournament = findTournament(String(tournamentIdParam));
@@ -226,7 +254,6 @@ export default async function handler(req, res) {
       res.status(404).send("Tournament not found");
       return;
     }
-    const teamNameParam = req.query?.teamName ? String(req.query.teamName) : undefined;
     const ics = buildStaticTournamentICS(tournament, teamNameParam);
     res.setHeader("Content-Type", "text/calendar; charset=utf-8");
     res.setHeader("Cache-Control", "public, max-age=300, s-maxage=300");
