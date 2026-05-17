@@ -2938,14 +2938,14 @@ export default function Home() {
             if (niwpData) {
               mergeBase = mergeNiwpIntoStatic(mergeBase, niwpData);
             }
-            if (scoresData?.games?.length) {
+            if (scoresData?.games?.length || scoresData?.standings?.length) {
               mergeBase = mergeNiwpIntoStatic(mergeBase, scoresData);
             }
             // Fill in bracket opponent names from bracketSlots (e.g. 2M → "Team Fury")
             if (scoresData?.bracketSlots) {
               mergeBase = applyBracketSlots(mergeBase, scoresData.bracketSlots);
             }
-            if (niwpData || scoresData?.games?.length || scoresData?.bracketSlots) {
+            if (niwpData || scoresData?.games?.length || scoresData?.standings?.length || scoresData?.bracketSlots) {
               mergeBase = { ...mergeBase, scrapedAt: new Date().toISOString() };
               writeCache(staticCacheKey, mergeBase);
               setData(mergeBase);
@@ -3680,8 +3680,9 @@ export default function Home() {
               <div className="empty">No standings available.</div>
             ) : (
               (() => {
-                const us = standings.find((s) => s.isUs);
-                const others = standings.filter((s) => !s.isUs);
+                // Pool-aware standings: group by pool (M/N/O) when pool field is present.
+                const hasPools = standings.some((s) => s.pool);
+
                 const renderRow = (row, pinned = false) => (
                   <tr
                     key={row.teamId}
@@ -3707,9 +3708,51 @@ export default function Home() {
                     </td>
                     <td className="num">{row.matchesWon}</td>
                     <td className="num">{row.matchesLost}</td>
-                    <td className="num">{Math.round((row.setPercent || 0) * 100)}</td>
+                    <td className="num">
+                      {hasPools
+                        ? (row.goalDiff != null
+                            ? (row.goalDiff > 0 ? `+${row.goalDiff}` : String(row.goalDiff))
+                            : "—")
+                        : Math.round((row.setPercent || 0) * 100)}
+                    </td>
                   </tr>
                 );
+
+                if (hasPools) {
+                  // Group by pool, preserve sort order from server (pool then rank).
+                  const poolGroups = {};
+                  for (const row of standings) {
+                    const p = row.pool || "?";
+                    if (!poolGroups[p]) poolGroups[p] = [];
+                    poolGroups[p].push(row);
+                  }
+                  const sortedPools = Object.keys(poolGroups).sort();
+                  return (
+                    <table className="standings-table">
+                      <thead>
+                        <tr>
+                          <th className="rank">#</th>
+                          <th className="team">Team</th>
+                          <th className="num">W</th>
+                          <th className="num">L</th>
+                          <th className="num">GD</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {sortedPools.flatMap((pool) => [
+                          <tr key={`pool-hdr-${pool}`} className="pool-header-row">
+                            <td colSpan={5}>Pool {pool}</td>
+                          </tr>,
+                          ...poolGroups[pool].map((row) => renderRow(row, row.isUs)),
+                        ])}
+                      </tbody>
+                    </table>
+                  );
+                }
+
+                // Flat table (no pool data) — legacy NIWP standings path.
+                const us = standings.find((s) => s.isUs);
+                const others = standings.filter((s) => !s.isUs);
                 return (
                   <table className="standings-table">
                     <tbody>
