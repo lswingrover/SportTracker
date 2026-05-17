@@ -3768,6 +3768,43 @@ export default function Home() {
 
         {tab === "stats" && (
           <>
+            {/* Summary tiles — always at the top, scope-independent.
+                Computed from completed games. Hidden only when no games played yet. */}
+            {(() => {
+              const tGames = (data?.games || []).filter((g) => g.done);
+              if (!tGames.length) return null;
+              let goalsFor = 0, goalsAgainst = 0;
+              for (const g of tGames) {
+                for (const s of (g.sets || [])) {
+                  goalsFor += s.us ?? 0;
+                  goalsAgainst += s.them ?? 0;
+                }
+              }
+              const diff = goalsFor - goalsAgainst;
+              const wins = tGames.filter((g) => g.result === "W").length;
+              const losses = tGames.filter((g) => g.result === "L").length;
+              return (
+                <section className="stats" style={{ padding: "16px 16px 8px" }}>
+                  <div className="stat win">
+                    <div className="label">Record</div>
+                    <div className="value">{wins}–{losses}</div>
+                  </div>
+                  <div className="stat">
+                    <div className="label">Goals for</div>
+                    <div className="value">{goalsFor}</div>
+                  </div>
+                  <div className="stat">
+                    <div className="label">Goals against</div>
+                    <div className="value">{goalsAgainst}</div>
+                  </div>
+                  <div className={`stat ${diff >= 0 ? "pos" : ""}`}>
+                    <div className="label">Differential</div>
+                    <div className="value">{diff > 0 ? "+" : ""}{diff}</div>
+                  </div>
+                </section>
+              );
+            })()}
+
             {/* Scope toggle */}
             <div className="history-filter" style={{ padding: "12px 16px 4px" }}>
               <button
@@ -3791,7 +3828,7 @@ export default function Home() {
                 onPlayerTap={(p) => setPlayerSheet(p)}
               />
             ) : (
-              /* "This tournament" — always show summary tiles, then player table if available. */
+              /* "This tournament" — player stats table when NIWP has weekKey coverage. */
               (() => {
                 const tGames = (data?.games || []).filter((g) => g.done);
                 if (!tGames.length) {
@@ -3801,47 +3838,14 @@ export default function Home() {
                     </div>
                   );
                 }
-                let goalsFor = 0, goalsAgainst = 0;
-                for (const g of tGames) {
-                  for (const s of (g.sets || [])) {
-                    goalsFor += s.us ?? 0;
-                    goalsAgainst += s.them ?? 0;
-                  }
-                }
-                const diff = goalsFor - goalsAgainst;
-                const wins = tGames.filter((g) => g.result === "W").length;
-                const losses = tGames.filter((g) => g.result === "L").length;
                 const hasPlayerStats = data?.weekKey && (tournamentStatsLoading || tournamentStatsData?.length > 0);
+                if (!hasPlayerStats) return null;
                 return (
-                  <div style={{ paddingBottom: 24 }}>
-                    {/* Summary tiles — always visible */}
-                    <section className="stats" style={{ padding: "16px 16px 8px" }}>
-                      <div className="stat win">
-                        <div className="label">Record</div>
-                        <div className="value">{wins}–{losses}</div>
-                      </div>
-                      <div className="stat">
-                        <div className="label">Goals for</div>
-                        <div className="value">{goalsFor}</div>
-                      </div>
-                      <div className="stat">
-                        <div className="label">Goals against</div>
-                        <div className="value">{goalsAgainst}</div>
-                      </div>
-                      <div className={`stat ${diff >= 0 ? "pos" : ""}`}>
-                        <div className="label">Differential</div>
-                        <div className="value">{diff > 0 ? "+" : ""}{diff}</div>
-                      </div>
-                    </section>
-                    {/* Per-player table — shows for NIWP-tracked tournaments */}
-                    {hasPlayerStats && (
-                      <LeaderboardTab
-                        players={tournamentStatsData}
-                        loading={tournamentStatsLoading}
-                        onPlayerTap={(p) => setPlayerSheet(p)}
-                      />
-                    )}
-                  </div>
+                  <LeaderboardTab
+                    players={tournamentStatsData}
+                    loading={tournamentStatsLoading}
+                    onPlayerTap={(p) => setPlayerSheet(p)}
+                  />
                 );
               })()
             )}
