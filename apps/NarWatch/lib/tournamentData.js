@@ -89,7 +89,7 @@ export const TOURNAMENTS = [
     static: true,
     dataSource: "niwp",
     weekKey: "2026-W20",
-    scoresUrl: "/api/trident-scores",
+    // scoresUrl: "/api/trident-scores" — Google Sheets source returns empty JS shell (no table data). NIWP only.
     // Pool N (3 teams, round-robin): Team Orlando (1st), North Idaho (2nd), Next Level (3rd)
     // Bracket: 2nd-place seeds (2M, 2N, 2O) play a 3-team round-robin on Sat/Sun.
     // All times America/New_York (EDT = UTC-4).
@@ -127,11 +127,11 @@ export const TOURNAMENTS = [
       // NI finished 2nd in Pool N. 2N plays 2M then 2O.
       {
         id: "trident-2026-bracket-2n-a",
-        done: false,
-        result: null,
-        score: null,
-        sets: [],
-        opponent: "TBD",
+        done: true,
+        result: "W",
+        score: "6–4",
+        sets: [{ us: 6, them: 4 }],
+        opponent: "Marlins (Ohio)",
         court: "Pool 1",
         gameLabel: "Bracket · Game 62",
         timeISO: "2026-05-17T11:55:00Z", // 7:55 AM EDT — 2M vs 2N
@@ -141,11 +141,11 @@ export const TOURNAMENTS = [
       },
       {
         id: "trident-2026-bracket-2n-b",
-        done: false,
-        result: null,
-        score: null,
-        sets: [],
-        opponent: "TBD",
+        done: true,
+        result: "L",
+        score: "3–10",
+        sets: [{ us: 3, them: 10 }],
+        opponent: "Orlando United",
         court: "Pool 1",
         gameLabel: "Bracket · Game 74",
         timeISO: "2026-05-17T15:35:00Z", // 11:35 AM EDT — 2N vs 2O

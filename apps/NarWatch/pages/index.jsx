@@ -107,13 +107,47 @@ function mergeNiwpIntoStatic(staticPayload, niwpData) {
     if (!niwpByOpponent.has(key)) niwpByOpponent.set(key, g);
   }
 
-  // Merge NIWP results into static games.
-  const mergedGames = staticPayload.games.map((g) => {
+  // First pass: merge by opponent name. Track which NIWP games were consumed.
+  const consumedNiwpIds = new Set();
+  const firstPassGames = staticPayload.games.map((g) => {
     const key = (g.opponent || "").toLowerCase().trim();
-    if (key === "tbd" || key === "") return g; // leave placeholder slots alone
+    if (key === "tbd" || key === "") return g; // bracket placeholders — handled in second pass
     const match = niwpByOpponent.get(key);
     if (!match) return g;
-    return { ...g, done: true, result: match.result, score: match.score, sets: match.sets };
+    consumedNiwpIds.add(match.id ?? match.gmNum);
+    return { ...g, done: true, result: match.result, score: match.score, sets: match.sets,
+             opponent: match.opponent || g.opponent };
+  });
+
+  // Second pass: positional match for TBD bracket slots.
+  // Any NIWP completed game not consumed above is a bracket result.
+  // Map them onto undone isBracket static slots in chronological order.
+  const unconsumedNiwp = niwpGames
+    .filter((g) => g.done && !consumedNiwpIds.has(g.id ?? g.gmNum))
+    .sort((a, b) => (a.id ?? 0) - (b.id ?? 0)); // NIWP ids are sequential
+
+  const tbdBracketIndices = firstPassGames
+    .map((g, i) => (!g.done && g.isBracket ? i : -1))
+    .filter((i) => i >= 0)
+    .sort((a, b) => {
+      const ta = new Date(firstPassGames[a].timeISO || 0).getTime();
+      const tb = new Date(firstPassGames[b].timeISO || 0).getTime();
+      return ta - tb;
+    });
+
+  const mergedGames = [...firstPassGames];
+  unconsumedNiwp.forEach((niwpGame, i) => {
+    const slotIdx = tbdBracketIndices[i];
+    if (slotIdx == null) return;
+    const slot = mergedGames[slotIdx];
+    mergedGames[slotIdx] = {
+      ...slot,
+      done: true,
+      result: niwpGame.result,
+      score: niwpGame.score,
+      sets: niwpGame.sets,
+      opponent: niwpGame.opponent || slot.opponent, // fill in actual opponent name
+    };
   });
 
   // Recompute record from merged games.
