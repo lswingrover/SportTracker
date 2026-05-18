@@ -673,6 +673,7 @@ button.stat:hover { border-color: var(--accent); }
   color: var(--muted);
   padding: 8px 4px 6px;
   min-height: 56px;
+  white-space: nowrap;
   border-radius: 10px;
   font-weight: 600;
   font-size: 12px;

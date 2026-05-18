@@ -3603,7 +3603,7 @@ export default function Home() {
             ["schedule",      "Schedule",      "🗓"],
             ["standings",     "Standings",     "🏆"],
             ["stats",         "Stats",         "📊"],
-            ["notifications", "Notifications", "🔔"],
+            ["notifications", "Alerts", "🔔"],
           ].map(([id, label, icon]) => (
             <button
               key={id}
