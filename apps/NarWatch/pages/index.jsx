@@ -764,6 +764,7 @@ function NotificationsCard({ teamId, onShowA2HS }) {
   const [supported, setSupported] = useState(false);
   const [subscribed, setSubscribed] = useState(false);
   const [working, setWorking] = useState(false);
+  const [subscribeError, setSubscribeError] = useState(null);
   const [prefs, setPrefs] = usePersistentState(`notifPrefs-${teamId}`, defaultClientPrefs());
   const endpointRef = useRef(null);
 
@@ -790,36 +791,61 @@ function NotificationsCard({ teamId, onShowA2HS }) {
   async function subscribe() {
     if (typeof window === "undefined" || !supported) return;
     setWorking(true);
+    setSubscribeError(null);
     try {
       const result = await window.Notification.requestPermission();
       setPerm(result);
       if (result !== "granted") return;
-      const reg =
-        (await navigator.serviceWorker.getRegistration()) ||
-        (await navigator.serviceWorker.register("/sw.js"));
+
+      let reg = await navigator.serviceWorker.getRegistration();
+      if (!reg) {
+        reg = await navigator.serviceWorker.register("/sw.js");
+        // Wait for the SW to activate before subscribing — otherwise
+        // pushManager may not be ready on first install.
+        await new Promise((resolve) => {
+          if (reg.active) { resolve(); return; }
+          const sw = reg.installing || reg.waiting;
+          if (sw) {
+            sw.addEventListener("statechange", function handler() {
+              if (sw.state === "activated") { sw.removeEventListener("statechange", handler); resolve(); }
+            });
+          } else {
+            setTimeout(resolve, 1500);
+          }
+        });
+      }
+
       const vapid = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY;
       if (!vapid) {
-        alert("Push not configured (no VAPID public key)");
+        setSubscribeError("VAPID key missing — push not configured on this deployment.");
         return;
       }
-      const subscription = await reg.pushManager.subscribe({
-        userVisibleOnly: true,
-        applicationServerKey: urlBase64ToUint8Array(vapid),
-      });
+
+      let subscription;
+      try {
+        subscription = await reg.pushManager.subscribe({
+          userVisibleOnly: true,
+          applicationServerKey: urlBase64ToUint8Array(vapid),
+        });
+      } catch (pushErr) {
+        setSubscribeError(`Browser rejected push subscription: ${pushErr?.message || pushErr}`);
+        return;
+      }
+
       const res = await fetch("/api/push-subscribe", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ subscription, teamId, prefs }),
       });
-      if (!res.ok) {
-        const err = await res.text().catch(() => "");
-        console.warn("subscribe failed:", err);
+      const json = await res.json().catch(() => ({}));
+      if (!res.ok || json?.ok === false) {
+        setSubscribeError(json?.reason || `Server error ${res.status}`);
         return;
       }
       endpointRef.current = subscription.endpoint;
       setSubscribed(true);
     } catch (err) {
-      console.warn("Web Push subscribe error:", err);
+      setSubscribeError(err?.message || String(err));
     } finally {
       setWorking(false);
     }
@@ -929,6 +955,20 @@ function NotificationsCard({ teamId, onShowA2HS }) {
             </button>
           ))}
       </div>
+      {subscribeError && (
+        <div style={{
+          margin: "8px 0 0",
+          padding: "8px 12px",
+          background: "var(--loss-bg, rgba(239,68,68,.12))",
+          border: "1px solid var(--loss)",
+          borderRadius: 8,
+          fontSize: 12,
+          color: "var(--loss)",
+          wordBreak: "break-word",
+        }}>
+          ⚠️ {subscribeError}
+        </div>
+      )}
       {!blocked && (
         <ul className="notif-prefs">
           {CLIENT_ALERT_TYPES.map((t) => {
