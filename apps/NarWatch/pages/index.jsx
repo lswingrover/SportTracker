@@ -1679,7 +1679,7 @@ function PastGameCard({ game, expanded, onToggle, venue, tz, opponentInfo, onSha
             <table className="set-table">
               <thead>
                 <tr>
-                  <th>Quarter</th>
+                  <th>{game.sets.length === 1 ? "Score" : "Quarter"}</th>
                   <th>NIN</th>
                   <th>Opp</th>
                 </tr>
@@ -1689,7 +1689,7 @@ function PastGameCard({ game, expanded, onToggle, venue, tz, opponentInfo, onSha
                   const usWin = s.us > s.them;
                   return (
                     <tr key={i}>
-                      <td>Q{i + 1}</td>
+                      <td>{game.sets.length === 1 ? "Final" : `Q${i + 1}`}</td>
                       <td className={usWin ? "win-side" : ""}>{s.us}</td>
                       <td className={!usWin ? "loss-side" : ""}>{s.them}</td>
                     </tr>
