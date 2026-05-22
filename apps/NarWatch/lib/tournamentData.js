@@ -5,6 +5,65 @@
 
 export const TOURNAMENTS = [
   {
+    id: "hillsboro-scrimmage-2026",
+    label: "CDA-Hillsboro Scrimmage",
+    chipLabel: "Hillsboro",
+    shortLabel: "Hillsboro",
+    teamId: "narwhals",
+    teamName: "North Idaho Narwhals",
+    venue: {
+      name: "KROC Center Aquatics",
+      address: "Coeur d'Alene, ID",
+      tz: "America/Los_Angeles",
+    },
+    date: "May 21 + 23, 2026",
+    static: true,
+    scrimmage: true,  // no official score tracking — results added manually
+    dataSource: null, // NIWP does not cover scrimmages
+    weekKey: "2026-W21",
+    games: [
+      {
+        id: "hillsboro-2026-thu-g1",
+        done: false,
+        result: null,
+        score: null,
+        sets: [],
+        opponent: "Hillsboro 18U Boys",
+        court: "KROC Main",
+        gameLabel: "Game 1",
+        timeISO: "2026-05-22T01:30:00Z", // Thu May 21, 6:30 PM PDT
+        time: "Thu, May 21, 6:30 PM",
+        isBracket: false,
+      },
+      {
+        id: "hillsboro-2026-sat-g11",
+        done: false,
+        result: null,
+        score: null,
+        sets: [],
+        opponent: "Hillsboro 18U Boys",
+        court: "KROC Main",
+        gameLabel: "Game 11",
+        timeISO: "2026-05-23T15:25:00Z", // Sat May 23, 8:25 AM PDT
+        time: "Sat, May 23, 8:25 AM",
+        isBracket: false,
+      },
+      {
+        id: "hillsboro-2026-sat-g19",
+        done: false,
+        result: null,
+        score: null,
+        sets: [],
+        opponent: "Hillsboro 18U Boys",
+        court: "KROC Main",
+        gameLabel: "Game 19",
+        timeISO: "2026-05-23T19:05:00Z", // Sat May 23, 12:05 PM PDT
+        time: "Sat, May 23, 12:05 PM",
+        isBracket: false,
+      },
+    ],
+  },
+  {
     id: "bend-2026",
     label: "Cascade Classic",
     chipLabel: "Bend",

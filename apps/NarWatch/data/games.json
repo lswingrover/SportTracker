@@ -1426,5 +1426,35 @@
     "team_type": "competitive",
     "team_ambiguous": false,
     "team_unmapped": false
+  },
+  {
+    "game_id": "138",
+    "home_team": "CDA 18U Boys",
+    "away_team": "Marlins",
+    "location": "Orlando Trident Cup",
+    "game_date": "2026-05-17 07:55:00",
+    "home_score": "6",
+    "away_score": "4",
+    "team_id": "cda-18u-boys",
+    "team_display_name": "CDA 18U Boys",
+    "team_short": "18U Boys",
+    "team_type": "competitive",
+    "team_ambiguous": false,
+    "team_unmapped": false
+  },
+  {
+    "game_id": "139",
+    "home_team": "CDA 18U Boys",
+    "away_team": "Orlando United",
+    "location": "Orlando Trident Cup",
+    "game_date": "2026-05-17 11:35:00",
+    "home_score": "3",
+    "away_score": "11",
+    "team_id": "cda-18u-boys",
+    "team_display_name": "CDA 18U Boys",
+    "team_short": "18U Boys",
+    "team_type": "competitive",
+    "team_ambiguous": false,
+    "team_unmapped": false
   }
 ]

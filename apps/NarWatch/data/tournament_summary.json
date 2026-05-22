@@ -951,21 +951,23 @@
   },
   {
     "tournament": "Orlando Trident Cup",
-    "games_played": 2,
-    "wins": 1,
-    "losses": 1,
+    "games_played": 4,
+    "wins": 2,
+    "losses": 2,
     "ties": 0,
     "win_pct": 0.5,
-    "record_str": "1-1",
-    "goals_for": 14,
-    "goals_against": 22,
-    "goal_differential": -8,
+    "record_str": "2-2",
+    "goals_for": 23,
+    "goals_against": 37,
+    "goal_differential": -14,
     "cda_teams": [
       "CDA 18U Boys",
       "CDA Boys 18U"
     ],
     "opponents": [
+      "Marlins",
       "Next Level",
+      "Orlando United",
       "Team Orlando"
     ],
     "game_log": [
@@ -986,6 +988,24 @@
         "home_score": 6,
         "away_score": 5,
         "result": "W"
+      },
+      {
+        "game_id": "138",
+        "date": "2026-05-17 07:55:00",
+        "home_team": "CDA 18U Boys",
+        "away_team": "Marlins",
+        "home_score": 6,
+        "away_score": 4,
+        "result": "W"
+      },
+      {
+        "game_id": "139",
+        "date": "2026-05-17 11:35:00",
+        "home_team": "CDA 18U Boys",
+        "away_team": "Orlando United",
+        "home_score": 3,
+        "away_score": 11,
+        "result": "L"
       }
     ]
   },

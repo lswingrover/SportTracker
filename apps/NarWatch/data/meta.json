@@ -1,9 +1,9 @@
 {
-  "computed_at": "2026-05-16T21:13:32.174Z",
-  "games_total": 84,
-  "games_included_in_stats": 80,
+  "computed_at": "2026-05-21T00:00:00.000Z",
+  "games_total": 86,
+  "games_included_in_stats": 82,
   "games_excluded": 4,
-  "games_with_stats": 84,
+  "games_with_stats": 86,
   "players_total": 94,
   "players_with_stats": 87,
   "teams": [
@@ -36,9 +36,9 @@
     }
   ],
   "tournaments": 11,
-  "combined_record": "44-27-9",
-  "combined_goals_for": 753,
-  "combined_goals_against": 652,
+  "combined_record": "45-28-9",
+  "combined_goals_for": 762,
+  "combined_goals_against": 667,
   "normalization_applied": true,
   "flags_applied": 4
 }
